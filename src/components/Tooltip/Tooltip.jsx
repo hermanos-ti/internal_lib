@@ -42,8 +42,17 @@ export const Tooltip = forwardRef((props, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [actualPlacement, setActualPlacement] = useState(placement);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  // Initial state is far off-screen to avoid 0,0 flash
+  const [position, setPosition] = useState({ top: -9999, left: -9999 });
   const [arrowPosition, setArrowPosition] = useState({ top: 'auto', left: 'auto' });
+  
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset to off-screen when closed
+      setPosition({ top: -9999, left: -9999 });
+      setArrowPosition({ top: 'auto', left: 'auto' });
+    }
+  }, [isOpen]);
 
   const targetRef = useRef(null);
   const tooltipRef = useRef(null);
@@ -54,19 +63,32 @@ export const Tooltip = forwardRef((props, ref) => {
   const isAnimatingRef = useRef(false);
   const instanceRef = useRef({ hide: null });
 
-  // Função para calcular posição do tooltip
   const calculatePosition = useCallback(() => {
     if (!targetRef.current || !tooltipRef.current) return;
 
     const targetRect = targetRef.current.getBoundingClientRect();
     let tooltipRect = tooltipRef.current.getBoundingClientRect();
     
-    // Se o tooltip ainda não está visível, usar dimensões estimadas
     if (tooltipRect.width === 0 || tooltipRect.height === 0) {
+      const originalVisibility = tooltipRef.current.style.visibility;
+      const originalDisplay = tooltipRef.current.style.display;
+      const originalPosition = tooltipRef.current.style.position;
+      
       tooltipRef.current.style.visibility = 'hidden';
       tooltipRef.current.style.display = 'block';
+      tooltipRef.current.style.position = 'absolute';
+      tooltipRef.current.style.top = '0';
+      tooltipRef.current.style.left = '0';
+      
       tooltipRect = tooltipRef.current.getBoundingClientRect();
-      tooltipRef.current.style.visibility = '';
+      
+      tooltipRef.current.style.visibility = originalVisibility;
+      tooltipRef.current.style.display = originalDisplay;
+      tooltipRef.current.style.position = originalPosition;
+      
+      if (tooltipRect.width === 0 || tooltipRect.height === 0) {
+        return;
+      }
     }
     
     const viewportWidth = window.innerWidth;
@@ -91,67 +113,67 @@ export const Tooltip = forwardRef((props, ref) => {
         top = targetRect.top + scrollY - tooltipRect.height - distance;
         left = targetRect.left + scrollX + skidding;
         arrowTop = tooltipRect.height;
-        arrowLeft = 12;
+        arrowLeft = 20;
       },
       'top-end': () => {
         top = targetRect.top + scrollY - tooltipRect.height - distance;
         left = targetRect.left + scrollX + targetRect.width - tooltipRect.width + skidding;
         arrowTop = tooltipRect.height;
-        arrowLeft = tooltipRect.width - 12;
+        arrowLeft = tooltipRect.width - 20;
       },
       bottom: () => {
         top = targetRect.bottom + scrollY + distance;
         left = targetRect.left + scrollX + targetRect.width / 2 - tooltipRect.width / 2 + skidding;
-        arrowTop = -8;
+        arrowTop = -6;
         arrowLeft = tooltipRect.width / 2;
       },
       'bottom-start': () => {
         top = targetRect.bottom + scrollY + distance;
         left = targetRect.left + scrollX + skidding;
-        arrowTop = -8;
-        arrowLeft = 12;
+        arrowTop = -6;
+        arrowLeft = 20;
       },
       'bottom-end': () => {
         top = targetRect.bottom + scrollY + distance;
         left = targetRect.left + scrollX + targetRect.width - tooltipRect.width + skidding;
-        arrowTop = -8;
-        arrowLeft = tooltipRect.width - 12;
+        arrowTop = -6;
+        arrowLeft = tooltipRect.width - 20;
       },
       left: () => {
         top = targetRect.top + scrollY + targetRect.height / 2 - tooltipRect.height / 2 + skidding;
         left = targetRect.left + scrollX - tooltipRect.width - distance;
-        arrowTop = tooltipRect.height / 2 - 8;
-        arrowLeft = tooltipRect.width;
+        arrowTop = 'auto';
+        arrowLeft = 'auto';
       },
       'left-start': () => {
         top = targetRect.top + scrollY + skidding;
         left = targetRect.left + scrollX - tooltipRect.width - distance;
-        arrowTop = 12 - 8;
-        arrowLeft = tooltipRect.width;
+        arrowTop = 8;
+        arrowLeft = 'auto';
       },
       'left-end': () => {
         top = targetRect.top + scrollY + targetRect.height - tooltipRect.height + skidding;
         left = targetRect.left + scrollX - tooltipRect.width - distance;
-        arrowTop = tooltipRect.height - 12 - 8;
-        arrowLeft = tooltipRect.width;
+        arrowTop = tooltipRect.height - 20;
+        arrowLeft = 'auto';
       },
       right: () => {
         top = targetRect.top + scrollY + targetRect.height / 2 - tooltipRect.height / 2 + skidding;
         left = targetRect.right + scrollX + distance;
-        arrowTop = tooltipRect.height / 2;
-        arrowLeft = -8;
+        arrowTop = 'auto';
+        arrowLeft = 'auto';
       },
       'right-start': () => {
         top = targetRect.top + scrollY + skidding;
         left = targetRect.right + scrollX + distance;
-        arrowTop = 12;
-        arrowLeft = -8;
+        arrowTop = 8;
+        arrowLeft = 'auto';
       },
       'right-end': () => {
         top = targetRect.top + scrollY + targetRect.height - tooltipRect.height + skidding;
         left = targetRect.right + scrollX + distance;
-        arrowTop = tooltipRect.height - 12;
-        arrowLeft = -8;
+        arrowTop = tooltipRect.height - 20;
+        arrowLeft = 'auto';
       },
     };
 
@@ -159,23 +181,19 @@ export const Tooltip = forwardRef((props, ref) => {
       placements[placement]();
     }
 
-    // Ajustar para manter dentro do viewport
     const padding = 8;
     
-    // Ajustar horizontalmente
     if (left < scrollX + padding) {
       if (placement.startsWith('left')) {
-        // Mudar para right
         finalPlacement = placement.replace('left', 'right');
         left = targetRect.right + scrollX + distance;
-        arrowLeft = -8;
-        // Recalcular arrowTop baseado no novo placement
+        arrowLeft = 'auto';
         if (finalPlacement === 'right') {
-          arrowTop = tooltipRect.height / 2 - 8;
+          arrowTop = 'auto';
         } else if (finalPlacement === 'right-start') {
-          arrowTop = 12 - 8;
+          arrowTop = 12;
         } else if (finalPlacement === 'right-end') {
-          arrowTop = tooltipRect.height - 12 - 8;
+          arrowTop = tooltipRect.height - 12;
         }
       } else {
         left = scrollX + padding;
@@ -185,17 +203,15 @@ export const Tooltip = forwardRef((props, ref) => {
       }
     } else if (left + tooltipRect.width > scrollX + viewportWidth - padding) {
       if (placement.startsWith('right')) {
-        // Mudar para left
         finalPlacement = placement.replace('right', 'left');
         left = targetRect.left + scrollX - tooltipRect.width - distance;
-        arrowLeft = tooltipRect.width;
-        // Recalcular arrowTop baseado no novo placement
+        arrowLeft = 'auto';
         if (finalPlacement === 'left') {
-          arrowTop = tooltipRect.height / 2 - 8;
+          arrowTop = 'auto';
         } else if (finalPlacement === 'left-start') {
-          arrowTop = 12 - 8;
+          arrowTop = 12;
         } else if (finalPlacement === 'left-end') {
-          arrowTop = tooltipRect.height - 12 - 8;
+          arrowTop = tooltipRect.height - 12;
         }
       } else {
         left = scrollX + viewportWidth - tooltipRect.width - padding;
@@ -205,33 +221,36 @@ export const Tooltip = forwardRef((props, ref) => {
       }
     }
 
-    // Ajustar verticalmente
     if (top < scrollY + padding) {
       if (placement.startsWith('top')) {
-        // Mudar para bottom
         finalPlacement = placement.replace('top', 'bottom');
         top = targetRect.bottom + scrollY + distance;
         arrowTop = -8;
       } else if (placement.startsWith('left') || placement.startsWith('right')) {
         top = scrollY + padding;
-        // Ajustar arrowTop para manter proporção
-        if (placement === 'left' || placement === 'right') {
-          arrowTop = Math.max(12 - 8, Math.min(arrowTop, tooltipRect.height - 12 - 8));
+        if (finalPlacement === 'left' || finalPlacement === 'right') {
+          arrowTop = 'auto';
+        } else if (finalPlacement === 'left-start' || finalPlacement === 'right-start') {
+          arrowTop = 12;
+        } else if (finalPlacement === 'left-end' || finalPlacement === 'right-end') {
+          arrowTop = tooltipRect.height - 12;
         }
       } else {
         top = scrollY + padding;
       }
     } else if (top + tooltipRect.height > scrollY + viewportHeight - padding) {
       if (placement.startsWith('bottom')) {
-        // Mudar para top
         finalPlacement = placement.replace('bottom', 'top');
         top = targetRect.top + scrollY - tooltipRect.height - distance;
         arrowTop = tooltipRect.height;
       } else if (placement.startsWith('left') || placement.startsWith('right')) {
         top = scrollY + viewportHeight - tooltipRect.height - padding;
-        // Ajustar arrowTop para manter proporção
-        if (placement === 'left' || placement === 'right') {
-          arrowTop = Math.max(12 - 8, Math.min(arrowTop, tooltipRect.height - 12 - 8));
+        if (finalPlacement === 'left' || finalPlacement === 'right') {
+          arrowTop = 'auto';
+        } else if (finalPlacement === 'left-start' || finalPlacement === 'right-start') {
+          arrowTop = 12;
+        } else if (finalPlacement === 'left-end' || finalPlacement === 'right-end') {
+          arrowTop = tooltipRect.height - 12;
         }
       } else {
         top = scrollY + viewportHeight - tooltipRect.height - padding;
@@ -243,22 +262,53 @@ export const Tooltip = forwardRef((props, ref) => {
     setArrowPosition({ top: arrowTop, left: arrowLeft });
   }, [placement, distance, skidding]);
 
-  // Atualizar posição quando necessário
   useEffect(() => {
     if (isOpen && !disabled) {
+      setPosition({ top: -9999, left: -9999 }); // Ensure initial off-screen
+      setArrowPosition({ top: 'auto', left: 'auto' });
+      
+      let lastWidth = 0;
+      let lastHeight = 0;
+      let stableCount = 0;
+      
       const updatePosition = () => {
         if (tooltipRef.current && targetRef.current) {
-          // Aguardar tooltip ser renderizado
-          requestAnimationFrame(() => {
+          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+          if (tooltipRect.width > 0 && tooltipRect.height > 0) {
+            if (tooltipRect.width === lastWidth && tooltipRect.height === lastHeight) {
+              stableCount++;
+              if (stableCount >= 2) {
+                calculatePosition();
+                if (!isVisible) {
+                  setIsVisible(true);
+                }
+              } else {
+                requestAnimationFrame(updatePosition);
+              }
+            } else {
+              lastWidth = tooltipRect.width;
+              lastHeight = tooltipRect.height;
+              stableCount = 0;
+              requestAnimationFrame(updatePosition);
+            }
+          } else {
             requestAnimationFrame(() => {
-              calculatePosition();
+              requestAnimationFrame(() => {
+                updatePosition();
+              });
             });
-          });
+          }
         }
       };
 
-      // Aguardar um pouco mais para garantir que o tooltip foi renderizado
-      const timeoutId = setTimeout(updatePosition, 0);
+      const timeoutId = setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            updatePosition();
+          });
+        });
+      }, 0);
+      
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
 
@@ -268,43 +318,57 @@ export const Tooltip = forwardRef((props, ref) => {
         window.removeEventListener('resize', updatePosition);
       };
     }
-  }, [isOpen, isVisible, disabled, calculatePosition]);
+  }, [isOpen, isVisible, disabled]);
 
-  const handleShow = useCallback(() => {
-    if (disabled || isOpen) return;
+  const handleShow = useCallback((immediate = false) => {
+    if (disabled || isOpen) {
+      return;
+    }
 
-    // Fechar todos os outros tooltips antes de abrir este
     closeAllTooltips(instanceRef);
 
     clearTimeout(showTimerRef.current);
     clearTimeout(hideTimerRef.current);
 
-    showTimerRef.current = setTimeout(() => {
+    if (immediate) {
       setIsOpen(true);
       isAnimatingRef.current = true;
       activeTooltips.add(instanceRef);
       onShow?.();
 
-      // Aguardar próximo frame para aplicar animação
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsVisible(true);
-          
-          // Aguardar animação completar
-          animationTimerRef.current = setTimeout(() => {
-            isAnimatingRef.current = false;
-            onAfterShow?.();
-          }, 150); // Duração da animação CSS
-        });
+        animationTimerRef.current = setTimeout(() => {
+          isAnimatingRef.current = false;
+          onAfterShow?.();
+        }, 250);
       });
-    }, showDelay);
+    } else {
+      showTimerRef.current = setTimeout(() => {
+        setIsOpen(true);
+        isAnimatingRef.current = true;
+        activeTooltips.add(instanceRef);
+        onShow?.();
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            animationTimerRef.current = setTimeout(() => {
+              isAnimatingRef.current = false;
+              onAfterShow?.();
+            }, 250);
+          });
+        });
+      }, showDelay);
+    }
   }, [disabled, isOpen, showDelay, onShow, onAfterShow]);
 
   const handleHide = useCallback(() => {
-    if (!isOpen) return;
-
     clearTimeout(showTimerRef.current);
     clearTimeout(hideTimerRef.current);
+    showTimerRef.current = null;
+
+    if (!isOpen) {
+      return;
+    }
 
     hideTimerRef.current = setTimeout(() => {
       isAnimatingRef.current = true;
@@ -312,35 +376,22 @@ export const Tooltip = forwardRef((props, ref) => {
       onHide?.();
       setIsVisible(false);
 
-      // Aguardar animação completar antes de remover do DOM
       animationTimerRef.current = setTimeout(() => {
         setIsOpen(false);
         isAnimatingRef.current = false;
         onAfterHide?.();
-      }, 150); // Duração da animação CSS
+      }, 250);
     }, hideDelay);
   }, [isOpen, hideDelay, onHide, onAfterHide]);
 
-  // Callback ref para tooltip - calcular posição quando montado
   const tooltipCallbackRef = useCallback((node) => {
     tooltipRef.current = node;
-    if (node && targetRef.current) {
-      // Calcular posição após tooltip ser montado
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (tooltipRef.current && targetRef.current) {
-            calculatePosition();
-          }
-        });
-      });
-    }
-  }, [calculatePosition]);
+  }, []);
 
-  // Sincronizar prop open com estado interno
   useEffect(() => {
     if (isControlled) {
       if (controlledOpen && !disabled && !isOpen) {
-        handleShow();
+        handleShow(true);
       } else if (!controlledOpen && isOpen) {
         handleHide();
       }
@@ -348,7 +399,6 @@ export const Tooltip = forwardRef((props, ref) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controlledOpen, disabled, isControlled]);
 
-  // Handlers de eventos
   const triggers = useMemo(() => trigger.split(' ').filter(Boolean), [trigger]);
 
   const handleMouseEnter = useCallback(() => {
@@ -365,7 +415,7 @@ export const Tooltip = forwardRef((props, ref) => {
 
   const handleFocus = useCallback(() => {
     if (triggers.includes('focus') && !isControlled) {
-      handleShow();
+      handleShow(true);
     }
   }, [triggers, isControlled, handleShow]);
 
@@ -382,7 +432,7 @@ export const Tooltip = forwardRef((props, ref) => {
       if (isOpen) {
         handleHide();
       } else {
-        handleShow();
+        handleShow(true); // Abrir instantaneamente no clique
       }
     }
   }, [triggers, isControlled, isOpen, handleShow, handleHide]);
@@ -402,7 +452,7 @@ export const Tooltip = forwardRef((props, ref) => {
     return {
       show: () => {
         if (!disabled) {
-          handleShow();
+          handleShow(true);
         }
       },
       hide: () => {
@@ -411,17 +461,14 @@ export const Tooltip = forwardRef((props, ref) => {
     };
   }, [disabled, handleShow, handleHide]);
 
-  // Limpar do registro ao desmontar
   useEffect(() => {
     return () => {
       activeTooltips.delete(instanceRef);
     };
   }, []);
 
-  // Gerar ID único para aria-describedby
   const tooltipId = useMemo(() => `tooltip-${Math.random().toString(36).slice(2, 11)}`, []);
 
-  // Clonar children com ref e event handlers
   const targetElement = useMemo(() => {
     if (!children) return null;
 
@@ -429,10 +476,8 @@ export const Tooltip = forwardRef((props, ref) => {
     const isDisabled = child.props?.disabled;
     const isFocable = child.type === 'input' || child.type === 'button' || child.type === 'textarea' || child.type === 'select' || child.type === 'a';
     
-    // Se o elemento está disabled, precisamos envolver em um wrapper
     if (isDisabled) {
       const wrapperRef = (node) => {
-        // targetRef deve apontar para o elemento disabled dentro do wrapper
         if (node) {
           targetRef.current = node.querySelector('button, input, select, textarea, a') || node.firstElementChild || node;
         }
@@ -444,7 +489,6 @@ export const Tooltip = forwardRef((props, ref) => {
         'aria-describedby': isOpen ? tooltipId : undefined,
       };
 
-      // Adicionar handlers no wrapper
       if (triggers.includes('hover')) {
         wrapperProps.onMouseEnter = handleMouseEnter;
         wrapperProps.onMouseLeave = handleMouseLeave;
@@ -471,12 +515,10 @@ export const Tooltip = forwardRef((props, ref) => {
       'aria-describedby': isOpen ? tooltipId : undefined,
     };
 
-    // Se trigger inclui focus e elemento não é focável, adicionar tabIndex
     if (triggers.includes('focus') && !isFocable && child.props?.tabIndex === undefined) {
       childProps.tabIndex = 0;
     }
 
-    // Combinar refs se já existir uma
     const originalRef = child.ref;
     if (originalRef) {
       childProps.ref = (node) => {
@@ -491,7 +533,6 @@ export const Tooltip = forwardRef((props, ref) => {
       childProps.ref = targetRef;
     }
 
-    // Combinar event handlers existentes
     if (triggers.includes('hover')) {
       const originalMouseEnter = child.props?.onMouseEnter;
       const originalMouseLeave = child.props?.onMouseLeave;
@@ -516,7 +557,6 @@ export const Tooltip = forwardRef((props, ref) => {
         originalBlur?.(e);
         handleBlur();
       };
-      // Adicionar suporte para ESC quando em foco
       const originalKeyDown = child.props?.onKeyDown;
       childProps.onKeyDown = (e) => {
         originalKeyDown?.(e);
@@ -537,7 +577,6 @@ export const Tooltip = forwardRef((props, ref) => {
     return React.cloneElement(child, childProps);
   }, [children, triggers, isOpen, tooltipId, handleMouseEnter, handleMouseLeave, handleFocus, handleBlur, handleClick, handleHide]);
 
-  // Renderizar tooltip
   const tooltipContent = isOpen && !disabled && content && (
     createPortal(
       <div
@@ -548,15 +587,21 @@ export const Tooltip = forwardRef((props, ref) => {
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
+          visibility: isVisible ? 'visible' : 'hidden',
         }}
       >
         {content}
         {!withoutArrow && (
           <div
-            className={`${styles.arrow} ${styles[`arrow--${actualPlacement.split('-')[0]}`]}`}
+            className={`${styles.arrow} ${
+              (actualPlacement.startsWith('left-') || actualPlacement.startsWith('right-')) &&
+              (actualPlacement.includes('-start') || actualPlacement.includes('-end'))
+                ? styles[`arrow--${actualPlacement}`]
+                : styles[`arrow--${actualPlacement.split('-')[0]}`]
+            }`}
             style={{
-              top: arrowPosition.top !== 'auto' ? `${arrowPosition.top}px` : 'auto',
-              left: arrowPosition.left !== 'auto' ? `${arrowPosition.left}px` : 'auto',
+              ...(arrowPosition.top !== 'auto' && { top: `${arrowPosition.top}px` }),
+              ...(arrowPosition.left !== 'auto' && { left: `${arrowPosition.left}px` }),
             }}
           />
         )}

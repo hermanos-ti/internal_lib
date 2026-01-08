@@ -1,6 +1,57 @@
 import React, { useRef, useState } from 'react';
 import { Tooltip } from './Tooltip';
 
+// Styles for demo components to look clean and modern
+const buttonStyle = {
+  padding: '10px 20px',
+  fontSize: '14px',
+  fontWeight: '500',
+  color: '#334155', // Slate-700
+  backgroundColor: '#f1f5f9', // Slate-100
+  border: '1px solid #cbd5e1', // Slate-300
+  borderRadius: '6px',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  outline: 'none',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+};
+
+const primaryButtonStyle = {
+  ...buttonStyle,
+  color: '#ffffff',
+  backgroundColor: '#3b82f6', // Blue-500
+  border: '1px solid #2563eb', // Blue-600
+};
+
+const dangerButtonStyle = {
+  ...buttonStyle,
+  color: '#ffffff',
+  backgroundColor: '#ef4444', // Red-500
+  border: '1px solid #dc2626', // Red-600
+};
+
+const inputStyle = {
+  padding: '10px 12px',
+  fontSize: '14px',
+  color: '#1e293b', // Slate-800
+  border: '1px solid #cbd5e1', // Slate-300
+  borderRadius: '6px',
+  outline: 'none',
+  width: '100%',
+  boxSizing: 'border-box',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  transition: 'border-color 0.2s ease',
+};
+
+const containerStyle = {
+  padding: '60px',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  minHeight: '200px',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+};
+
 export default {
   title: 'Components/Tooltip',
   component: Tooltip,
@@ -8,7 +59,7 @@ export default {
   parameters: {
     docs: {
       description: {
-        component: 'Componente Tooltip para exibir informações contextuais adicionais quando o usuário interage com um elemento. Suporta múltiplos posicionamentos, triggers, delays configuráveis e controle programático.',
+        component: 'Componente Tooltip para exibir informações contextuais adicionais quando o usuário interage com um elemento. Design limpo e moderno.',
       },
     },
   },
@@ -68,9 +119,9 @@ export default {
 export const UsoBasico = {
   name: 'Uso Básico',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
-      <Tooltip content="Este é um tooltip básico que aparece ao passar o mouse">
-        <button style={{ padding: '10px 20px', fontSize: '16px' }}>
+    <div style={containerStyle}>
+      <Tooltip content="Tooltip simples e informativo">
+        <button style={buttonStyle}>
           Passe o mouse aqui
         </button>
       </Tooltip>
@@ -79,7 +130,7 @@ export const UsoBasico = {
   parameters: {
     docs: {
       description: {
-        story: 'O uso mais simples do Tooltip. Por padrão, aparece ao passar o mouse sobre o elemento (hover) e ao focar (focus). O tooltip é posicionado acima do elemento (top) por padrão.',
+        story: 'O uso mais simples do Tooltip. Por padrão, aparece ao passar o mouse sobre o elemento (hover) e ao focar (focus).',
       },
     },
   },
@@ -100,12 +151,11 @@ export const Placements = {
 
     return (
       <div style={{ 
-        padding: '150px', 
+        ...containerStyle,
         display: 'grid', 
         gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: '80px',
-        alignItems: 'center',
-        justifyItems: 'center'
+        gap: '40px',
+        padding: '100px',
       }}>
         {placements.map((placement) => (
           <Tooltip 
@@ -114,13 +164,13 @@ export const Placements = {
             placement={placement}
           >
             <button style={{ 
-              padding: '10px 15px', 
-              minWidth: '100px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
+              ...buttonStyle, 
+              width: '100%', 
+              minHeight: '60px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px'
             }}>
               {placement}
             </button>
@@ -132,7 +182,7 @@ export const Placements = {
   parameters: {
     docs: {
       description: {
-        story: 'O Tooltip suporta 12 posicionamentos diferentes. O componente ajusta automaticamente a posição se o tooltip sair da viewport. Use `-start` para alinhar ao início, `-end` para alinhar ao final, ou sem sufixo para centralizar.',
+        story: 'O Tooltip suporta 12 posicionamentos diferentes.',
       },
     },
   },
@@ -142,9 +192,9 @@ export const Placements = {
 export const PlacementTop = {
   name: 'Placement: Top',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
+    <div style={containerStyle}>
       <Tooltip content="Tooltip posicionado acima" placement="top">
-        <button>Top</button>
+        <button style={buttonStyle}>Top</button>
       </Tooltip>
     </div>
   ),
@@ -153,9 +203,9 @@ export const PlacementTop = {
 export const PlacementBottom = {
   name: 'Placement: Bottom',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
+    <div style={containerStyle}>
       <Tooltip content="Tooltip posicionado abaixo" placement="bottom">
-        <button>Bottom</button>
+        <button style={buttonStyle}>Bottom</button>
       </Tooltip>
     </div>
   ),
@@ -164,9 +214,9 @@ export const PlacementBottom = {
 export const PlacementLeft = {
   name: 'Placement: Left',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
+    <div style={containerStyle}>
       <Tooltip content="Tooltip posicionado à esquerda" placement="left">
-        <button>Left</button>
+        <button style={buttonStyle}>Left</button>
       </Tooltip>
     </div>
   ),
@@ -175,9 +225,9 @@ export const PlacementLeft = {
 export const PlacementRight = {
   name: 'Placement: Right',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
+    <div style={containerStyle}>
       <Tooltip content="Tooltip posicionado à direita" placement="right">
-        <button>Right</button>
+        <button style={buttonStyle}>Right</button>
       </Tooltip>
     </div>
   ),
@@ -189,68 +239,49 @@ export const PlacementRight = {
 export const TriggerHover = {
   name: 'Trigger: Hover',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
+    <div style={containerStyle}>
       <Tooltip 
         content="Aparece ao passar o mouse"
         trigger="hover"
       >
-        <button>Passe o mouse</button>
+        <button style={buttonStyle}>Passe o mouse</button>
       </Tooltip>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Trigger `hover`: O tooltip aparece quando o usuário passa o mouse sobre o elemento. É o comportamento padrão e ideal para informações contextuais.',
-      },
-    },
-  },
 };
 
 export const TriggerFocus = {
   name: 'Trigger: Focus',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
-      <Tooltip 
-        content="Aparece ao focar no elemento (acessibilidade)"
-        trigger="focus"
-      >
-        <input 
-          type="text" 
-          placeholder="Clique ou use Tab para focar"
-          style={{ padding: '10px', fontSize: '16px' }}
-        />
-      </Tooltip>
+    <div style={containerStyle}>
+      <div style={{ width: '300px' }}>
+        <Tooltip 
+          content="Aparece ao focar no elemento (acessibilidade)"
+          trigger="focus"
+        >
+          <input 
+            type="text" 
+            placeholder="Clique ou use Tab para focar"
+            style={inputStyle}
+          />
+        </Tooltip>
+      </div>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Trigger `focus`: Ideal para acessibilidade. O tooltip aparece quando o elemento recebe foco via teclado ou mouse. Use em campos de formulário e elementos interativos.',
-      },
-    },
-  },
 };
 
 export const TriggerClick = {
   name: 'Trigger: Click',
   render: () => (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
+    <div style={containerStyle}>
       <Tooltip 
         content="Clique novamente para fechar"
         trigger="click"
       >
-        <button>Clique aqui</button>
+        <button style={buttonStyle}>Clique aqui</button>
       </Tooltip>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Trigger `click`: O tooltip aparece/desaparece ao clicar no elemento. Útil para informações que o usuário precisa ver explicitamente ou para mobile onde hover não funciona.',
-      },
-    },
-  },
 };
 
 export const TriggerManual = {
@@ -259,70 +290,46 @@ export const TriggerManual = {
     const tooltipRef = useRef(null);
     
     return (
-      <div style={{ padding: '100px', textAlign: 'center' }}>
+      <div style={{ ...containerStyle, flexDirection: 'column', gap: '20px' }}>
         <Tooltip 
           ref={tooltipRef}
           content="Controlado programaticamente"
           trigger="manual"
         >
-          <button>Elemento alvo</button>
+          <button style={{ ...buttonStyle, cursor: 'default' }}>Elemento Alvo</button>
         </Tooltip>
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <button onClick={() => tooltipRef.current?.show()}>
-            Mostrar Tooltip
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button style={primaryButtonStyle} onClick={() => tooltipRef.current?.show()}>
+            Mostrar
           </button>
-          <button onClick={() => tooltipRef.current?.hide()}>
-            Esconder Tooltip
+          <button style={buttonStyle} onClick={() => tooltipRef.current?.hide()}>
+            Esconder
           </button>
         </div>
       </div>
     );
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Trigger `manual`: O tooltip só aparece através de controle programático usando os métodos `show()` e `hide()` ou a prop `open`. Use quando precisar de controle total sobre quando o tooltip aparece.',
-      },
-    },
   },
 };
 
 export const TriggerCombinacoes = {
   name: 'Triggers: Combinações',
   render: () => (
-    <div style={{ padding: '100px', display: 'flex', flexDirection: 'column', gap: '30px', alignItems: 'center' }}>
-      <div>
-        <Tooltip 
-          content="Hover ou Focus"
-          trigger="hover focus"
-        >
-          <button>Hover ou Focus</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          Aparece ao passar mouse OU focar
-        </p>
-      </div>
+    <div style={{ ...containerStyle, flexDirection: 'column', gap: '30px' }}>
+      <Tooltip 
+        content="Hover ou Focus"
+        trigger="hover focus"
+      >
+        <button style={buttonStyle}>Hover ou Focus</button>
+      </Tooltip>
       
-      <div>
-        <Tooltip 
-          content="Hover ou Click"
-          trigger="hover click"
-        >
-          <button>Hover ou Click</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          Aparece ao passar mouse OU clicar
-        </p>
-      </div>
+      <Tooltip 
+        content="Hover ou Click"
+        trigger="hover click"
+      >
+        <button style={buttonStyle}>Hover ou Click</button>
+      </Tooltip>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Você pode combinar múltiplos triggers separando-os por espaço. O tooltip aparecerá quando qualquer um dos triggers for ativado.',
-      },
-    },
-  },
 };
 
 // ============================================
@@ -331,52 +338,30 @@ export const TriggerCombinacoes = {
 export const Delays = {
   name: 'Delays Configuráveis',
   render: () => (
-    <div style={{ padding: '100px', display: 'flex', flexDirection: 'column', gap: '30px', alignItems: 'center' }}>
-      <div>
-        <Tooltip 
-          content="Delay de 500ms para aparecer"
-          showDelay={500}
-        >
-          <button>Delay de 500ms</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          Aguarda 500ms antes de mostrar
-        </p>
-      </div>
+    <div style={{ ...containerStyle, flexDirection: 'column', gap: '30px' }}>
+      <Tooltip 
+        content="Delay de 500ms para aparecer"
+        showDelay={500}
+      >
+        <button style={buttonStyle}>Delay Show: 500ms</button>
+      </Tooltip>
       
-      <div>
-        <Tooltip 
-          content="Delay de 300ms para desaparecer"
-          hideDelay={300}
-        >
-          <button>Delay de 300ms para esconder</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          Aguarda 300ms antes de esconder
-        </p>
-      </div>
+      <Tooltip 
+        content="Delay de 300ms para desaparecer"
+        hideDelay={300}
+      >
+        <button style={buttonStyle}>Delay Hide: 300ms</button>
+      </Tooltip>
       
-      <div>
-        <Tooltip 
-          content="Delays customizados"
-          showDelay={800}
-          hideDelay={500}
-        >
-          <button>Delays customizados</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          Show: 800ms, Hide: 500ms
-        </p>
-      </div>
+      <Tooltip 
+        content="Delays customizados"
+        showDelay={800}
+        hideDelay={500}
+      >
+        <button style={buttonStyle}>Show: 800ms / Hide: 500ms</button>
+      </Tooltip>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Use `showDelay` para evitar que tooltips apareçam acidentalmente quando o usuário apenas passa o mouse rapidamente. Use `hideDelay` para manter o tooltip visível brevemente após o mouse sair, útil para links clicáveis dentro do tooltip.',
-      },
-    },
-  },
 };
 
 // ============================================
@@ -386,45 +371,36 @@ export const ControleProgramatico = {
   name: 'Controle Programático',
   render: () => {
     const [isOpen, setIsOpen] = useState(false);
-    const tooltipRef = useRef(null);
     
     return (
-      <div style={{ padding: '100px', textAlign: 'center' }}>
-        <h3 style={{ marginBottom: '30px' }}>Modo Controlado (prop open)</h3>
-        <Tooltip 
-          content="Controlado pela prop open"
-          open={isOpen}
-          trigger="manual"
-        >
-          <button>Elemento alvo</button>
-        </Tooltip>
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <button onClick={() => setIsOpen(true)}>Abrir</button>
-          <button onClick={() => setIsOpen(false)}>Fechar</button>
-          <button onClick={() => setIsOpen(!isOpen)}>Toggle</button>
-        </div>
+      <div style={{ ...containerStyle, flexDirection: 'column' }}>
+        <h3 style={{ marginBottom: '20px', fontSize: '16px', color: '#475569' }}>Modo Controlado (prop open)</h3>
         
-        <h3 style={{ marginTop: '50px', marginBottom: '30px' }}>Métodos Imperativos (ref)</h3>
-        <Tooltip 
-          ref={tooltipRef}
-          content="Controlado por métodos show() e hide()"
-          trigger="manual"
-        >
-          <button>Elemento alvo</button>
-        </Tooltip>
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <button onClick={() => tooltipRef.current?.show()}>show()</button>
-          <button onClick={() => tooltipRef.current?.hide()}>hide()</button>
+        <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <Tooltip 
+            content="Controlado pela prop open"
+            open={isOpen}
+            trigger="manual"
+          >
+            <div style={{ 
+              padding: '20px', 
+              border: '1px dashed #cbd5e1', 
+              borderRadius: '6px',
+              backgroundColor: '#f8fafc',
+              color: '#64748b'
+            }}>
+              Elemento Alvo
+            </div>
+          </Tooltip>
+          
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button style={isOpen ? buttonStyle : primaryButtonStyle} onClick={() => setIsOpen(true)}>Abrir</button>
+            <button style={!isOpen ? buttonStyle : primaryButtonStyle} onClick={() => setIsOpen(false)}>Fechar</button>
+            <button style={buttonStyle} onClick={() => setIsOpen(!isOpen)}>Toggle</button>
+          </div>
         </div>
       </div>
     );
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'O Tooltip pode ser controlado de duas formas: usando a prop `open` (modo controlado) ou usando métodos imperativos através de ref (`show()` e `hide()`). Use quando precisar sincronizar o estado do tooltip com lógica de negócio.',
-      },
-    },
   },
 };
 
@@ -434,63 +410,30 @@ export const ControleProgramatico = {
 export const CustomizacaoVisual = {
   name: 'Customização Visual',
   render: () => (
-    <div style={{ padding: '100px', display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'center' }}>
-      <div>
-        <Tooltip 
-          content="Tooltip sem seta"
-          withoutArrow={true}
-        >
-          <button>Sem Arrow</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          withoutArrow={true}
-        </p>
-      </div>
+    <div style={{ ...containerStyle, flexDirection: 'column', gap: '40px' }}>
+      <Tooltip 
+        content="Tooltip sem seta"
+        withoutArrow={true}
+      >
+        <button style={buttonStyle}>Sem Arrow</button>
+      </Tooltip>
       
-      <div>
-        <Tooltip 
-          content="Distância maior (20px)"
-          distance={20}
-        >
-          <button>Distance: 20px</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          distance={20}
-        </p>
-      </div>
+      <Tooltip 
+        content="Distância maior (24px)"
+        distance={24}
+      >
+        <button style={buttonStyle}>Distance: 24px</button>
+      </Tooltip>
       
-      <div>
-        <Tooltip 
-          content="Com skidding (deslocamento lateral)"
-          skidding={30}
-          placement="top"
-        >
-          <button>Skidding: 30px</button>
-        </Tooltip>
-        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          skidding={30}
-        </p>
-      </div>
-      
-      <div>
-        <Tooltip 
-          content="Combinação: sem arrow, distância 15px, skidding 20px"
-          withoutArrow={true}
-          distance={15}
-          skidding={20}
-        >
-          <button>Combinação</button>
-        </Tooltip>
-      </div>
+      <Tooltip 
+        content="Com skidding (deslocamento)"
+        skidding={30}
+        placement="top"
+      >
+        <button style={buttonStyle}>Skidding: 30px</button>
+      </Tooltip>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Customize a aparência do tooltip: remova a seta com `withoutArrow`, ajuste a distância com `distance`, e use `skidding` para deslocamento fino ao longo do elemento alvo.',
-      },
-    },
-  },
 };
 
 // ============================================
@@ -502,43 +445,31 @@ export const EstadosDesabilitacao = {
     const [disabled, setDisabled] = useState(false);
     
     return (
-      <div style={{ padding: '100px', textAlign: 'center' }}>
+      <div style={{ ...containerStyle, flexDirection: 'column', gap: '30px' }}>
         <Tooltip 
           content="Este tooltip pode ser desabilitado"
           disabled={disabled}
         >
-          <button>Elemento com tooltip</button>
+          <button style={buttonStyle}>Passe o mouse (Teste)</button>
         </Tooltip>
         
-        <div style={{ marginTop: '30px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
-            <input 
-              type="checkbox" 
-              checked={disabled}
-              onChange={(e) => setDisabled(e.target.checked)}
-            />
-            Desabilitar tooltip
-          </label>
-        </div>
-        
-        <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-          <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>Tooltip condicional:</p>
-          <Tooltip 
-            content={disabled ? "Tooltip está desabilitado" : "Tooltip está habilitado"}
-            disabled={disabled}
-          >
-            <button>Estado: {disabled ? 'Desabilitado' : 'Habilitado'}</button>
-          </Tooltip>
-        </div>
+        <label style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '10px', 
+          fontSize: '14px', 
+          color: '#475569',
+          cursor: 'pointer'
+        }}>
+          <input 
+            type="checkbox" 
+            checked={disabled}
+            onChange={(e) => setDisabled(e.target.checked)}
+          />
+          Desabilitar tooltip
+        </label>
       </div>
     );
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Use a prop `disabled` para desabilitar o tooltip dinamicamente. Útil quando o tooltip só deve aparecer em certas condições ou estados da aplicação.',
-      },
-    },
   },
 };
 
@@ -551,57 +482,42 @@ export const EventosCallbacks = {
     const [logs, setLogs] = useState([]);
     
     const addLog = (event) => {
-      setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${event}`]);
+      setLogs(prev => [`${new Date().toLocaleTimeString().split(' ')[0]}: ${event}`, ...prev].slice(0, 5));
     };
     
-    const clearLogs = () => setLogs([]);
-    
     return (
-      <div style={{ padding: '100px', textAlign: 'center' }}>
+      <div style={{ ...containerStyle, flexDirection: 'column', gap: '30px' }}>
         <Tooltip 
-          content="Observe os eventos no console abaixo"
-          onShow={() => addLog('onShow - Tooltip começou a aparecer')}
-          onAfterShow={() => addLog('onAfterShow - Tooltip completamente visível')}
-          onHide={() => addLog('onHide - Tooltip começou a esconder')}
-          onAfterHide={() => addLog('onAfterHide - Tooltip completamente escondido')}
+          content="Gera eventos no log abaixo"
+          onShow={() => addLog('onShow')}
+          onAfterShow={() => addLog('onAfterShow')}
+          onHide={() => addLog('onHide')}
+          onAfterHide={() => addLog('onAfterHide')}
         >
-          <button>Passe o mouse aqui</button>
+          <button style={buttonStyle}>Interaja comigo</button>
         </Tooltip>
         
-        <div style={{ marginTop: '40px', textAlign: 'left', maxWidth: '500px', margin: '40px auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h4 style={{ margin: 0 }}>Log de Eventos:</h4>
-            <button onClick={clearLogs} style={{ padding: '5px 10px', fontSize: '12px' }}>
-              Limpar
-            </button>
-          </div>
-          <div style={{ 
-            backgroundColor: '#f5f5f5', 
-            padding: '15px', 
-            borderRadius: '4px',
-            maxHeight: '200px',
-            overflowY: 'auto',
-            fontFamily: 'monospace',
-            fontSize: '12px'
-          }}>
-            {logs.length === 0 ? (
-              <p style={{ color: '#999', margin: 0 }}>Nenhum evento ainda. Interaja com o tooltip acima.</p>
-            ) : (
-              logs.map((log, index) => (
-                <div key={index} style={{ marginBottom: '5px' }}>{log}</div>
-              ))
-            )}
-          </div>
+        <div style={{ 
+          width: '100%', 
+          maxWidth: '400px',
+          backgroundColor: '#1e293b', 
+          borderRadius: '6px',
+          padding: '15px',
+          color: '#e2e8f0',
+          fontFamily: 'monospace',
+          fontSize: '12px'
+        }}>
+          <div style={{ borderBottom: '1px solid #334155', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>Event Log</div>
+          {logs.length === 0 ? (
+            <div style={{ color: '#64748b' }}>Aguardando interação...</div>
+          ) : (
+            logs.map((log, index) => (
+              <div key={index} style={{ marginBottom: '4px' }}>{log}</div>
+            ))
+          )}
         </div>
       </div>
     );
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'O Tooltip emite 4 eventos: `onShow` (início da animação de entrada), `onAfterShow` (após animação completar), `onHide` (início da animação de saída), e `onAfterHide` (após animação completar). Use para analytics, logging ou feedback visual.',
-      },
-    },
   },
 };
 
@@ -611,421 +527,198 @@ export const EventosCallbacks = {
 export const CasoUsoBotoes = {
   name: 'Caso de Uso: Botões de Ação',
   render: () => (
-    <div style={{ padding: '100px', display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+    <div style={{ ...containerStyle, gap: '15px', flexWrap: 'wrap' }}>
       <Tooltip content="Salvar alterações" placement="top">
-        <button style={{ padding: '10px 20px', fontSize: '16px' }}>💾 Salvar</button>
+        <button style={primaryButtonStyle}>
+          Salvar
+        </button>
       </Tooltip>
       
       <Tooltip content="Excluir item permanentemente" placement="top">
-        <button style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px' }}>
-          🗑️ Excluir
+        <button style={dangerButtonStyle}>
+          Excluir
         </button>
       </Tooltip>
       
       <Tooltip content="Exportar dados para CSV" placement="top">
-        <button style={{ padding: '10px 20px', fontSize: '16px' }}>📥 Exportar</button>
-      </Tooltip>
-      
-      <Tooltip content="Compartilhar com outros usuários" placement="top">
-        <button style={{ padding: '10px 20px', fontSize: '16px' }}>🔗 Compartilhar</button>
+        <button style={buttonStyle}>
+          Exportar
+        </button>
       </Tooltip>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Use tooltips em botões de ação para fornecer contexto adicional sobre o que a ação faz, especialmente útil para ícones sem texto ou ações destrutivas.',
-      },
-    },
-  },
-};
-
-export const CasoUsoIconesAjuda = {
-  name: 'Caso de Uso: Ícones de Ajuda',
-  render: () => (
-    <div style={{ padding: '100px', display: 'flex', flexDirection: 'column', gap: '30px', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <label>Nome completo:</label>
-        <input type="text" placeholder="Digite seu nome" style={{ padding: '8px' }} />
-        <Tooltip 
-          content="Digite seu nome completo como aparece no documento de identidade"
-          trigger="focus"
-          placement="right"
-        >
-          <span style={{ cursor: 'help', fontSize: '18px' }}>❓</span>
-        </Tooltip>
-      </div>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <label>CPF:</label>
-        <input type="text" placeholder="000.000.000-00" style={{ padding: '8px' }} />
-        <Tooltip 
-          content="Formato: XXX.XXX.XXX-XX (apenas números)"
-          trigger="focus"
-          placement="right"
-        >
-          <span style={{ cursor: 'help', fontSize: '18px' }}>ℹ️</span>
-        </Tooltip>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Ícones de ajuda são perfeitos para tooltips. Use `trigger="focus"` para que apareçam quando o usuário focar no campo relacionado, melhorando a acessibilidade.',
-      },
-    },
-  },
 };
 
 export const CasoUsoFormularios = {
   name: 'Caso de Uso: Campos de Formulário',
   render: () => (
-    <div style={{ padding: '100px', maxWidth: '400px', margin: '0 auto' }}>
-      <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ ...containerStyle, alignItems: 'flex-start' }}>
+      <form style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '300px' }}>
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Senha:
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#334155' }}>
+            Senha
           </label>
           <Tooltip 
-            content="A senha deve ter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos"
+            content="Mínimo 8 caracteres, maiúsculas e números."
             trigger="focus"
             placement="right"
           >
             <input 
               type="password" 
               placeholder="Digite sua senha"
-              style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+              style={inputStyle}
             />
           </Tooltip>
         </div>
         
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Email:
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#334155' }}>
+            Email
           </label>
           <Tooltip 
-            content="Usaremos este email para enviar notificações importantes"
+            content="Usaremos para notificações."
             trigger="focus"
             placement="right"
           >
             <input 
               type="email" 
               placeholder="seu@email.com"
-              style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+              style={inputStyle}
             />
           </Tooltip>
         </div>
       </form>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Em formulários, use tooltips para fornecer instruções, exemplos ou requisitos de validação. O trigger `focus` é ideal para aparecer quando o usuário interage com o campo.',
-      },
-    },
-  },
 };
 
 export const CasoUsoTabelas = {
   name: 'Caso de Uso: Tabelas',
   render: () => (
-    <div style={{ padding: '100px' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f5f5f5' }}>
-            <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Produto</th>
-            <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>
-              Preço
-              <Tooltip content="Preço unitário em reais (R$)" placement="top">
-                <span style={{ marginLeft: '5px', cursor: 'help' }}>ℹ️</span>
-              </Tooltip>
-            </th>
-            <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>
-              Estoque
-              <Tooltip content="Quantidade disponível em estoque" placement="top">
-                <span style={{ marginLeft: '5px', cursor: 'help' }}>ℹ️</span>
-              </Tooltip>
-            </th>
-            <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>Notebook</td>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-              R$ 2.499,00
-              <Tooltip content="Preço com desconto de 15%" placement="top">
-                <span style={{ marginLeft: '5px', cursor: 'help', color: 'green' }}>💰</span>
-              </Tooltip>
-            </td>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>12 unidades</td>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-              <Tooltip content="Editar produto" placement="top">
-                <button style={{ marginRight: '5px' }}>✏️</button>
-              </Tooltip>
-              <Tooltip content="Excluir produto" placement="top">
-                <button>🗑️</button>
-              </Tooltip>
-            </td>
-          </tr>
-          <tr>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>Mouse</td>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>R$ 89,90</td>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-              0 unidades
-              <Tooltip content="Produto esgotado" placement="top">
-                <span style={{ marginLeft: '5px', cursor: 'help', color: 'red' }}>⚠️</span>
-              </Tooltip>
-            </td>
-            <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-              <Tooltip content="Editar produto" placement="top">
-                <button style={{ marginRight: '5px' }}>✏️</button>
-              </Tooltip>
-              <Tooltip content="Excluir produto" placement="top">
-                <button>🗑️</button>
-              </Tooltip>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Em tabelas, use tooltips para fornecer informações adicionais sobre colunas, valores ou ações. Útil para explicar ícones, status ou dados complexos sem poluir a interface.',
-      },
-    },
-  },
-};
-
-export const CasoUsoElementosDesabilitados = {
-  name: 'Caso de Uso: Elementos Desabilitados',
-  render: () => (
-    <div style={{ padding: '100px', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
-      <Tooltip 
-        content="Você precisa fazer login para salvar"
-        placement="top"
-      >
-        <button disabled style={{ padding: '10px 20px', fontSize: '16px', opacity: 0.5, cursor: 'not-allowed' }}>
-          Salvar (desabilitado)
-        </button>
-      </Tooltip>
-      
-      <Tooltip 
-        content="Limite de upload atingido (5MB)"
-        placement="top"
-      >
-        <button disabled style={{ padding: '10px 20px', fontSize: '16px', opacity: 0.5, cursor: 'not-allowed' }}>
-          Upload (desabilitado)
-        </button>
-      </Tooltip>
-      
-      <p style={{ fontSize: '14px', color: '#666', maxWidth: '400px', textAlign: 'center' }}>
-        Tooltips em elementos desabilitados explicam por que a ação não está disponível, melhorando a experiência do usuário.
-      </p>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Use tooltips em elementos desabilitados para explicar por que estão desabilitados e o que o usuário precisa fazer para habilitá-los. Isso melhora significativamente a UX.',
-      },
-    },
-  },
-};
-
-// ============================================
-// CASO 10: ACESSIBILIDADE
-// ============================================
-export const Acessibilidade = {
-  name: 'Acessibilidade',
-  render: () => (
-    <div style={{ padding: '100px', display: 'flex', flexDirection: 'column', gap: '30px', maxWidth: '600px', margin: '0 auto' }}>
-      <div>
-        <h3 style={{ marginBottom: '15px' }}>Navegação por Teclado</h3>
-        <Tooltip 
-          content="Pressione ESC para fechar este tooltip"
-          trigger="focus"
-        >
-          <button style={{ padding: '10px 20px', fontSize: '16px' }}>
-            Foque aqui (Tab) e pressione ESC
-          </button>
-        </Tooltip>
-        <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
-          O tooltip suporta navegação por teclado. Use Tab para focar e ESC para fechar quando o trigger for 'focus'.
-        </p>
-      </div>
-      
-      <div>
-        <h3 style={{ marginBottom: '15px' }}>Screen Readers</h3>
-        <Tooltip 
-          content="Este tooltip é anunciado por screen readers através do atributo aria-describedby"
-          trigger="focus"
-        >
-          <input 
-            type="text" 
-            placeholder="Foque aqui para ouvir o tooltip"
-            style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-          />
-        </Tooltip>
-        <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
-          O componente automaticamente adiciona `aria-describedby` ao elemento alvo, permitindo que screen readers anunciem o conteúdo do tooltip.
-        </p>
-      </div>
-      
-      <div>
-        <h3 style={{ marginBottom: '15px' }}>Boas Práticas</h3>
-        <ul style={{ textAlign: 'left', fontSize: '14px', lineHeight: '1.8' }}>
-          <li>Use <code>trigger="focus"</code> para elementos interativos importantes</li>
-          <li>Mantenha o conteúdo do tooltip conciso e útil</li>
-          <li>Evite tooltips apenas decorativos - forneça informação real</li>
-          <li>Teste com navegação por teclado (Tab, Enter, ESC)</li>
-          <li>Use delays apropriados para evitar tooltips acidentais</li>
-        </ul>
+    <div style={{ padding: '60px', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', width: '100%', maxWidth: '600px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'sans-serif', fontSize: '14px' }}>
+          <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            <tr>
+              <th style={{ padding: '12px 16px', textAlign: 'left', color: '#475569' }}>Produto</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left', color: '#475569' }}>Preço</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left', color: '#475569' }}>Status</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right', color: '#475569' }}>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px 16px', color: '#1e293b' }}>MacBook Pro</td>
+              <td style={{ padding: '12px 16px', color: '#1e293b' }}>R$ 14.000</td>
+              <td style={{ padding: '12px 16px' }}>
+                <Tooltip content="Em estoque (12 unidades)" placement="top">
+                  <span style={{ 
+                    display: 'inline-block', 
+                    padding: '2px 8px', 
+                    borderRadius: '12px', 
+                    backgroundColor: '#dcfce7', 
+                    color: '#166534',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'help'
+                  }}>
+                    Disponível
+                  </span>
+                </Tooltip>
+              </td>
+              <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                <Tooltip content="Editar" placement="top">
+                  <button style={{ ...buttonStyle, padding: '6px 10px', marginRight: '8px' }}>✏️</button>
+                </Tooltip>
+                <Tooltip content="Excluir" placement="top">
+                  <button style={{ ...buttonStyle, padding: '6px 10px', color: '#ef4444', borderColor: '#fee2e2', backgroundColor: '#fef2f2' }}>🗑️</button>
+                </Tooltip>
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: '12px 16px', color: '#1e293b' }}>Magic Mouse</td>
+              <td style={{ padding: '12px 16px', color: '#1e293b' }}>R$ 600</td>
+              <td style={{ padding: '12px 16px' }}>
+                <Tooltip content="Aguardando reposição" placement="top">
+                   <span style={{ 
+                    display: 'inline-block', 
+                    padding: '2px 8px', 
+                    borderRadius: '12px', 
+                    backgroundColor: '#fee2e2', 
+                    color: '#991b1b',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'help'
+                  }}>
+                    Esgotado
+                  </span>
+                </Tooltip>
+              </td>
+              <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                <Tooltip content="Editar" placement="top">
+                  <button style={{ ...buttonStyle, padding: '6px 10px', marginRight: '8px' }}>✏️</button>
+                </Tooltip>
+                <Tooltip content="Excluir" placement="top">
+                  <button style={{ ...buttonStyle, padding: '6px 10px', color: '#ef4444', borderColor: '#fee2e2', backgroundColor: '#fef2f2' }}>🗑️</button>
+                </Tooltip>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'O Tooltip foi construído com acessibilidade em mente: suporta navegação por teclado, é anunciado por screen readers através de aria-describedby, e permite controle total via teclado. Sempre use trigger="focus" para elementos interativos importantes.',
-      },
-    },
-  },
 };
 
-// ============================================
-// EXEMPLO COMPLETO
-// ============================================
 export const ExemploCompleto = {
   name: 'Exemplo Completo',
   render: () => {
-    const [showAdvanced, setShowAdvanced] = useState(false);
-    const tooltipRef = useRef(null);
-    
     return (
-      <div style={{ padding: '100px', maxWidth: '600px', margin: '0 auto' }}>
-        <h2 style={{ marginBottom: '30px' }}>Formulário com Tooltips</h2>
-        
-        <form style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-              Nome de usuário:
-            </label>
-            <Tooltip 
-              content="Use apenas letras, números e underscore. Mínimo 3 caracteres."
-              trigger="focus"
-              placement="right"
-              showDelay={200}
-            >
-              <input 
-                type="text" 
-                placeholder="usuario123"
-                style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-              />
-            </Tooltip>
-          </div>
+      <div style={{ ...containerStyle, alignItems: 'flex-start' }}>
+        <div style={{ 
+          width: '100%', 
+          maxWidth: '400px', 
+          border: '1px solid #e2e8f0', 
+          borderRadius: '8px', 
+          padding: '24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+        }}>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#1e293b' }}>Configurações de Conta</h3>
           
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-              Email:
-            </label>
-            <Tooltip 
-              content="Seu email será usado para recuperação de senha e notificações"
-              trigger="focus"
-              placement="right"
-              showDelay={200}
-            >
-              <input 
-                type="email" 
-                placeholder="usuario@exemplo.com"
-                style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-              />
-            </Tooltip>
-          </div>
-          
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <input 
-                type="checkbox" 
-                checked={showAdvanced}
-                onChange={(e) => setShowAdvanced(e.target.checked)}
-              />
-              <span>Mostrar opções avançadas</span>
-              <Tooltip 
-                content="Ative para ver configurações adicionais de privacidade e segurança"
-                trigger="hover focus"
-                placement="right"
-              >
-                <span style={{ cursor: 'help', fontSize: '16px' }}>❓</span>
-              </Tooltip>
-            </label>
-          </div>
-          
-          {showAdvanced && (
-            <div style={{ padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                Token de API:
-              </label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <Tooltip 
-                  ref={tooltipRef}
-                  content="Token gerado automaticamente. Clique no botão para gerar um novo."
-                  trigger="manual"
-                  placement="top"
-                >
-                  <input 
-                    type="text" 
-                    value="sk_live_..."
-                    readOnly
-                    style={{ flex: 1, padding: '10px', fontSize: '16px' }}
-                  />
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#334155' }}>
+                Nome de Usuário
+                <Tooltip content="Visível para outros usuários" placement="right">
+                  <span style={{ cursor: 'help', color: '#94a3b8', fontSize: '12px' }}>ⓘ</span>
                 </Tooltip>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    tooltipRef.current?.show();
-                    setTimeout(() => tooltipRef.current?.hide(), 3000);
-                  }}
-                  style={{ padding: '10px 20px' }}
-                >
-                  Gerar
-                </button>
+              </label>
+              <input type="text" placeholder="jdoe" style={inputStyle} />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#334155' }}>
+                Chave de API
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input type="text" value="sk_test_51Mz..." readOnly style={{ ...inputStyle, backgroundColor: '#f8fafc', color: '#64748b' }} />
+                <Tooltip content="Copiar para área de transferência" placement="top">
+                  <button type="button" style={{ ...buttonStyle, padding: '0 12px' }}>📋</button>
+                </Tooltip>
               </div>
             </div>
-          )}
-          
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <Tooltip 
-              content="Salvar e continuar editando"
-              placement="top"
-            >
-              <button type="submit" style={{ padding: '12px 24px', fontSize: '16px' }}>
-                Salvar
-              </button>
-            </Tooltip>
-            
-            <Tooltip 
-              content="Descartar todas as alterações"
-              placement="top"
-            >
-              <button type="button" style={{ padding: '12px 24px', fontSize: '16px' }}>
-                Cancelar
-              </button>
-            </Tooltip>
-          </div>
-        </form>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+              <Tooltip content="Descartar alterações" placement="bottom">
+                <button type="button" style={buttonStyle}>Cancelar</button>
+              </Tooltip>
+              <Tooltip content="Salvar preferências" placement="bottom">
+                <button type="button" style={primaryButtonStyle}>Salvar</button>
+              </Tooltip>
+            </div>
+          </form>
+        </div>
       </div>
     );
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Exemplo completo mostrando o uso do Tooltip em um formulário real, combinando diferentes triggers, placements e casos de uso.',
-      },
-    },
   },
 };
