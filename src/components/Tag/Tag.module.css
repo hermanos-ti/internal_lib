@@ -1,0 +1,420 @@
+.tag {
+  --tag-bg: transparent;
+  --tag-color: inherit;
+  --tag-border: transparent;
+  
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-100: #f1f5f9;
+  --neutral-50: #f8fafc;
+  
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --brand-100: #e0e7ff;
+  --brand-50: #eef2ff;
+  
+  --success-400: #34d399;
+  --success-500: #10b981;
+  --success-600: #059669;
+  --success-700: #047857;
+  --success-100: #d1fae5;
+  --success-50: #ecfdf5;
+  
+  --warning-400: #fbbf24;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+  --warning-100: #fef3c7;
+  --warning-50: #fffbeb;
+  
+  --danger-400: #fb7185;
+  --danger-500: #f43f5e;
+  --danger-600: #e11d48;
+  --danger-700: #be123c;
+  --danger-100: #ffe4e6;
+  --danger-50: #fff1f2;
+}
+
+/* Base Tag Styles */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: 
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+}
+
+.small {
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  gap: 3px;
+}
+
+.medium {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.large {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  gap: 5px;
+}
+
+.pill {
+  border-radius: 9999px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  transform: translateY(-1px);
+}
+
+.clickable:active {
+  transform: translateY(0);
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  margin-left: 2px;
+  margin-right: -4px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: 
+    opacity 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  color: inherit;
+}
+
+.remove:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.remove:active {
+  transform: scale(0.9);
+}
+
+.remove:focus-visible {
+  opacity: 1;
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.removeIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.small .remove {
+  margin-right: -3px;
+}
+
+.small .removeIcon {
+  width: 12px;
+  height: 12px;
+}
+
+.large .remove {
+  margin-right: -5px;
+}
+
+.large .removeIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.neutral.filled {
+  background-color: var(--neutral-500);
+  color: #ffffff;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.neutral.filled:hover {
+  background-color: var(--neutral-600);
+}
+
+.neutral.outlined {
+  background-color: transparent;
+  color: var(--neutral-600);
+  border-color: var(--neutral-500);
+}
+
+.neutral.outlined:hover {
+  background-color: var(--neutral-50);
+  border-color: var(--neutral-600);
+}
+
+.neutral.accent {
+  background-color: var(--neutral-100);
+  color: var(--neutral-600);
+}
+
+.neutral.accent:hover {
+  background-color: #e2e8f0;
+}
+
+.neutral.filled-outlined {
+  background-color: var(--neutral-400);
+  color: #ffffff;
+  border-color: var(--neutral-600);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.neutral.filled-outlined:hover {
+  background-color: var(--neutral-500);
+  border-color: var(--neutral-600);
+}
+
+.brand.filled {
+  background-color: var(--brand-500);
+  color: #ffffff;
+  box-shadow: 
+    0 1px 2px rgba(99, 102, 241, 0.2),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+.brand.filled:hover {
+  background-color: var(--brand-600);
+}
+
+.brand.outlined {
+  background-color: transparent;
+  color: var(--brand-600);
+  border-color: var(--brand-500);
+}
+
+.brand.outlined:hover {
+  background-color: var(--brand-50);
+  border-color: var(--brand-600);
+}
+
+.brand.accent {
+  background-color: var(--brand-100);
+  color: var(--brand-600);
+}
+
+.brand.accent:hover {
+  background-color: #c7d2fe;
+}
+
+.brand.filled-outlined {
+  background-color: var(--brand-400);
+  color: #ffffff;
+  border-color: var(--brand-600);
+  box-shadow: 0 1px 2px rgba(99, 102, 241, 0.2);
+}
+
+.brand.filled-outlined:hover {
+  background-color: var(--brand-500);
+  border-color: var(--brand-600);
+}
+
+.success.filled {
+  background-color: var(--success-500);
+  color: #ffffff;
+  box-shadow: 
+    0 1px 2px rgba(16, 185, 129, 0.2),
+    0 0 0 1px rgba(16, 185, 129, 0.1);
+}
+
+.success.filled:hover {
+  background-color: var(--success-600);
+}
+
+.success.outlined {
+  background-color: transparent;
+  color: var(--success-600);
+  border-color: var(--success-500);
+}
+
+.success.outlined:hover {
+  background-color: var(--success-50);
+  border-color: var(--success-600);
+}
+
+.success.accent {
+  background-color: var(--success-100);
+  color: var(--success-600);
+}
+
+.success.accent:hover {
+  background-color: #a7f3d0;
+}
+
+.success.filled-outlined {
+  background-color: var(--success-400);
+  color: #ffffff;
+  border-color: var(--success-600);
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
+}
+
+.success.filled-outlined:hover {
+  background-color: var(--success-500);
+  border-color: var(--success-600);
+}
+
+.warning.filled {
+  background-color: var(--warning-500);
+  color: #ffffff;
+  box-shadow: 
+    0 1px 2px rgba(245, 158, 11, 0.2),
+    0 0 0 1px rgba(245, 158, 11, 0.1);
+}
+
+.warning.filled:hover {
+  background-color: var(--warning-600);
+}
+
+.warning.outlined {
+  background-color: transparent;
+  color: var(--warning-600);
+  border-color: var(--warning-500);
+}
+
+.warning.outlined:hover {
+  background-color: var(--warning-50);
+  border-color: var(--warning-600);
+}
+
+.warning.accent {
+  background-color: var(--warning-100);
+  color: var(--warning-600);
+}
+
+.warning.accent:hover {
+  background-color: #fde68a;
+}
+
+.warning.filled-outlined {
+  background-color: var(--warning-400);
+  color: #ffffff;
+  border-color: var(--warning-600);
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.2);
+}
+
+.warning.filled-outlined:hover {
+  background-color: var(--warning-500);
+  border-color: var(--warning-600);
+}
+
+.danger.filled {
+  background-color: var(--danger-500);
+  color: #ffffff;
+  box-shadow: 
+    0 1px 2px rgba(244, 63, 94, 0.2),
+    0 0 0 1px rgba(244, 63, 94, 0.1);
+}
+
+.danger.filled:hover {
+  background-color: var(--danger-600);
+}
+
+.danger.outlined {
+  background-color: transparent;
+  color: var(--danger-600);
+  border-color: var(--danger-500);
+}
+
+.danger.outlined:hover {
+  background-color: var(--danger-50);
+  border-color: var(--danger-600);
+}
+
+.danger.accent {
+  background-color: var(--danger-100);
+  color: var(--danger-600);
+}
+
+.danger.accent:hover {
+  background-color: #fecdd3;
+}
+
+.danger.filled-outlined {
+  background-color: var(--danger-400);
+  color: #ffffff;
+  border-color: var(--danger-600);
+  box-shadow: 0 1px 2px rgba(244, 63, 94, 0.2);
+}
+
+.danger.filled-outlined:hover {
+  background-color: var(--danger-500);
+  border-color: var(--danger-600);
+}
+
+.custom {
+  background-color: var(--tag-bg) !important;
+  color: var(--tag-color) !important;
+  border-color: var(--tag-border) !important;
+}
+
+.custom .remove:hover {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag,
+  .remove {
+    transition: none;
+  }
+  
+  .clickable:hover {
+    transform: none;
+  }
+  
+  .remove:active {
+    transform: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .neutral.outlined,
+  .brand.outlined,
+  .success.outlined,
+  .warning.outlined,
+  .danger.outlined {
+    border-width: 1.5px;
+  }
+}
