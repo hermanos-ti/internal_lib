@@ -1,0 +1,128 @@
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.loader__spinner {
+  position: relative;
+  display: inline-block;
+}
+
+.loader__spinner__ring {
+  position: absolute;
+  border: 3px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: loader-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.loader__spinner__ring:nth-child(1) {
+  animation-delay: -0.45s;
+}
+
+.loader__spinner__ring:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.loader__spinner__ring:nth-child(3) {
+  animation-delay: -0.15s;
+}
+
+/* Tamanhos */
+.loader__small {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.loader__small .loader__spinner__ring {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 2px;
+}
+
+.loader__medium {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.loader__medium .loader__spinner__ring {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 3px;
+}
+
+.loader__large {
+  width: 4rem;
+  height: 4rem;
+}
+
+.loader__large .loader__spinner__ring {
+  width: 4rem;
+  height: 4rem;
+  border-width: 4px;
+}
+
+/* Cores */
+.loader__primary {
+  color: #007bff;
+}
+
+.loader__secondary {
+  color: #6c757d;
+}
+
+.loader__success {
+  color: #28a745;
+}
+
+.loader__danger {
+  color: #dc3545;
+}
+
+.loader__warning {
+  color: #ffc107;
+}
+
+.loader__info {
+  color: #17a2b8;
+}
+
+.loader__text {
+  font-size: 0.875rem;
+  color: #6c757d;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+@keyframes loader-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Redução de movimento para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  .loader__spinner__ring {
+    animation: none;
+  }
+  
+  .loader__spinner__ring::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.25rem;
+    height: 0.25rem;
+    background: currentColor;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+

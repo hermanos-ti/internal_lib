@@ -1,0 +1,163 @@
+.loader__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.1);
+  animation: loader-fade-in 0.2s ease-in;
+}
+
+.loader__overlay__blocking {
+  pointer-events: all;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.loader__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.loader__spinner {
+  position: relative;
+  display: inline-block;
+}
+
+.loader__spinner__ring {
+  position: absolute;
+  border: 4px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: loader-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.loader__spinner__ring:nth-child(1) {
+  animation-delay: -0.45s;
+}
+
+.loader__spinner__ring:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.loader__spinner__ring:nth-child(3) {
+  animation-delay: -0.15s;
+}
+
+/* Tamanhos */
+.loader__small {
+  width: 2rem;
+  height: 2rem;
+}
+
+.loader__small .loader__spinner__ring {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+}
+
+.loader__medium {
+  width: 3rem;
+  height: 3rem;
+}
+
+.loader__medium .loader__spinner__ring {
+  width: 3rem;
+  height: 3rem;
+  border-width: 4px;
+}
+
+.loader__large {
+  width: 4rem;
+  height: 4rem;
+}
+
+.loader__large .loader__spinner__ring {
+  width: 4rem;
+  height: 4rem;
+  border-width: 4px;
+}
+
+/* Cores */
+.loader__primary {
+  color: #007bff;
+}
+
+.loader__secondary {
+  color: #6c757d;
+}
+
+.loader__success {
+  color: #28a745;
+}
+
+.loader__danger {
+  color: #dc3545;
+}
+
+.loader__warning {
+  color: #ffc107;
+}
+
+.loader__info {
+  color: #17a2b8;
+}
+
+.loader__text {
+  font-size: 1rem;
+  color: #333;
+  text-align: center;
+  font-weight: 500;
+}
+
+@keyframes loader-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loader-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Redução de movimento para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  .loader__spinner__ring {
+    animation: none;
+  }
+  
+  .loader__spinner__ring::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: currentColor;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .loader__overlay {
+    animation: none;
+  }
+}
+

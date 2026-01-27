@@ -1,0 +1,376 @@
+export const DEFAULT_OPTIONS = {
+  showHeader: true,
+  showFooter: true,
+  showToolbar: true,
+  showPagination: true,
+  itensPerPage: 10,
+  itensPerPageOptions: [10, 25, 50, 100],
+  currentMode: 'grid',
+  tableIcon: 'fas fa-table',
+  tableName: 'Tabela',
+  columnMinWidth: 'auto',
+  // --- 
+  showFilters: true,
+  showSorts: true,
+  // Filter mode: 'internal' (apply filters to table) or 'external' (only emit via callback)
+  filterMode: 'internal',
+  // Callback emitido quando filtros são salvos: (filters, sqlWhere) => {}
+  onFilterChange: null,
+}
+
+export const DEFAULT_COLUMN_CONFIG = {
+  type: 'text', // text, number, date, select
+  visible: true,
+  width: 'auto',
+  align: 'left',
+  format: 'text',
+  searchable: false,
+  sortable: true,
+  filterable: true,
+  render: null, // render(value, row, column, rowIndex, colIndex)
+  subColumns: null, // Array de subcolunas ou null
+  // TODO: Adicionar tooltip e cellTooltip
+  className: '',
+  style: {},
+  cellClassName: '',
+  cellStyle: {},
+}
+
+export const DEFAULT_FOOTER_CONFIG = {
+  visible: true,
+  align: 'center',
+  format: 'text',
+  render: null,
+  value: null,
+  className: '',
+  style: {},
+}
+
+export const COLUMN_ICONS = {
+  text: 'fas fa-font-case',
+  number: 'fas fa-hashtag',
+  date: 'fas fa-calendar-alt',
+  select: 'fas fa-circle-caret-down',
+}
+
+export const FILTER_CONDITIONS = {
+  text: [
+    { value: 'is', label: 'É' },
+    { value: 'isNot', label: 'Não é' },
+    { value: 'contains', label: 'Contém' },
+    { value: 'notContains', label: 'Não Contém' },
+    { value: 'startsWith', label: 'Começa com' },
+    { value: 'endsWith', label: 'Termina com' },
+    { value: 'isEmpty', label: 'É Vazio' },
+    { value: 'isNotEmpty', label: 'Não é vazio' },
+  ],
+  number: [
+    { value: 'equals', label: 'Igual' },
+    { value: 'notEquals', label: 'Diferente' },
+    { value: 'greaterThan', label: 'Maior' },
+    { value: 'lessThan', label: 'Menor' },
+    { value: 'greaterOrEqual', label: 'Maior ou Igual' },
+    { value: 'lessOrEqual', label: 'Menor ou Igual' },
+    { value: 'isEmpty', label: 'É Vazio' },
+    { value: 'isNotEmpty', label: 'Não é vazio' },
+  ],
+  date: [
+    { value: 'is', label: 'É' },
+    { value: 'isBefore', label: 'É Antes' },
+    { value: 'isAfter', label: 'É Depois' },
+    { value: 'isOnOrBefore', label: 'Até' },
+    { value: 'isOnOrAfter', label: 'A partir de' },
+    { value: 'isBetween', label: 'É Entre' },
+    { value: 'isEmpty', label: 'É Vazio' },
+    { value: 'isNotEmpty', label: 'Não é vazio' },
+  ],
+  select: [
+    { value: 'is', label: 'É' },
+    { value: 'isNot', label: 'Não é' },
+    { value: 'isEmpty', label: 'É Vazio' },
+    { value: 'isNotEmpty', label: 'Não é vazio' },
+  ],
+}
+
+export const EMPTY_CONDITIONS = ['isEmpty', 'isNotEmpty']
+
+export const RANGE_CONDITIONS = ['isBetween']
+
+export const DEFAULT_FILTER = {
+  id: null,
+  key: null,
+  label: null,
+  type: 'text',
+  condition: 'is',
+  value: '',
+  valueTo: '',
+  isAdvanced: false,
+}
+
+export const DEFAULT_FILTER_GROUP = {
+  id: null,
+  isAdvanced: true,
+  label: 'Filtro Avançado',
+  logic: 'AND',
+  rules: [],
+}
+
+// ============================================
+// Mapeamento de Condições para SQL
+// ============================================
+
+export const CONDITION_TO_SQL = {
+  // Text conditions
+  is: (column, value) => `${column} = '${escapeSqlString(value)}'`,
+  isNot: (column, value) => `${column} <> '${escapeSqlString(value)}'`,
+  contains: (column, value) => `${column} LIKE ('%${escapeSqlString(value)}%')`,
+  notContains: (column, value) => `${column} NOT LIKE ('%${escapeSqlString(value)}%')`,
+  startsWith: (column, value) => `${column} LIKE ('${escapeSqlString(value)}%')`,
+  endsWith: (column, value) => `${column} LIKE ('%${escapeSqlString(value)}')`,
+  
+  // Number conditions
+  equals: (column, value) => `${column} = ${value}`,
+  notEquals: (column, value) => `${column} <> ${value}`,
+  greaterThan: (column, value) => `${column} > ${value}`,
+  lessThan: (column, value) => `${column} < ${value}`,
+  greaterOrEqual: (column, value) => `${column} >= ${value}`,
+  lessOrEqual: (column, value) => `${column} <= ${value}`,
+  
+  // Date conditions
+  isBefore: (column, value) => `${column} < '${value}'`,
+  isAfter: (column, value) => `${column} > '${value}'`,
+  isOnOrBefore: (column, value) => `${column} <= '${value}'`,
+  isOnOrAfter: (column, value) => `${column} >= '${value}'`,
+  isBetween: (column, value, valueTo) => `${column} BETWEEN '${value}' AND '${valueTo}'`,
+  
+  // Empty conditions
+  isEmpty: (column) => `(${column} IS NULL OR ${column} = '')`,
+  isNotEmpty: (column) => `(${column} IS NOT NULL AND ${column} <> '')`,
+}
+
+// Mapeamento de condições para símbolos/operadores visuais
+const CONDITION_TO_SYMBOL = {
+  // Text
+  is: 'é',
+  isNot: '≠',
+  contains: 'contém',
+  notContains: 'não contém',
+  startsWith: 'começa com',
+  endsWith: 'termina com',
+  isEmpty: 'é vazio',
+  isNotEmpty: 'não é vazio',
+  
+  // Number
+  equals: '=',
+  notEquals: '≠',
+  greaterThan: '>',
+  lessThan: '<',
+  greaterOrEqual: '≥',
+  lessOrEqual: '≤',
+  
+  // Date
+  isBefore: '<',
+  isAfter: '>',
+  isOnOrBefore: '≤',
+  isOnOrAfter: '≥',
+  isBetween: 'entre',
+}
+
+/**
+ * Gera texto de exibição para um filtro
+ * @param {Object} filter - Objeto de filtro
+ * @param {Array} columns - Array de colunas disponíveis
+ * @returns {string} Texto formatado para exibição
+ */
+export const getFilterDisplayText = (filter, columns) => {
+  // Se for filtro avançado, retornar label genérico
+  if (filter.isAdvanced) {
+    return filter.label || 'Filtro Avançado';
+  }
+
+  // Buscar coluna correspondente
+  const column = columns?.find(col => col.key === filter.key);
+  const columnLabel = column?.title || filter.label || filter.key || 'Coluna';
+  
+  // Se não houver condição, retornar apenas o label da coluna
+  if (!filter.condition) {
+    return columnLabel;
+  }
+
+  // Buscar label da condição
+  const columnType = column?.type || filter.type || 'text';
+  const conditions = FILTER_CONDITIONS[columnType] || FILTER_CONDITIONS.text;
+  const conditionObj = conditions.find(c => c.value === filter.condition);
+  const conditionLabel = conditionObj?.label || CONDITION_TO_SYMBOL[filter.condition] || filter.condition;
+
+  // Condições que não precisam de valor
+  if (EMPTY_CONDITIONS.includes(filter.condition)) {
+    return `${columnLabel} ${conditionLabel}`;
+  }
+
+  // Condição "entre" precisa de dois valores
+  if (RANGE_CONDITIONS.includes(filter.condition)) {
+    const value = filter.value || '';
+    const valueTo = filter.valueTo || '';
+    if (value && valueTo) {
+      return `${columnLabel} ${conditionLabel} ${value} e ${valueTo}`;
+    } else if (value) {
+      return `${columnLabel} ${conditionLabel} ${value}`;
+    } else {
+      return `${columnLabel} ${conditionLabel}`;
+    }
+  }
+
+  // Condições normais com valor
+  const value = filter.value || '';
+  if (value) {
+    // Para condições numéricas, usar símbolo ao invés de texto
+    if (['equals', 'notEquals', 'greaterThan', 'lessThan', 'greaterOrEqual', 'lessOrEqual'].includes(filter.condition)) {
+      const symbol = CONDITION_TO_SYMBOL[filter.condition] || conditionLabel;
+      return `${columnLabel} ${symbol} ${value}`;
+    }
+    return `${columnLabel} ${conditionLabel} ${value}`;
+  }
+
+  // Sem valor ainda
+  return `${columnLabel} ${conditionLabel}`;
+}
+
+/**
+ * Escapa caracteres especiais para SQL
+ */
+function escapeSqlString(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/'/g, "''");
+}
+
+/**
+ * Converte uma regra individual para SQL
+ */
+function ruleToSQL(rule, columns) {
+  if (!rule || rule.type === 'group') return null;
+  
+  const column = columns?.find(c => c.key === rule.key);
+  const columnName = column?.sqlColumn || rule.key;
+  const condition = rule.condition;
+  const value = rule.value;
+  const valueTo = rule.valueTo;
+  
+  const sqlGenerator = CONDITION_TO_SQL[condition];
+  if (!sqlGenerator) return null;
+  
+  // Empty conditions don't need value
+  if (EMPTY_CONDITIONS.includes(condition)) {
+    return sqlGenerator(columnName);
+  }
+  
+  // Range conditions need both values
+  if (RANGE_CONDITIONS.includes(condition)) {
+    return sqlGenerator(columnName, value, valueTo);
+  }
+  
+  // Regular conditions
+  return sqlGenerator(columnName, value);
+}
+
+/**
+ * Converte um grupo de regras para SQL (recursivo)
+ */
+function groupToSQL(group, columns) {
+  if (!group || !group.rules || group.rules.length === 0) return '';
+  
+  const parts = [];
+  
+  for (let i = 0; i < group.rules.length; i++) {
+    const item = group.rules[i];
+    let sqlPart = '';
+    
+    if (item.type === 'group') {
+      sqlPart = groupToSQL(item, columns);
+      if (sqlPart) {
+        sqlPart = `(${sqlPart})`;
+      }
+    } else {
+      sqlPart = ruleToSQL(item, columns);
+    }
+    
+    if (sqlPart) {
+      // Add logic operator (AND/OR) before the part, except for the first one
+      if (parts.length > 0) {
+        const logic = item.logic || group.logic || 'AND';
+        parts.push(` ${logic} `);
+      }
+      parts.push(sqlPart);
+    }
+  }
+  
+  return parts.join('');
+}
+
+/**
+ * Converte a estrutura de filtro avançado para uma cláusula WHERE em PL/SQL
+ * 
+ * @param {Object} filterGroup - Grupo de filtro avançado
+ * @param {Array} columns - Array de colunas da tabela (opcional, para mapear nomes SQL)
+ * @param {boolean} includeWhere - Se deve incluir "WHERE" no início (padrão: true)
+ * @returns {string} Cláusula SQL WHERE
+ * 
+ * @example
+ * const filter = {
+ *   logic: 'AND',
+ *   rules: [
+ *     { type: 'rule', key: 'nome', condition: 'contains', value: 'João' },
+ *     { type: 'rule', key: 'idade', condition: 'greaterThan', value: 18, logic: 'AND' }
+ *   ]
+ * };
+ * 
+ * filterToSQL(filter);
+ * // => "WHERE nome LIKE '%João%' AND idade > 18"
+ */
+export function filterToSQL(filterGroup, columns = [], includeWhere = true) {
+  if (!filterGroup || !filterGroup.rules || filterGroup.rules.length === 0) {
+    return '';
+  }
+  
+  const sql = groupToSQL(filterGroup, columns);
+  
+  if (!sql) return '';
+  
+  return includeWhere ? `WHERE ${sql}` : sql;
+}
+
+/**
+ * Converte múltiplos filtros simples para SQL
+ * 
+ * @param {Array} filters - Array de filtros simples
+ * @param {Array} columns - Array de colunas da tabela
+ * @param {string} logic - Lógica entre filtros ('AND' ou 'OR')
+ * @param {boolean} includeWhere - Se deve incluir "WHERE" no início
+ * @returns {string} Cláusula SQL WHERE
+ */
+export function filtersToSQL(filters, columns = [], logic = 'AND', includeWhere = true) {
+  if (!filters || filters.length === 0) return '';
+  
+  const parts = [];
+  
+  for (const filter of filters) {
+    if (filter.isAdvanced && filter.rules) {
+      // Advanced filter (group)
+      const groupSql = groupToSQL(filter, columns);
+      if (groupSql) {
+        parts.push(`(${groupSql})`);
+      }
+    } else {
+      // Simple filter
+      const ruleSql = ruleToSQL(filter, columns);
+      if (ruleSql) {
+        parts.push(ruleSql);
+      }
+    }
+  }
+  
+  if (parts.length === 0) return '';
+  
+  const sql = parts.join(` ${logic} `);
+  return includeWhere ? `WHERE ${sql}` : sql;
+}

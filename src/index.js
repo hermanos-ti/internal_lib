@@ -9,8 +9,10 @@ import { Drawer } from './components/Drawer/Drawer';
 import { Frame } from './components/Frame/Frame';
 import { Header } from './components/Header/Header';
 import { Input } from './components/Input/Input';
+import { Loader } from './components/Loader/Loader';
 import { Menu } from './components/Menu/Menu';
 import { Modal } from './components/Modal/Modal';
+import { Pagination } from './components/Pagination/Pagination';
 import { Popup } from './components/Popup/Popup';
 import { Skeleton } from './components/Skeleton/Skeleton';
 import { Tabela } from './components/Tabela/Tabela';
@@ -19,6 +21,7 @@ import { Tag } from './components/Tag/Tag';
 import { Tooltip } from './components/Tooltip/Tooltip';
 
 import { Dialog } from './functions/Dialog/Dialog';
+import { LoaderManagerInstance, LoaderGlobal } from './functions/Loader/Loader';
 import { Toast } from './functions/Toast/Toast';
 
 export { 
@@ -33,8 +36,10 @@ export {
   Frame,
   Header,
   Input,
+  Loader,
   Menu,
   Modal,
+  Pagination,
   Popup,
   Skeleton,
   Tabela,
@@ -42,5 +47,7 @@ export {
   Tag,
   Tooltip,
   Dialog,
+  LoaderManagerInstance as LoaderManager,
+  LoaderGlobal,
   Toast
 };
