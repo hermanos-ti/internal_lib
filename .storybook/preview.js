@@ -14,20 +14,27 @@ const preview = {
     },
     layout: 'centered',
     backgrounds: {
-      default: 'light',
-      values: [
-        {
+      options: {
+        light: {
           name: 'light',
           value: '#ffffff',
         },
-        {
+
+        dark: {
           name: 'dark',
           value: '#333333',
-        },
-      ],
+        }
+      }
     },
   },
+
   tags: ['autodocs'],
+
+  initialGlobals: {
+    backgrounds: {
+      value: 'light'
+    }
+  }
 };
 
 export default preview;
