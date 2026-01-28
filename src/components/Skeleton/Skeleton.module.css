@@ -1,0 +1,314 @@
+/* Variáveis CSS para cores neutras */
+.skeleton {
+  --skeleton-base: #e2e8f0;
+  --skeleton-highlight: #c3d0e0;
+  --skeleton-wave: rgba(255, 255, 255, 0.7);
+  
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+}
+
+/* Base Skeleton Styles */
+.skeleton {
+  display: inline-block;
+  background-color: var(--skeleton-base);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animações */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    background-color: var(--skeleton-base);
+  }
+  50% {
+    background-color: var(--skeleton-highlight);
+  }
+}
+
+@keyframes skeleton-wave {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+/* Aplicação de animações */
+.skeleton__pulse {
+  animation: skeleton-pulse 2s ease-in-out infinite;
+  background-color: var(--skeleton-base);
+}
+
+.skeleton__wave {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton__wave::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--skeleton-wave),
+    transparent
+  );
+  width: 150%;
+  animation: skeleton-wave 2s ease-in-out infinite;
+}
+
+.skeleton__shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 0%,
+    var(--skeleton-base) 20%,
+    var(--skeleton-highlight) 45%,
+    var(--skeleton-highlight) 55%,
+    var(--skeleton-base) 80%,
+    var(--skeleton-base) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 2s linear infinite;
+}
+
+/* Tamanhos */
+.skeleton__small {
+  height: 12px;
+}
+
+.skeleton__medium {
+  height: 16px;
+}
+
+.skeleton__large {
+  height: 24px;
+}
+
+/* Border Radius */
+.skeleton__rounded-none {
+  border-radius: 0;
+}
+
+.skeleton__rounded-sm {
+  border-radius: 4px;
+}
+
+.skeleton__rounded-md {
+  border-radius: 6px;
+}
+
+.skeleton__rounded-lg {
+  border-radius: 8px;
+}
+
+.skeleton__rounded-xl {
+  border-radius: 12px;
+}
+
+.skeleton__rounded-full {
+  border-radius: 9999px;
+}
+
+.skeleton__rounded-pill {
+  border-radius: 9999px;
+}
+
+/* Variantes */
+.skeleton__text {
+  height: 16px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.skeleton__text__line {
+  margin-bottom: 8px;
+}
+
+.skeleton__text__line:last-child {
+  margin-bottom: 0;
+}
+
+.skeleton__text__line:nth-child(1) {
+  width: 100%;
+}
+
+.skeleton__text__line:nth-child(2) {
+  width: 95%;
+}
+
+.skeleton__text__line:nth-child(3) {
+  width: 88%;
+}
+
+.skeleton__text__line:nth-child(4) {
+  width: 92%;
+}
+
+.skeleton__text__line:nth-child(5) {
+  width: 85%;
+}
+
+.skeleton__avatar {
+  width: 40px !important;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton__avatar__small {
+  width: 32px !important;
+  height: 32px;
+}
+
+.skeleton__avatar__medium {
+  width: 40px !important;
+  height: 40px;
+}
+
+.skeleton__avatar__large {
+  width: 56px !important;
+  height: 56px;
+}
+
+.skeleton__card {
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.skeleton__card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton__card__title {
+  height: 20px;
+  width: 60%;
+  border-radius: 4px;
+}
+
+.skeleton__card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton__card__line {
+  height: 14px;
+  border-radius: 4px;
+}
+
+.skeleton__card__line:nth-child(1) {
+  width: 100%;
+}
+
+.skeleton__card__line:nth-child(2) {
+  width: 85%;
+}
+
+.skeleton__card__line:nth-child(3) {
+  width: 70%;
+}
+
+.skeleton__card__footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.skeleton__card__button {
+  height: 32px;
+  width: 80px;
+  border-radius: 6px;
+}
+
+.skeleton__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton__list__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.skeleton__list__avatar {
+  width: 40px !important;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton__list__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton__list__title {
+  height: 16px;
+  width: 60%;
+  border-radius: 4px;
+}
+
+.skeleton__list__subtitle {
+  height: 12px;
+  width: 40%;
+  border-radius: 4px;
+}
+
+/* Container para múltiplos elementos */
+.skeleton__container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.skeleton__container__horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Acessibilidade - Redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton__pulse,
+  .skeleton__wave::after,
+  .skeleton__shimmer {
+    animation: none;
+  }
+  
+  .skeleton {
+    opacity: 0.7;
+  }
+}
