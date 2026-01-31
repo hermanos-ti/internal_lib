@@ -1,0 +1,281 @@
+/* CSS Variables - Design System */
+.tabGroup {
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-100: #f1f5f9;
+  --neutral-50: #f8fafc;
+  
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --brand-100: #e0e7ff;
+  --brand-50: #eef2ff;
+  
+  --border-color: #cbd5e1;
+  --border-color-light: #e5e7eb;
+  
+  --focus-color: #93c5fd;
+  
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Tab Group Container */
+.tabGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tabGroupBottom {
+  flex-direction: column-reverse;
+}
+
+.tabGroupStart {
+  flex-direction: row;
+  gap: 0;
+}
+
+.tabGroupEnd {
+  flex-direction: row-reverse;
+  gap: 0;
+}
+
+.tabGroupStart .tabListContainer,
+.tabGroupEnd .tabListContainer {
+  max-height: 100%;
+  height: 100%;
+}
+
+/* Tab List Container */
+.tabListContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tabListScroll {
+  overflow: auto;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tabListScroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Limites para orientação vertical */
+.tabGroupStart .tabListScroll,
+.tabGroupEnd .tabListScroll {
+  max-height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Tab List */
+.tabList {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  min-width: 0;
+  width: max-content;
+}
+
+.tabListVertical {
+  flex-direction: column;
+  width: 100%;
+  height: max-content;
+  min-height: 0;
+}
+
+/* Tab Button */
+.tabButton {
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--neutral-700);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: 
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  position: relative;
+}
+
+.tabButton:hover:not(.tabButtonDisabled) {
+  background-color: var(--neutral-50);
+  color: var(--neutral-700);
+}
+
+.tabButton:active:not(.tabButtonDisabled) {
+  transform: translateY(1px);
+}
+
+.tabButton:focus-visible {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Tab Button Active */
+.tabButtonActive {
+  background-color: var(--brand-50);
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+.tabButtonActive:hover {
+  background-color: var(--brand-100);
+  color: var(--brand-700);
+}
+
+/* Tab Button Disabled */
+.tabButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Tab Icon */
+.tabIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Remove Button */
+.removeButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 6px;
+  margin-left: 4px;
+  line-height: 1;
+  color: var(--neutral-500);
+  font-size: 18px;
+  font-weight: 400;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: 
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 20px;
+  height: 20px;
+}
+
+.removeButton:hover {
+  background-color: var(--neutral-100);
+  color: var(--neutral-700);
+}
+
+.removeButton:active {
+  background-color: var(--neutral-400);
+  color: #ffffff;
+}
+
+/* Scroll Button */
+.scrollButton {
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--neutral-600);
+  font-size: 16px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: 
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.scrollButton:hover:not(.scrollButtonHidden) {
+  background-color: var(--neutral-50);
+  border-color: var(--neutral-400);
+  color: var(--neutral-700);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.scrollButton:active:not(.scrollButtonHidden) {
+  background-color: var(--neutral-100);
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.scrollButton:focus-visible {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+.scrollButtonHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Panel */
+.panel {
+  padding: 16px;
+  min-height: 40px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.panelTop {
+  border-top: 1px solid var(--border-color-light);
+  padding-top: 16px;
+}
+
+.panelBottom {
+  border-bottom: 1px solid var(--border-color-light);
+  padding-bottom: 16px;
+}
+
+.panelStart {
+  border-left: 1px solid var(--border-color-light);
+  padding-left: 16px;
+}
+
+.panelEnd {
+  border-right: 1px solid var(--border-color-light);
+  padding-right: 16px;
+}
