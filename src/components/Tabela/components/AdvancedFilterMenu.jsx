@@ -675,7 +675,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             className={styles.advancedFilterMenu__actionBtn}
             onClick={(e) => {
               e.stopPropagation();
-              setOpenActionMenu(showActionMenu ? null : { path });
+              setOpenActionMenu(showActionMenu ? null : { path, isGroup: false });
             }}
             title="Ações"
           >
@@ -735,31 +735,25 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             {/* Group action menu */}
             <div style={{ position: 'relative' }}>
               <button
+                ref={(el) => {
+                  if (el) {
+                    actionButtonRefs.current.set(pathKey, el);
+                  } else {
+                    actionButtonRefs.current.delete(pathKey);
+                  }
+                }}
                 className={styles.advancedFilterMenu__actionBtn}
-                onClick={() => setOpenActionMenu(showActionMenu ? null : { path })}
+                onClick={(e) => {
+                  // #region agent log
+                  fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:739',message:'Group action button clicked',data:{path:JSON.stringify(path),showActionMenu,isRootGroup,pathKey},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+                  // #endregion
+                  e.stopPropagation();
+                  setOpenActionMenu(showActionMenu ? null : { path, isGroup: true });
+                }}
                 title="Ações"
               >
                 <i className="fas fa-ellipsis-vertical" />
               </button>
-
-              {showActionMenu && (
-                <div className={styles.advancedFilterMenu__actionDropdown}>
-                  <button
-                    className={styles.advancedFilterMenu__actionDropdown__item}
-                    onClick={() => handleDuplicateRule(path)}
-                  >
-                    <i className={`far fa-copy ${styles.advancedFilterMenu__actionDropdown__icon}`} />
-                    Duplicar grupo
-                  </button>
-                  <button
-                    className={`${styles.advancedFilterMenu__actionDropdown__item} ${styles.danger}`}
-                    onClick={() => handleRemoveRule(path)}
-                  >
-                    <i className={`far fa-trash ${styles.advancedFilterMenu__actionDropdown__icon}`} />
-                    Remover grupo
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -896,71 +890,110 @@ export const AdvancedFilterMenu = memo(forwardRef(({
       </div>
 
       {/* Action dropdown portal */}
-      {openActionMenu && createPortal(
-        <div
-          ref={actionDropdownRef}
-          className={styles.advancedFilterMenu__actionDropdown}
-          style={{
-            position: 'absolute',
-            top: `${actionDropdownPosition.top}px`,
-            left: `${actionDropdownPosition.left}px`,
-            zIndex: 1010
-          }}
-        >
-          <button
-            className={styles.advancedFilterMenu__actionDropdown__item}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDuplicateRule(openActionMenu.path);
-              setOpenActionMenu(null);
+      {openActionMenu && (() => {
+        const isGroup = openActionMenu.isGroup || false;
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:912',message:'Rendering action dropdown portal',data:{isGroup,path:JSON.stringify(openActionMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        return createPortal(
+          <div
+            ref={actionDropdownRef}
+            className={styles.advancedFilterMenu__actionDropdown}
+            style={{
+              position: 'absolute',
+              top: `${actionDropdownPosition.top}px`,
+              left: `${actionDropdownPosition.left}px`,
+              zIndex: 1010
             }}
           >
-            <i className={`far fa-copy ${styles.advancedFilterMenu__actionDropdown__icon}`} />
-            Duplicar regra
-          </button>
-          <button
-            className={styles.advancedFilterMenu__actionDropdown__item}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleTransformToGroup(openActionMenu.path);
-              setOpenActionMenu(null);
-            }}
-          >
-            <i className={`far fa-layer-group ${styles.advancedFilterMenu__actionDropdown__icon}`} />
-            Transformar em grupo
-          </button>
-          <button
-            className={`${styles.advancedFilterMenu__actionDropdown__item} ${styles.danger}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRemoveRule(openActionMenu.path);
-              setOpenActionMenu(null);
-            }}
-          >
-            <i className={`far fa-trash ${styles.advancedFilterMenu__actionDropdown__icon}`} />
-            Remover regra
-          </button>
-        </div>,
-        document.body
-      )}
+            {isGroup ? (
+              <>
+                <button
+                  className={styles.advancedFilterMenu__actionDropdown__item}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDuplicateRule(openActionMenu.path);
+                    setOpenActionMenu(null);
+                  }}
+                >
+                  <i className={`far fa-copy ${styles.advancedFilterMenu__actionDropdown__icon}`} />
+                  Duplicar grupo
+                </button>
+                <button
+                  className={`${styles.advancedFilterMenu__actionDropdown__item} ${styles.danger}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveRule(openActionMenu.path);
+                    setOpenActionMenu(null);
+                  }}
+                >
+                  <i className={`far fa-trash ${styles.advancedFilterMenu__actionDropdown__icon}`} />
+                  Remover grupo
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className={styles.advancedFilterMenu__actionDropdown__item}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDuplicateRule(openActionMenu.path);
+                    setOpenActionMenu(null);
+                  }}
+                >
+                  <i className={`far fa-copy ${styles.advancedFilterMenu__actionDropdown__icon}`} />
+                  Duplicar regra
+                </button>
+                <button
+                  className={styles.advancedFilterMenu__actionDropdown__item}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTransformToGroup(openActionMenu.path);
+                    setOpenActionMenu(null);
+                  }}
+                >
+                  <i className={`far fa-layer-group ${styles.advancedFilterMenu__actionDropdown__icon}`} />
+                  Transformar em grupo
+                </button>
+                <button
+                  className={`${styles.advancedFilterMenu__actionDropdown__item} ${styles.danger}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveRule(openActionMenu.path);
+                    setOpenActionMenu(null);
+                  }}
+                >
+                  <i className={`far fa-trash ${styles.advancedFilterMenu__actionDropdown__icon}`} />
+                  Remover regra
+                </button>
+              </>
+            )}
+          </div>,
+          document.body
+        );
+      })()}
 
       {/* Add rule dropdown portal */}
-      {openAddRuleMenu && createPortal(
-        <div
-          ref={addRuleDropdownRef}
-          className={styles.advancedFilterMenu__addRuleDropdown}
-          style={{
-            position: 'absolute',
-            top: `${addRuleDropdownPosition.top}px`,
-            left: `${addRuleDropdownPosition.left}px`,
-            zIndex: 1010
-          }}
-        >
+      {openAddRuleMenu && (() => {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:961',message:'Rendering add rule dropdown portal',data:{path:JSON.stringify(openAddRuleMenu.path),position:JSON.stringify(addRuleDropdownPosition)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        return createPortal(
+          <div
+            ref={addRuleDropdownRef}
+            className={styles.advancedFilterMenu__addRuleDropdown}
+            style={{
+              position: 'absolute',
+              top: `${addRuleDropdownPosition.top}px`,
+              left: `${addRuleDropdownPosition.left}px`,
+              zIndex: 1010
+            }}
+          >
           <button
             className={styles.advancedFilterMenu__addRuleDropdown__item}
             onClick={(e) => {
               // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:960',message:'Add rule simple button clicked',data:{pathKey:openAddRuleMenu.path.length === 0 ? 'root' : openAddRuleMenu.path.join('-'),path:JSON.stringify(openAddRuleMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+              fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:974',message:'Add rule simple button clicked',data:{pathKey:openAddRuleMenu.path.length === 0 ? 'root' : openAddRuleMenu.path.join('-'),path:JSON.stringify(openAddRuleMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
               // #endregion
               e.stopPropagation();
               e.preventDefault();
@@ -975,7 +1008,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             className={styles.advancedFilterMenu__addRuleDropdown__item}
             onClick={(e) => {
               // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:975',message:'Add group button clicked',data:{pathKey:openAddRuleMenu.path.length === 0 ? 'root' : openAddRuleMenu.path.join('-'),path:JSON.stringify(openAddRuleMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+              fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:989',message:'Add group button clicked',data:{pathKey:openAddRuleMenu.path.length === 0 ? 'root' : openAddRuleMenu.path.join('-'),path:JSON.stringify(openAddRuleMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
               // #endregion
               e.stopPropagation();
               e.preventDefault();
@@ -988,7 +1021,8 @@ export const AdvancedFilterMenu = memo(forwardRef(({
           </button>
         </div>,
         document.body
-      )}
+        );
+      })()}
     </div>
   );
 }));

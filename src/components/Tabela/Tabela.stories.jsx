@@ -221,6 +221,18 @@ const columnsPerformanceExternal = [
   { key: 'cidade', label: 'Cidade', sortable: true, type: 'text' },
   { key: 'dataAdmissao', label: 'Data Admissão', sortable: true, type: 'date' },
   { key: 'status', label: 'Status', sortable: true, type: 'select' },
+  { key: 'a', label: 'A', sortable: true, type: 'boolean' },
+  { key: 'b', label: 'B', sortable: true, type: 'boolean' },
+  { key: 'c', label: 'C', sortable: true, type: 'boolean' },
+  { key: 'd', label: 'D', sortable: true, type: 'boolean' },
+  { key: 'e', label: 'E', sortable: true, type: 'boolean' },
+  { key: 'f', label: 'F', sortable: true, type: 'boolean' },
+  { key: 'g', label: 'G', sortable: true, type: 'boolean' },
+  { key: 'h', label: 'H', sortable: true, type: 'boolean' },
+  { key: 'i', label: 'I', sortable: true, type: 'boolean' },
+  { key: 'j', label: 'J', sortable: true, type: 'boolean' },
+  { key: 'k', label: 'K', sortable: true, type: 'boolean' },
+  { key: 'l', label: 'L', sortable: true, type: 'boolean' },
 ];
 
 // Gerar dataset com mais campos para teste de filtros externos
@@ -327,7 +339,7 @@ export const PerformanceTestExternalFilter = {
 };
 
 // Exemplo 5: Teste com muitos dados para demonstrar loader durante sorting
-const dataPerformanceLarge = generateLargeDataset(10000);
+const dataPerformanceLarge = generateLargeDataset(100000);
 
 export const PerformanceTestLarge = {
   render: () => (

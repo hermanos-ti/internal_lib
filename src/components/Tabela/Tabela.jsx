@@ -5,7 +5,7 @@ import { Pagination } from '../Pagination/Pagination';
 import { createPortal } from 'react-dom';
 
 import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
-import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu } from './components';
+import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu } from './components';
 
 export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
@@ -33,6 +33,8 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const sortedDataRef = useRef([]);
   const tableBodyRef = useRef(null);
   const expectedRowCountRef = useRef(0);
+  const tableWrapperRef = useRef(null);
+  const containerRef = useRef(null);
 
   const [itensPerPage, setItensPerPage] = useState(mergedOptions.itensPerPage);
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,16 +46,26 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const [tempFilters, setTempFilters] = useState([]);
   const [tempSorts, setTempSorts] = useState([]);
   const [isEditingToolbar, setIsEditingToolbar] = useState(false);
+  const [hasScroll, setHasScroll] = useState(false);
+  const [maxWidth, setMaxWidth] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   const columnSelectionMenuRef = useRef(null);
   const sortMenuRef = useRef(null);
   const filterMenuRef = useRef(null);
   const advancedFilterMenuRef = useRef(null);
+  const settingsMenuRef = useRef(null);
   const toolbarFilterButtonRef = useRef(null);
   const toolbarSortButtonRef = useRef(null);
+  const toolbarSettingsButtonRef = useRef(null);
   const sortButtonRef = useRef(null);
   const filterButtonRefs = useRef(new Map());
   const sortMenuColumnSelectRef = useRef(null);
+
+  const searchInputRef = useRef(null);
+  const searchContainerRef = useRef(null);
+  const wasSearchFocusedRef = useRef(false);
 
   const [currentEditingFilter, setCurrentEditingFilter] = useState(null);
   const [currentAdvancedFilterGroup, setCurrentAdvancedFilterGroup] = useState(null);
@@ -329,6 +341,8 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         sortMenuRef.current?.close();
       } else if (menuType === 'filter-menu') {
         filterMenuRef.current?.close();
+      } else if (menuType === 'settings-menu') {
+        settingsMenuRef.current?.close();
       } else {
         columnSelectionMenuRef.current?.close();
       }
@@ -358,9 +372,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       }
       // Preservar tempFilters
     } else if (menuType === 'filter-menu') {
+      // Não inicializar tempFilters/tempSorts aqui - apenas abrir o menu não deve alterar estados
+      // Os estados temporários serão inicializados apenas quando o usuário começar a editar (handleFilterUpdate)
       // skipTempReset evita sobrescrever tempFilters quando chamado de dentro do onSelect
-      if (tempFilters.length === 0 && !options.skipTempReset) {
+      if (tempFilters.length === 0 && !options.skipTempReset && isEditingToolbar) {
+        // Só inicializar se já estiver em modo de edição
         setTempFilters([...filters]);
+      }
+      // Preservar tempSorts apenas se já estiver em modo de edição
+      if (tempSorts.length === 0 && sorts.length > 0 && isEditingToolbar) {
+        setTempSorts([...sorts]);
       }
     }
 
@@ -407,7 +428,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     setSortMenuEditingIndex(-1);
   }, [menuState.isOpen, menuState.type]);
 
-  const openSortMenuColumnSelection = useCallback((item, index, buttonElement) => {
+  const openSortMenuColumnSelection = useCallback((index, buttonElement) => {
     if (subMenuState.isOpen && sortMenuColumnSelectRef.current === buttonElement) {
       closeSubMenu();
       return;
@@ -510,13 +531,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     return true;
   }, []);
 
-  const areTempArraysEqualToOriginals = useCallback(() => {
-    const filtersEqual = areFiltersEqual(tempFilters, filters);
-    const sortsEqual = areSortsEqual(tempSorts, sorts);
-
-    return filtersEqual && sortsEqual;
-  }, [tempFilters, filters, tempSorts, sorts, areFiltersEqual, areSortsEqual]);
-
   const handleSortMenuUpdateSorts = useCallback((newSorts) => {
     setIsEditingToolbar(true);
     setTempSorts(newSorts);
@@ -527,12 +541,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
 
     setTempSorts([]);
     setSorts([]);
-    // O useEffect vai verificar automaticamente se os arrays são iguais
   }, []);
-
-  // ============================================
-  // Filter Menu Handlers
-  // ============================================
 
   const handleOpenFilterMenu = useCallback((filter, buttonRef) => {
     if (filter.isAdvanced) {
@@ -577,13 +586,21 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       menuWidth: 320,
       menuHeight: 350
     });
-  }, [visibleColumns, openMenu, calculateMenuPosition]);
+  }, [visibleColumns, openMenu, calculateMenuPosition, isEditingToolbar, sorts, tempSorts, filters, tempFilters]);
 
   const handleFilterUpdate = useCallback((updatedFilter) => {
     setIsEditingToolbar(true);
-    setTempFilters(prev =>
-      prev.map(f => f.key === updatedFilter.key ? updatedFilter : f)
-    );
+    
+    setTempFilters(prev => {
+      if (prev.length === 0 && filters.length > 0) {
+        return filters.map(f => f.key === updatedFilter.key ? updatedFilter : f);
+      }
+      return prev.map(f => f.key === updatedFilter.key ? updatedFilter : f);
+    });
+    
+    if (tempSorts.length === 0 && sorts.length > 0) {
+      setTempSorts([...sorts]);
+    }
 
     if (menuState.type === 'filter-menu' && menuState.isOpen && currentEditingFilter?.key === updatedFilter.key) {
       setCurrentEditingFilter(updatedFilter);
@@ -592,17 +609,22 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         setCurrentEditingFilter(null);
       }
     }
-  }, [currentEditingFilter, menuState.type, menuState.isOpen]);
+  }, [currentEditingFilter, menuState.type, menuState.isOpen, isEditingToolbar, tempSorts, sorts, tempFilters, filters]);
 
   const handleFilterRemove = useCallback((filterId) => {
     setIsEditingToolbar(true);
-    setTempFilters(prev => prev.filter(f => f.id !== filterId && f.key !== filterId));
-    setFilters(prev => prev.filter(f => f.id !== filterId && f.key !== filterId));
+    setTempFilters(prev => {
+      const filtered = prev.filter(f => f.id !== filterId && f.key !== filterId);
+      return filtered;
+    });
+    setFilters(prev => {
+      const filtered = prev.filter(f => f.id !== filterId && f.key !== filterId);
+      return filtered;
+    });
     setCurrentEditingFilter(null);
-  }, []);
+  }, [sorts, tempSorts, filters]);
 
   const handleOpenAdvancedFilter = useCallback((filterItem) => {
-    // Criar ou atualizar grupo de filtro avançado
     const newGroup = currentAdvancedFilterGroup ? {
       ...currentAdvancedFilterGroup,
       rules: [
@@ -650,7 +672,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const handleAdvancedFilterSave = useCallback((filterGroup) => {
     setIsEditingToolbar(true);
 
-    // Adicionar como um novo filtro avançado na lista de filtros
     const advancedFilterItem = {
       ...filterGroup,
       key: filterGroup.id,
@@ -674,7 +695,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     setCurrentAdvancedFilterGroup(null);
   }, []);
 
-  // Deletar filtro avançado
   const handleAdvancedFilterDelete = useCallback(() => {
     if (!currentAdvancedFilterGroup) return;
 
@@ -732,15 +752,9 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }, 0);
   }, [calculateMenuPosition]);
 
-  // ============================================
-  // Filter Data Logic
-  // ============================================
-
-  // Avaliar uma condição de filtro simples
   const evaluateFilterCondition = useCallback((value, filter) => {
     const { condition, value: filterValue, valueTo } = filter;
 
-    // Condições que não precisam de valor
     if (condition === 'isEmpty') {
       return value === null || value === undefined || value === '';
     }
@@ -748,17 +762,14 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       return value !== null && value !== undefined && value !== '';
     }
 
-    // Se o valor do filtro está vazio, retornar true (não filtrar)
     if (filterValue === '' || filterValue === null || filterValue === undefined) {
       return true;
     }
 
-    // Converter valores para comparação
     const normalizedValue = value?.toString?.()?.toLowerCase?.() ?? '';
     const normalizedFilterValue = filterValue?.toString?.()?.toLowerCase?.() ?? '';
 
     switch (condition) {
-      // Text conditions
       case 'is':
         return normalizedValue === normalizedFilterValue;
       case 'isNot':
@@ -772,7 +783,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       case 'endsWith':
         return normalizedValue.endsWith(normalizedFilterValue);
 
-      // Number conditions
       case 'equals':
         return Number(value) === Number(filterValue);
       case 'notEquals':
@@ -786,7 +796,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       case 'lessOrEqual':
         return Number(value) <= Number(filterValue);
 
-      // Date conditions
       case 'isBefore': {
         const dateValue = new Date(value);
         const dateFilter = new Date(filterValue);
@@ -820,7 +829,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
   }, []);
 
-  // Avaliar um grupo de filtros avançados (recursivo)
   const evaluateFilterGroup = useCallback((row, group) => {
     if (!group || !group.rules || group.rules.length === 0) {
       return true;
@@ -848,7 +856,82 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
   }, [evaluateFilterCondition]);
 
-  // Filtrar dados com base nos filtros ativos
+  const normalizeString = useCallback((str) => {
+    if (!str) return '';
+    return str
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }, []);
+
+  const normalizedDataCache = useRef(new Map());
+
+  const searchableColumns = useMemo(() => {
+    return visibleColumns.filter(col => col.searchable !== false);
+  }, [visibleColumns]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!originalData.length || !searchableColumns.length) {
+      normalizedDataCache.current.clear();
+      return;
+    }
+
+    const cache = new Map();
+    const searchableKeys = searchableColumns.map(col => col.key);
+
+    originalData.forEach((row, index) => {
+      const normalizedRow = {};
+      searchableKeys.forEach(key => {
+        const value = row[key]?.sortableValue ?? row[key];
+        normalizedRow[key] = normalizeString(value);
+      });
+      cache.set(index, normalizedRow);
+    });
+
+    normalizedDataCache.current = cache;
+  }, [originalData, searchableColumns, normalizeString]);
+
+  const searchDataAsync = useCallback((data, searchTerm, searchableColumns) => {
+    if (!searchTerm || searchTerm.trim() === '') {
+      return data;
+    }
+
+    const normalizedSearchTerm = normalizeString(searchTerm);
+    if (!normalizedSearchTerm) {
+      return data;
+    }
+
+    const searchableKeys = searchableColumns.map(col => col.key);
+    const cache = normalizedDataCache.current;
+
+    return data.filter((row, index) => {
+      const normalizedRow = cache.get(index);
+      if (!normalizedRow) {
+        return searchableKeys.some(key => {
+          const value = row[key]?.sortableValue ?? row[key];
+          const normalizedValue = normalizeString(value);
+          return normalizedValue.includes(normalizedSearchTerm);
+        });
+      }
+
+      return searchableKeys.some(key => {
+        const normalizedValue = normalizedRow[key] || '';
+        return normalizedValue.includes(normalizedSearchTerm);
+      });
+    });
+  }, [normalizeString]);
+
   const filterDataAsync = useCallback((data, activeFilters) => {
     if (!activeFilters || activeFilters.length === 0) {
       return data;
@@ -857,10 +940,8 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     return data.filter(row => {
       return activeFilters.every(filter => {
         if (filter.isAdvanced) {
-          // Filtro avançado com grupos
           return evaluateFilterGroup(row, filter);
         } else {
-          // Filtro simples
           const value = row[filter.key]?.sortableValue ?? row[filter.key];
           return evaluateFilterCondition(value, filter);
         }
@@ -868,48 +949,38 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     });
   }, [evaluateFilterCondition, evaluateFilterGroup]);
 
-  // Estado para dados filtrados
   const [filteredData, setFilteredData] = useState(originalData);
-  const [isFiltering, setIsFiltering] = useState(false);
 
-  // Efeito para aplicar filtros
   useEffect(() => {
     const activeFilters = isEditingToolbar ? tempFilters : filters;
     const isExternalMode = filterModeRef.current === 'external';
 
-    // Se não há filtros, usar dados originais
-    if (!activeFilters || activeFilters.length === 0) {
-      if (!isExternalMode) {
-        setFilteredData(originalData);
-      }
-      return;
-    }
 
-    // Modo externo: não aplicar filtros na tabela, apenas emitir callback
-    if (isExternalMode) {
-      // Não filtrar dados localmente
-      setFilteredData(originalData);
-      return;
-    }
-
-    setIsFiltering(true);
-
-    // Aplicar filtros de forma assíncrona para não bloquear a UI
     requestAnimationFrame(() => {
-      const result = filterDataAsync(originalData, activeFilters);
-      setFilteredData(result);
-      setIsFiltering(false);
-    });
-  }, [originalData, filters, tempFilters, isEditingToolbar, filterDataAsync]);
+      let result = originalData;
 
-  // Efeito para emitir callback onFilterChange quando filtros são salvos (não em edição)
+      if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
+        result = searchDataAsync(result, debouncedSearchTerm, searchableColumns);
+      }
+
+      if (isExternalMode) {
+        setFilteredData(result);
+        return;
+      }
+
+      if (activeFilters && activeFilters.length > 0) {
+        result = filterDataAsync(result, activeFilters);
+      }
+
+      setFilteredData(result);
+    });
+  }, [originalData, filters, tempFilters, isEditingToolbar, filterDataAsync, debouncedSearchTerm, searchDataAsync, searchableColumns]);
+
   useEffect(() => {
     if (isEditingToolbar || !onFilterChangeRef.current) return;
 
-    // Gerar SQL para os filtros atuais
     const sqlWhere = filtersToSQL(filters, tableColumns, 'AND', true);
 
-    // Emitir callback com filtros e SQL
     onFilterChangeRef.current(filters, sqlWhere);
   }, [filters, tableColumns, isEditingToolbar]);
 
@@ -1170,7 +1241,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           });
         }
 
-        // Ordenar colunas por posição para manter ordem correta
         rowColumns.sort((a, b) => (a.position ?? Infinity) - (b.position ?? Infinity));
       }
 
@@ -1182,9 +1252,8 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   }, [tableColumns, visibleColumns]);
 
   const sortedData = useMemo(() => {
-    // Usar tempSorts durante edição, sorts quando não está editando
     const activeSorts = isEditingToolbar ? tempSorts : sorts;
-    const dataSource = filteredData.length > 0 || (isEditingToolbar ? tempFilters : filters).length > 0
+    const dataSource = filteredData.length > 0 || (isEditingToolbar ? tempFilters : filters).length > 0 || debouncedSearchTerm.trim() !== ''
       ? filteredData
       : originalData;
 
@@ -1197,23 +1266,94 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     return hasValidSortedData
       ? sortedDataRef.current.slice((currentPage - 1) * itensPerPage, currentPage * itensPerPage)
       : dataSource.slice((currentPage - 1) * itensPerPage, currentPage * itensPerPage);
-  }, [originalData, filteredData, filters, tempFilters, sorts, tempSorts, isEditingToolbar, isSorting, sortVersion, currentPage, itensPerPage, sortedDataRef]);
+  }, [originalData, filteredData, filters, tempFilters, sorts, tempSorts, isEditingToolbar, isSorting, sortVersion, currentPage, itensPerPage, sortedDataRef, debouncedSearchTerm]);
 
   useEffect(() => {
     const activeFilters = isEditingToolbar ? tempFilters : filters;
-    const dataSource = activeFilters.length > 0 ? filteredData : originalData;
+    const dataSource = filteredData.length > 0 || activeFilters.length > 0 || debouncedSearchTerm.trim() !== ''
+      ? filteredData
+      : originalData;
     setTotalItems(dataSource.length);
     setTotalPages(Math.ceil(dataSource.length / itensPerPage));
-  }, [originalData, filteredData, filters, tempFilters, isEditingToolbar, itensPerPage]);
+  }, [originalData, filteredData, filters, tempFilters, isEditingToolbar, itensPerPage, debouncedSearchTerm]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [itensPerPage])
+  }, [itensPerPage, debouncedSearchTerm])
+
+  useEffect(() => {
+    const calculateMaxWidth = () => {
+      if (containerRef.current) {
+        const parentElement = containerRef.current.parentElement;
+        if (parentElement) {
+          const computedStyle = window.getComputedStyle(parentElement);
+          const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+          const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+          const parentWidth = parentElement.offsetWidth - paddingLeft - paddingRight;
+          setMaxWidth(parentWidth);
+        }
+      }
+    };
+
+    calculateMaxWidth();
+    
+    const timeoutId = setTimeout(() => {
+      calculateMaxWidth();
+    }, 100);
+
+    const resizeObserver = new ResizeObserver(() => {
+      calculateMaxWidth();
+    });
+
+    if (containerRef.current?.parentElement) {
+      resizeObserver.observe(containerRef.current.parentElement);
+    }
+
+    window.addEventListener('resize', calculateMaxWidth);
+
+    return () => {
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', calculateMaxWidth);
+    };
+  }, []);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (tableWrapperRef.current) {
+        const hasVerticalScroll = tableWrapperRef.current.scrollHeight > tableWrapperRef.current.clientHeight;
+        const hasHorizontalScroll = tableWrapperRef.current.scrollWidth > tableWrapperRef.current.clientWidth;
+        setHasScroll(hasVerticalScroll || hasHorizontalScroll);
+      }
+    };
+
+    checkScroll();
+    
+    const resizeObserver = new ResizeObserver(checkScroll);
+    if (tableWrapperRef.current) {
+      resizeObserver.observe(tableWrapperRef.current);
+    }
+
+    const scrollHandler = () => checkScroll();
+    if (tableWrapperRef.current) {
+      tableWrapperRef.current.addEventListener('scroll', scrollHandler);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+      if (tableWrapperRef.current) {
+        tableWrapperRef.current.removeEventListener('scroll', scrollHandler);
+      }
+    };
+  }, [sortedData, originalData, filters, tempFilters, visibleColumns]);
 
   const tableContent = useMemo(() => {
     if (mergedOptions.currentMode === 'grid') {
       return (
-        <div className={styles.tabela__wrapper} style={{ position: 'relative' }}>
+        <div 
+          ref={tableWrapperRef}
+          className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''}`}
+        >
           <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''}`}>
             {mergedOptions.showHeader && (
               <thead className={`${styles.tabela__header} ${headerStructure.headerRows.length > 1 ? styles.isNastedHeader : ''}`}>
@@ -1353,6 +1493,26 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     );
   }, [totalPages, currentPage, mergedOptions.itensPerPageOptions, itensPerPage, setItensPerPage]);
 
+  const handleSearchToggle = useCallback((e) => {
+    const clickedOnInput = e.target === searchInputRef.current || 
+                          searchInputRef.current?.contains(e.target);
+    
+    if (clickedOnInput) {
+      return;
+    }
+    
+    const isCurrentlyFocused = document.activeElement === searchInputRef.current;
+    const wasFocused = isCurrentlyFocused || wasSearchFocusedRef.current;
+    
+    if (wasFocused) {
+      searchInputRef.current?.blur();
+      wasSearchFocusedRef.current = false;
+    } else {
+      searchInputRef.current?.focus();
+      wasSearchFocusedRef.current = true;
+    }
+  }, []);
+
   const toolbarContent = useMemo(() => {
     return (
       <div className={styles.tabela__toolbar}>
@@ -1362,6 +1522,34 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             <span className={styles.tabela__toolbar__label}>{mergedOptions.tableName}</span>
           </div>
           <div className={styles.tabela__toolbar__top__right}>
+            {mergedOptions.showSearch && (
+              <div 
+                ref={searchContainerRef}
+                className={styles.tabela__toolbar__search} 
+                onClick={handleSearchToggle}
+              >
+                <input 
+                  ref={searchInputRef} 
+                  className={styles.tabela__toolbar__search__input} 
+                  type="text" 
+                  placeholder="Pesquisar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => {
+                    wasSearchFocusedRef.current = true;
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      if (document.activeElement !== searchInputRef.current) {
+                        wasSearchFocusedRef.current = false;
+                      }
+                    }, 100);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <i className={`far fa-search ${styles.tabela__toolbar__search__icon}`} />
+              </div>
+            )}
             {mergedOptions.showSorts && (
               <button
                 ref={toolbarSortButtonRef}
@@ -1380,6 +1568,13 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                 <i className={`far fa-bars-filter ${styles.tabela__toolbar__button__icon}`} />
               </button>
             )}
+            <button
+              ref={toolbarSettingsButtonRef}
+              className={styles.tabela__toolbar__button}
+              onClick={() => openMenu('settings-menu', toolbarSettingsButtonRef, { preferredPosition: 'bottom-end' })}
+            >
+              <i className={`far fa-gear ${styles.tabela__toolbar__button__icon}`} />
+            </button>
           </div>
         </div>
         {(sorts.length > 0 || filters.length > 0 || isEditingToolbar) && (
@@ -1394,10 +1589,15 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   >
                     <i className={`far fa-arrow-down-arrow-up ${styles.tabela__toolbar__button__icon}`} />
                     <span className={styles.tabela__toolbar__button__label}>
-                      {isEditingToolbar ?
-                        tempSorts.length > 1 ? `${tempSorts.length} colunas` : `${tempSorts[0]?.label ?? tempSorts[0]?.key}`
-                        : sorts.length > 1 ? `${sorts.length} colunas` : `${sorts[0]?.label ?? sorts[0]?.key}`
-                      }
+                      {(() => {
+                        if (isEditingToolbar) {
+                          if (tempSorts.length === 0) return '';
+                          return tempSorts.length > 1 ? `${tempSorts.length} colunas` : (tempSorts[0]?.label ?? tempSorts[0]?.key ?? '');
+                        } else {
+                          if (sorts.length === 0) return '';
+                          return sorts.length > 1 ? `${sorts.length} colunas` : (sorts[0]?.label ?? sorts[0]?.key ?? '');
+                        }
+                      })()}
                     </span>
                   </button>
                 </div>
@@ -1419,7 +1619,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                         }}
                       >
                         <i className={`far ${filter.isAdvanced ? 'fa-layer-group' : 'fa-bars-filter'} ${styles.tabela__toolbar__button__icon}`} />
-                        <span className={styles.tabela__toolbar__button__label}>{getFilterDisplayText(filter, visibleColumns)}</span>
+                      <span className={styles.tabela__toolbar__button__label}>{getFilterDisplayText(filter, visibleColumns)}</span>
                       </button>
                     );
                   }) : filters.map((filter) => {
@@ -1475,7 +1675,11 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   }, [mergedOptions.tableIcon, mergedOptions.tableName, sorts, filters, openMenu, tempSorts, tempFilters, isEditingToolbar, handleOpenFilterMenu]);
 
   return (
-    <>
+    <div 
+      ref={containerRef}
+      className={styles.tabela__container}
+      style={maxWidth !== null ? { maxWidth: `${maxWidth}px` } : undefined}
+    >
       {mergedOptions.showToolbar && toolbarContent}
       {tableContent}
       {mergedOptions.showFooter && tableFooterContent}
@@ -1495,14 +1699,11 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               onSelect={(column) => {
                 setIsEditingToolbar(true);
                 if (menuState.type === 'filter-selection') {
-                  // Verificar se já existe
                   const existingFilter = tempFilters.find(f => f.key === column.key) || filters.find(f => f.key === column.key);
 
                   if (existingFilter) {
-                    // Se já existe, remover
                     setTempFilters(prev => prev.filter(item => item.key !== column.key));
                   } else {
-                    // Se não existe, criar novo filtro
                     const newFilter = {
                       ...DEFAULT_FILTER,
                       id: `filter-${column.key}-${Date.now()}`,
@@ -1578,6 +1779,15 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               ]}
             />
           )}
+
+          {menuState.type === 'settings-menu' && (
+            <SettingsMenu
+              ref={settingsMenuRef}
+              menuState={menuState}
+              onClose={closeMenu}
+              refList={[toolbarSettingsButtonRef.current]}
+            />
+          )}
         </>
         , document.body
       )}
@@ -1594,7 +1804,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               onSelect={(column) => {
                 setIsEditingToolbar(true);
                 if (sortMenuEditingIndex === -1) {
-                  // Adding new column
                   const newSorts = [
                     ...(isEditingToolbar ? tempSorts : sorts),
                     { key: column.key, direction: 'asc', label: column.label ?? column.key }
@@ -1602,7 +1811,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   setTempSorts(newSorts);
                   sortMenuRef.current?.updateItems(newSorts);
                 } else {
-                  // Replacing existing column
                   const currentSorts = isEditingToolbar ? tempSorts : sorts;
                   const newSorts = [...currentSorts];
                   newSorts[sortMenuEditingIndex] = {
@@ -1648,6 +1856,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         </>
         , document.body
       )}
-    </>
+    </div>
   );
 };

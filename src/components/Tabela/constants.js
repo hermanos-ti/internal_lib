@@ -9,13 +9,11 @@ export const DEFAULT_OPTIONS = {
   tableIcon: 'fas fa-table',
   tableName: 'Tabela',
   columnMinWidth: 'auto',
-  // --- 
   showFilters: true,
   showSorts: true,
-  // Filter mode: 'internal' (apply filters to table) or 'external' (only emit via callback)
+  showSearch: true,
   filterMode: 'internal',
-  // Callback emitido quando filtros são salvos: (filters, sqlWhere) => {}
-  onFilterChange: null,
+  onFilterChange: null, // (filters, sqlWhere) => {}
 }
 
 export const DEFAULT_COLUMN_CONFIG = {
@@ -24,7 +22,7 @@ export const DEFAULT_COLUMN_CONFIG = {
   width: 'auto',
   align: 'left',
   format: 'text',
-  searchable: false,
+  searchable: true,
   sortable: true,
   filterable: true,
   render: null, // render(value, row, column, rowIndex, colIndex)
@@ -55,40 +53,40 @@ export const COLUMN_ICONS = {
 
 export const FILTER_CONDITIONS = {
   text: [
-    { value: 'is', label: 'É' },
-    { value: 'isNot', label: 'Não é' },
-    { value: 'contains', label: 'Contém' },
-    { value: 'notContains', label: 'Não Contém' },
-    { value: 'startsWith', label: 'Começa com' },
-    { value: 'endsWith', label: 'Termina com' },
-    { value: 'isEmpty', label: 'É Vazio' },
-    { value: 'isNotEmpty', label: 'Não é vazio' },
+    { value: 'is', label: 'é' },
+    { value: 'isNot', label: 'não é' },
+    { value: 'contains', label: 'contém' },
+    { value: 'notContains', label: 'não contém' },
+    { value: 'startsWith', label: 'começa com' },
+    { value: 'endsWith', label: 'termina com' },
+    { value: 'isEmpty', label: 'é vazio' },
+    { value: 'isNotEmpty', label: 'não é vazio' },
   ],
   number: [
-    { value: 'equals', label: 'Igual' },
-    { value: 'notEquals', label: 'Diferente' },
-    { value: 'greaterThan', label: 'Maior' },
-    { value: 'lessThan', label: 'Menor' },
-    { value: 'greaterOrEqual', label: 'Maior ou Igual' },
-    { value: 'lessOrEqual', label: 'Menor ou Igual' },
-    { value: 'isEmpty', label: 'É Vazio' },
-    { value: 'isNotEmpty', label: 'Não é vazio' },
+    { value: 'equals', label: 'igual' },
+    { value: 'notEquals', label: 'diferente' },
+    { value: 'greaterThan', label: 'maior' },
+    { value: 'lessThan', label: 'menor' },
+    { value: 'greaterOrEqual', label: 'maior ou igual' },
+    { value: 'lessOrEqual', label: 'menor ou igual' },
+    { value: 'isEmpty', label: 'é vazio' },
+    { value: 'isNotEmpty', label: 'não é vazio' },
   ],
   date: [
-    { value: 'is', label: 'É' },
-    { value: 'isBefore', label: 'É Antes' },
-    { value: 'isAfter', label: 'É Depois' },
-    { value: 'isOnOrBefore', label: 'Até' },
-    { value: 'isOnOrAfter', label: 'A partir de' },
-    { value: 'isBetween', label: 'É Entre' },
-    { value: 'isEmpty', label: 'É Vazio' },
-    { value: 'isNotEmpty', label: 'Não é vazio' },
+    { value: 'is', label: 'é' },
+    { value: 'isBefore', label: 'é antes' },
+    { value: 'isAfter', label: 'é depois' },
+    { value: 'isOnOrBefore', label: 'até' },
+    { value: 'isOnOrAfter', label: 'a partir de' },
+    { value: 'isBetween', label: 'é entre' },
+    { value: 'isEmpty', label: 'é vazio' },
+    { value: 'isNotEmpty', label: 'não é vazio' },
   ],
   select: [
-    { value: 'is', label: 'É' },
-    { value: 'isNot', label: 'Não é' },
-    { value: 'isEmpty', label: 'É Vazio' },
-    { value: 'isNotEmpty', label: 'Não é vazio' },
+    { value: 'is', label: 'é' },
+    { value: 'isNot', label: 'não é' },
+    { value: 'isEmpty', label: 'é vazio' },
+    { value: 'isNotEmpty', label: 'não é vazio' },
   ],
 }
 
@@ -217,7 +215,7 @@ export const getFilterDisplayText = (filter, columns) => {
     } else if (value) {
       return `${columnLabel} ${conditionLabel} ${value}`;
     } else {
-      return `${columnLabel} ${conditionLabel}`;
+      return columnLabel;
     }
   }
 
@@ -233,7 +231,7 @@ export const getFilterDisplayText = (filter, columns) => {
   }
 
   // Sem valor ainda
-  return `${columnLabel} ${conditionLabel}`;
+  return columnLabel;
 }
 
 /**
