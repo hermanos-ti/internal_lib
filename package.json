@@ -13,7 +13,7 @@
       "import": "./dist/internal_lib.es.js",
       "require": "./dist/internal_lib.umd.js"
     },
-    "./dist/style.css": "./dist/style.css"
+    "./dist/style.css": "./dist/internal_lib.css"
   },
   "files": [
     "dist"
