@@ -4,4 +4,6 @@ export { SortMenu } from './SortMenu';
 export { FilterMenu } from './FilterMenu';
 export { AdvancedFilterMenu } from './AdvancedFilterMenu';
 export { SettingsMenu } from './SettingsMenu';
+export { VisibleColumnsPanel } from './VisibleColumnsPanel';
+export { VisibleColumnsModal } from './VisibleColumnsModal';
 export { Select } from './Select';

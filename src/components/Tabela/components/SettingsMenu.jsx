@@ -1,55 +1,57 @@
 import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle } from 'react';
 import styles from '../Tabela.module.css';
+import { VisibleColumnsPanel } from './VisibleColumnsPanel';
 
-export const SettingsMenu = memo(forwardRef(({ 
+export const SettingsMenu = memo(forwardRef(({
   menuState,
   onClose,
-  refList
+  refList,
+  onAction,
+  headerColumns,
+  footerItems,
+  columnVisibility,
+  footerVisibility,
+  onApplyColumns
 }, ref) => {
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  
+  const [currentView, setCurrentView] = useState('list');
+
   const currentSessionRef = useRef(null);
   const menuStateSessionRef = useRef(null);
 
-  const [selectedOptions, setSelectedOptions] = useState({
-    colunasVisiveis: false,
-    agrupar: false,
-    calcular: false,
-    importar: false,
-    exportar: false
-  });
-
   useEffect(() => {
     menuStateSessionRef.current = menuState.sessionId;
-    
+
     if (menuState.isOpen) {
       currentSessionRef.current = menuState.sessionId;
       setIsVisible(true);
       setIsClosing(false);
+      setCurrentView('list');
     }
   }, [menuState.isOpen, menuState.sessionId]);
 
   const handleClose = useCallback(() => {
     const closingSessionId = currentSessionRef.current;
-    
+
     setIsClosing(true);
-    
+
     const timer = setTimeout(() => {
-      
+
       if (currentSessionRef.current !== closingSessionId) {
         setIsClosing(false);
         return;
       }
-      
+
       setIsVisible(false);
       setIsClosing(false);
+      setCurrentView('list');
       onClose(closingSessionId);
     }, 180);
 
     return () => clearTimeout(timer);
-  }, [onClose, isVisible, isClosing]);
+  }, [onClose]);
 
   useImperativeHandle(ref, () => ({
     close: handleClose,
@@ -60,8 +62,9 @@ export const SettingsMenu = memo(forwardRef(({
     if (!isVisible || isClosing) return;
 
     const handleClickOutside = (event) => {
-      const isClickOnRefList = refList?.some(r => r && typeof r.contains === 'function' && r.contains(event.target));
-      if (menuRef.current && !menuRef.current.contains(event.target) && !isClickOnRefList) {
+      const target = event.target;
+      const isClickOnRefList = refList?.some(r => r && typeof r.contains === 'function' && r.contains(target));
+      if (menuRef.current && !menuRef.current.contains(target) && !isClickOnRefList) {
         handleClose();
       }
     };
@@ -81,19 +84,28 @@ export const SettingsMenu = memo(forwardRef(({
 
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
-        handleClose();
+        if (currentView !== 'list') {
+          setCurrentView('list');
+        } else {
+          handleClose();
+        }
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isVisible, isClosing, handleClose]);
+  }, [isVisible, isClosing, handleClose, currentView]);
 
-  const handleOptionToggle = (optionKey) => {
-    setSelectedOptions(prev => ({
-      ...prev,
-      [optionKey]: !prev[optionKey]
-    }));
+  const handleAction = (optionKey) => {
+    if (optionKey === 'colunasVisiveis') {
+      setCurrentView('colunasVisiveis');
+    } else if (onAction) {
+      onAction(optionKey);
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentView('list');
   };
 
   if (!isVisible) return null;
@@ -114,35 +126,62 @@ export const SettingsMenu = memo(forwardRef(({
   ];
 
   return (
-    <>
-      <div 
-        ref={menuRef} 
-        className={`${styles.columnSelectionMenu} ${isClosing ? styles.closing : ''}`} 
-        style={menuStyle}
-      >
-        <div className={styles.columnSelectionMenu__header}>
-          <span className={styles.columnSelectionMenu__header__title}>Configurações</span>
-        </div>
+    <div
+      ref={menuRef}
+      className={`${styles.columnSelectionMenu} ${isClosing ? styles.closing : ''}`}
+      style={menuStyle}
+    >
+      {currentView === 'list' ? (
+        <>
+          <div className={styles.columnSelectionMenu__header}>
+            <span className={styles.columnSelectionMenu__header__title}>Configurações</span>
+          </div>
 
-        <div className={styles.columnSelectionMenu__body}>
-          {options.map((option) => {
-            return (
-              <div 
-                key={option.key} 
-                className={`${styles.columnSelectionMenu__item} ${selectedOptions[option.key] ? styles.selected : ''}`}
-                onClick={() => handleOptionToggle(option.key)}
+          <div className={styles.columnSelectionMenu__body}>
+            {options.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                className={styles.columnSelectionMenu__item}
+                onClick={() => handleAction(option.key)}
               >
                 <i className={`${option.icon} ${styles.columnSelectionMenu__item__icon}`} />
                 <span className={styles.columnSelectionMenu__item__label}>{option.label}</span>
-                {selectedOptions[option.key] && (
-                  <i className={`far fa-check ${styles.columnSelectionMenu__item__check}`} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </>
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={`${styles.columnSelectionMenu__header} ${styles.settingsMenu__headerRow}`}>
+            <button
+              type="button"
+              className={styles.settingsMenu__backBtn}
+              onClick={handleBack}
+              aria-label="Voltar"
+            >
+              <i className="far fa-arrow-left" />
+              <span>Voltar</span>
+            </button>
+            <span className={styles.columnSelectionMenu__header__title}>
+              {currentView === 'colunasVisiveis' ? 'Colunas visíveis' : 'Configurações'}
+            </span>
+          </div>
+
+          <div className={styles.columnSelectionMenu__body}>
+            {currentView === 'colunasVisiveis' && headerColumns && footerItems && onApplyColumns && (
+              <VisibleColumnsPanel
+                headerColumns={headerColumns}
+                footerItems={footerItems}
+                columnVisibility={columnVisibility}
+                footerVisibility={footerVisibility}
+                onApply={onApplyColumns}
+              />
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 }));
 

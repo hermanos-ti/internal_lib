@@ -22,8 +22,37 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const [originalData, setOriginalData] = useState([]);
   const [tableFooter, setTableFooter] = useState([]);
 
-  const [visibleColumns, setVisibleColumns] = useState([]);
-  const [visibleFooter, setVisibleFooter] = useState([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [footerVisibility, setFooterVisibility] = useState({});
+
+  const leafKeysMap = useMemo(() => {
+    const map = new Map();
+    const leaves = tableColumns.filter(c => !c.hasSubColumns);
+    leaves.forEach(leaf => {
+      map.set(leaf.key, [leaf.key]);
+      let key = leaf.parentKey;
+      while (key) {
+        const parent = tableColumns.find(c => c.key === key);
+        if (!parent) break;
+        if (!map.has(parent.key)) map.set(parent.key, []);
+        map.get(parent.key).push(leaf.key);
+        key = parent?.parentKey;
+      }
+    });
+    return map;
+  }, [tableColumns]);
+
+  const visibleColumns = useMemo(() => {
+    return tableColumns.filter(col =>
+      !col.hasSubColumns
+        ? columnVisibility[col.key] !== false
+        : (leafKeysMap.get(col.key) || []).some(leafKey => columnVisibility[leafKey] !== false)
+    );
+  }, [tableColumns, columnVisibility, leafKeysMap]);
+
+  const visibleFooter = useMemo(() => {
+    return tableFooter.filter(item => footerVisibility[item.key] !== false);
+  }, [tableFooter, footerVisibility]);
 
   const [isSorting, setIsSorting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,7 +153,11 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     if (columns) {
       const columnsConfig = processColumns(columns);
       setTableColumns(columnsConfig);
-      setVisibleColumns(columnsConfig.filter(column => column?.visible ?? true));
+      const nextVisibility = {};
+      columnsConfig.forEach(c => {
+        nextVisibility[c.key] = c?.visible ?? true;
+      });
+      setColumnVisibility(nextVisibility);
     }
   }, [columns, processColumns]);
 
@@ -209,7 +242,11 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       }
 
       setTableFooter(footerConfig);
-      setVisibleFooter(footerConfig.filter(item => item.visible));
+      const nextFooterVisibility = {};
+      footerConfig.forEach(item => {
+        nextFooterVisibility[item.key] = item.visible !== false;
+      });
+      setFooterVisibility(nextFooterVisibility);
     }
   }, [footer]);
 
@@ -1573,7 +1610,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               className={styles.tabela__toolbar__button}
               onClick={() => openMenu('settings-menu', toolbarSettingsButtonRef, { preferredPosition: 'bottom-end' })}
             >
-              <i className={`far fa-gear ${styles.tabela__toolbar__button__icon}`} />
+              <i className={`far fa-sliders ${styles.tabela__toolbar__button__icon}`} />
             </button>
           </div>
         </div>
@@ -1786,6 +1823,14 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               menuState={menuState}
               onClose={closeMenu}
               refList={[toolbarSettingsButtonRef.current]}
+              headerColumns={tableColumns.filter(c => !c.hasSubColumns)}
+              footerItems={tableFooter}
+              columnVisibility={columnVisibility}
+              footerVisibility={footerVisibility}
+              onApplyColumns={(nextCol, nextFoot) => {
+                setColumnVisibility(nextCol);
+                setFooterVisibility(nextFoot);
+              }}
             />
           )}
         </>
