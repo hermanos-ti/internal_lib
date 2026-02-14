@@ -75,8 +75,11 @@ export const VisibleColumnsModal = memo(({
 
   const menuStyle = {
     position: 'absolute',
-    top: `${menuState.position.top}px`,
     left: `${menuState.position.left}px`,
+    ...(menuState.position.verticalAnchor === 'bottom' && menuState.position.bottom != null
+      ? { bottom: `${menuState.position.bottom}px` }
+      : { top: `${menuState.position.top}px` }
+    ),
     zIndex: 1001
   };
 

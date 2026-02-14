@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--modal-overlay);
   z-index: 10;
 }
 
@@ -22,7 +22,6 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   min-height: 0;
   min-width: 0;
   max-width: 100%;
@@ -41,35 +40,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.tabela__wrapper::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.tabela__wrapper::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.tabela__wrapper.hasScroll::-webkit-scrollbar-track {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.tabela__wrapper::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.tabela__wrapper.hasScroll::-webkit-scrollbar-thumb {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.tabela__wrapper::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
 .tabela {
   table-layout: auto; 
   border: none;
@@ -77,8 +47,8 @@
   border-spacing: 0;
   width: 100%;
   min-width: 100%;
-  color: #2b2b2b;
-  background-color: #fff;
+  color: var(--modal-text-main);
+  background-color: var(--table-surface);
   flex-shrink: 0;
 }
 
@@ -92,13 +62,13 @@
 }
 
 .tabela__header__cell {
-  border-top: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
+  border-top: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--modal-border);
   padding: 0.75rem;
   text-align: left;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #2b2b2b;
+  color: var(--modal-text-main);
   letter-spacing: 0.035em;
   overflow: hidden;
   margin: 0 auto;
@@ -106,12 +76,12 @@
 
   &:first-child {
     border-top-left-radius: 0.5rem;
-    border-left: 1px solid #e0e0e0;
+    border-left: 1px solid var(--modal-border);
   }
 
   &:last-child {
     border-top-right-radius: 0.5rem;
-    border-right: 1px solid #e0e0e0;
+    border-right: 1px solid var(--modal-border);
   }
 
   &.tabela__header__cell__sortable{
@@ -127,9 +97,9 @@
 }
 
 .isNastedHeader .tabela__header__row .tabela__header__cell {
-  border-top: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
-  border-right: 1px solid #e0e0e0;
+  border-top: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--modal-border);
+  border-right: 1px solid var(--modal-border);
     
   &:first-child {
     border-top-left-radius: 0.5rem;
@@ -156,7 +126,7 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   line-height: 1.2 !important;
 }
 
@@ -177,7 +147,7 @@
   border: none;
 
   &:hover {
-    background: #f5f5f5;
+    background: var(--sidebar-hover-bg);
   }
 
   &:last-child .tabela__body__cell {
@@ -191,13 +161,145 @@
   }
 }
 
-.tabela__wrapper.hasScroll .tabela__body__row:last-child .tabela__body__cell {
+.tabela__body__groupHeader {
+  display: table-row;
+  border: none;
+  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
+}
+
+.tabela__body__groupHeader .tabela__body__cell {
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+}
+
+.tabela__body__groupHeaderLabel {
+  font-size: 0.875rem;
+}
+
+.tabela__group {
+  margin-bottom: 1.25rem;
+}
+
+.tabela__group:last-child {
+  margin-bottom: 0;
+}
+
+.tabela__group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: 0;
+  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  min-height: 2.5rem;
+}
+
+.tabela__group__headerCollapsed {
+  border-bottom: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 0.5rem;
+}
+
+/* Modo grupo: remover borda arredondada do header da tabela para encaixar no título do grupo */
+.tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:first-child {
+  border-top-left-radius: 0;
+}
+
+.tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:last-child {
+  border-top-right-radius: 0;
+}
+
+.tabela__group .isNastedHeader .tabela__header__row:first-child .tabela__header__cell:first-child {
+  border-top-left-radius: 0;
+}
+
+.tabela__group .isNastedHeader .tabela__header__row:first-child .tabela__header__cell:last-child {
+  border-top-right-radius: 0;
+}
+
+.tabela__group__label {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+  color: var(--modal-text-main);
+}
+
+.tabela__group__toggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--premium-primary, #0066cc);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.tabela__group__toggleBtn:hover {
+  background: color-mix(in srgb, var(--premium-primary, #0066cc) 12%, transparent);
+}
+
+.tabela__group__toggleBtn:focus-visible {
+  outline: 2px solid var(--premium-primary, #0066cc);
+  outline-offset: 2px;
+}
+
+.tabela__group__pagination {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.tabela__body__loadMoreRow {
+  display: table-row;
+  border: none;
+  cursor: pointer;
+}
+
+.tabela__body__loadMoreRow:hover {
+  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
+}
+
+.tabela__body__loadMoreCell {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--premium-primary, #0066cc);
+  text-align: left;
+  border-left: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
+  border-right: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
+  border-bottom: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 0 0 0.5rem 0.5rem;
+  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.02));
+}
+
+.tabela__body__loadMoreRow:hover .tabela__body__loadMoreCell {
+  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
+}
+
+.tabela__wrapper.hasScroll .tabela.hasFooter .tabela__body__row:last-child .tabela__body__cell {
   &:first-child {
     border-bottom-left-radius: 0;
   }
 
   &:last-child {
     border-bottom-right-radius: 0;
+  }
+}
+
+.tabela__wrapper.hasScroll .tabela:not(.hasFooter) .tabela__body__row:last-child .tabela__body__cell {
+  &:first-child {
+    border-bottom-left-radius: 0.5rem;
+  }
+
+  &:last-child {
+    border-bottom-right-radius: 0.5rem;
   }
 }
 
@@ -211,23 +313,23 @@
   text-align: left;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #2b2b2b;
+  color: var(--modal-text-main);
   letter-spacing: 0.035em;
   overflow: hidden;
   margin: 0 auto;
   white-space: nowrap;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--modal-border);
 
   &:not(:first-child) {
     border-left: none;
   }
 
   &:first-child {
-    border-left: 1px solid #e0e0e0;
+    border-left: 1px solid var(--modal-border);
   }
 
   &:last-child {
-    border-right: 1px solid #e0e0e0;
+    border-right: 1px solid var(--modal-border);
   }
 }
 
@@ -246,14 +348,14 @@
 .tabela__footer__cell {
   display: flex;
   width: 100%;
-  border-left: 1px solid #e0e0e0;
-  border-right: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
+  border-left: 1px solid var(--modal-border);
+  border-right: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--modal-border);
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #2b2b2b;
+  color: var(--modal-text-main);
   letter-spacing: 0.035em;
   margin: 0 auto;
   white-space: nowrap;
@@ -275,8 +377,8 @@
   margin-top: 0.75rem;
   display: flex;
   border-radius: 0.5rem;
-  border: 1px solid #e0e0e0;
-  background: linear-gradient(to top, #fcfcfc, #ffffff);
+  border: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
   flex-shrink: 0;
 }
 
@@ -308,7 +410,7 @@
 }
 
 .tabela__toolbar__top_with_buttons{
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--modal-border);
 }
 
 .tabela__toolbar__top__left {
@@ -327,7 +429,7 @@
 }
 
 .tabela__toolbar__bottom__left__first_item {
-  border-right: 2px solid #e0e0e0;
+  border-right: 2px solid var(--modal-border);
   padding-right: 0.6rem;
   flex-shrink: 0;
 
@@ -352,13 +454,13 @@
 
 .tabela__toolbar__icon {
   font-size: 1.25rem;
-  color: #2b2b2b;
+  color: var(--modal-text-main);
 }
 
 .tabela__toolbar__label {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #2b2b2b;
+  color: var(--modal-text-main);
 }
 
 .tabela__toolbar__button,
@@ -373,11 +475,10 @@
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 1px 2px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 1px solid #e0e3e8;
-  border-bottom-color: #d8dbe1;
+    inset 0 1px 0 var(--modal-border);
+  border: 1px solid var(--modal-border);
   border-radius: 0.5rem;
-  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
+  background: var(--table-menu-surface);
   padding: 0;
   margin: 0;
   transition: all 0.12s ease;
@@ -386,18 +487,17 @@
   position: relative;
 
   &:hover {
-    background: linear-gradient(to bottom, #fafbfc 0%, #f3f4f6 100%);
-    border-color: #d5d8de;
-    border-bottom-color: #cdd0d7;
+    background: var(--sidebar-hover-bg);
+    border-color: var(--modal-border);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.06),
       0 2px 3px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      inset 0 1px 0 var(--modal-border);
   }
 
   &:active {
-    background: linear-gradient(to bottom, #f0f1f3 0%, #f5f6f8 100%);
-    border-color: #d0d3da;
+    background: var(--sidebar-hover-bg);
+    border-color: var(--modal-border);
     box-shadow: 
       inset 0 1px 2px rgba(0, 0, 0, 0.08),
       inset 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -410,10 +510,10 @@
 
   &:focus-visible {
     outline: none;
-    border-color: #6366f1;
+    border-color: var(--premium-primary);
     box-shadow: 
-      0 0 0 3px rgba(99, 102, 241, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      0 0 0 3px color-mix(in srgb, var(--premium-primary) 12%, transparent),
+      inset 0 1px 0 var(--modal-border);
   }
 
   &.without_border {
@@ -423,8 +523,8 @@
   }
 
   &.without_border:hover {
-    background: #fafbfc;
-    border: 1px solid #eaebeb;
+    background: var(--sidebar-hover-bg);
+    border: 1px solid var(--modal-border);
   }
 }
 
@@ -437,18 +537,18 @@
 
 .tabela__toolbar__button__icon {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   transition: color 0.15s ease;
   line-height: 1.2 !important;
   flex-shrink: 0;
 }
 
 .tabela__toolbar__button:hover .tabela__toolbar__button__icon {
-  color: #4b5563;
+  color: var(--modal-text-main);
 }
 
 .tabela__toolbar__button__label {
-  color: #4b5563;
+  color: var(--modal-text-main);
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -464,7 +564,7 @@
 }
 
 .tabela__toolbar__search__icon{
-  color: #6b7280;
+  color: var(--modal-text-muted);
   font-size: 13px;
   transition: color 0.15s ease;
   line-height: 1.2 !important;
@@ -487,7 +587,7 @@
   outline: none;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #2b2b2b;
+  color: var(--modal-text-main);
   background: transparent;
 
   transition: width 0.2s ease;
@@ -515,7 +615,7 @@
   position: absolute;
   width: 300px;
   max-height: 420px;
-  background: #ffffff;
+  background: var(--table-menu-surface);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -558,14 +658,14 @@
 
 .columnSelectionMenu__header {
   padding: 0.5rem;
-  border-bottom: 1px solid #f0f0f0;
-  background: linear-gradient(to bottom, #fcfcfc, #ffffff);
+  border-bottom: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .columnSelectionMenu__header__title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--modal-text-main);
   padding: 0.35rem 0.65rem;
 }
 
@@ -584,7 +684,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -592,12 +692,12 @@
 }
 
 .settingsMenu__backBtn:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--sidebar-hover-bg);
+  color: var(--modal-text-main);
 }
 
 .settingsMenu__backBtn:active {
-  background: #e5e7eb;
+  background: var(--modal-border);
 }
 
 .columnSelectionMenu__searchWrapper {
@@ -607,31 +707,31 @@
 .columnSelectionMenu__search {
   width: 100%;
   padding: 0.35rem 0.65rem;
-  border: 1px solid #e0e3e8;
+  border: 1px solid var(--modal-border);
   border-radius: 8px;
   font-size: 0.875rem;
   font-family: inherit;
-  color: #2b2b2b;
-  background: #fafbfc;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
   transition: all 0.2s ease;
   outline: none;
 
   &::placeholder {
-    color: #717780;
+    color: var(--modal-text-muted);
   }
 
   &:hover {
-    border-color: #d5d8de;
+    border-color: var(--modal-border);
   }
 
   &:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-    background: #fff;
+    border-color: var(--premium-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--premium-primary) 12%, transparent);
+    background: var(--table-menu-surface);
   }
 
   &:focus + .columnSelectionMenu__searchIcon {
-    color: #6366f1;
+    color: var(--premium-primary);
   }
 }
 
@@ -640,7 +740,7 @@
   overflow-y: auto;
   padding: 0.5rem;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: var(--premium-primary) var(--premium-border);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -651,12 +751,12 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: var(--premium-primary);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: var(--premium-secondary);
   }
 }
 
@@ -673,23 +773,23 @@
 }
 
 .columnSelectionMenu__item:hover {
-  background: #f3f4f6;
+  background: var(--sidebar-hover-bg);
 }
 
 .columnSelectionMenu__item:active {
-  background: #e5e7eb;
+  background: var(--modal-border);
   transform: scale(0.99);
 }
 
 .columnSelectionMenu__item.selected {
-  background: rgba(99, 102, 241, 0.08);
-  color: #6366f1;
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  color: var(--premium-primary);
   font-weight: 600;
 }
 
 .columnSelectionMenu__item.selected .columnSelectionMenu__item__icon,
 .columnSelectionMenu__item.selected .columnSelectionMenu__item__label {
-  color: #6366f1;
+  color: var(--premium-primary);
 }
 
 button.columnSelectionMenu__item {
@@ -702,7 +802,7 @@ button.columnSelectionMenu__item {
 }
 
 .columnSelectionMenu__item__icon {
-  color: #4b5563;
+  color: var(--modal-text-main);
   font-size: 0.875rem;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -713,11 +813,11 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--modal-text-main);
 }
 
 .columnSelectionMenu__item__check {
-  color: #6366f1;
+  color: var(--premium-primary);
   font-size: 0.875rem;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -733,7 +833,7 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: center;
   padding: 32px 16px;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
 }
 
 .columnSelectionMenu__empty__icon {
@@ -750,7 +850,7 @@ button.columnSelectionMenu__item {
 .visibleColumnsModal__sectionTitle {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.5rem 0.75rem 0.25rem;
@@ -768,8 +868,8 @@ button.columnSelectionMenu__item {
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-top: 1px solid #f0f0f0;
-  background: linear-gradient(to top, #fefefe, #ffffff);
+  border-top: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 .visibleColumnsModal__footer__actions .columnSelectionMenu__footer__button {
   flex: 1;
@@ -782,7 +882,7 @@ button.columnSelectionMenu__item {
   min-width: 280px;
   max-width: 320px;
   max-height: 420px;
-  background: #fff;
+  background: var(--table-menu-surface);
   border-radius: 12px;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -803,14 +903,14 @@ button.columnSelectionMenu__item {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-bottom: 1px solid #f0f0f0;
-  background: linear-gradient(to bottom, #fcfcfc, #fff);
+  border-bottom: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .visibleColumnsModal__header__title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--modal-text-main);
   padding: 0.35rem 0.65rem;
 }
 
@@ -824,26 +924,28 @@ button.columnSelectionMenu__item {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .visibleColumnsModal__closeBtn:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--sidebar-hover-bg);
+  color: var(--modal-text-main);
 }
 
 .visibleColumnsModal__closeBtn:active {
-  background: #e5e7eb;
+  background: var(--modal-border);
 }
 
 .visibleColumnsModal__body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   overflow-y: auto;
-  padding: 0.5rem;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: var(--premium-primary) var(--premium-border);
 }
 
 .visibleColumnsModal__body::-webkit-scrollbar {
@@ -851,16 +953,15 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__body::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--premium-primary);
   border-radius: 3px;
 }
 
 .visibleColumnsModal__section {
-  margin-bottom: 0.75rem;
-}
-
-.visibleColumnsModal__section:last-child {
-  margin-bottom: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .visibleColumnsModal__sectionHeader {
@@ -868,14 +969,12 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.25rem 0 0.5rem;
-  margin-bottom: 0.125rem;
 }
 
 .visibleColumnsModal__sectionLabel {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--modal-text-main);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -887,22 +986,22 @@ button.columnSelectionMenu__item {
   padding: 0.35rem 0.65rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #4b5563;
-  background: #fafbfc;
-  border: 1px solid #e0e3e8;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .visibleColumnsModal__sectionToggle:hover {
-  background: #f3f4f6;
-  border-color: #d5d8de;
-  color: #374151;
+  background: var(--sidebar-hover-bg);
+  border-color: var(--modal-border);
+  color: var(--modal-text-main);
 }
 
 .visibleColumnsModal__sectionToggle:active {
-  background: #e5e7eb;
+  background: var(--modal-border);
 }
 
 .visibleColumnsModal__list {
@@ -924,11 +1023,11 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__item:hover {
-  background: #f3f4f6;
+  background: var(--sidebar-hover-bg);
 }
 
 .visibleColumnsModal__item:active {
-  background: #e5e7eb;
+  background: var(--modal-border);
 }
 
 .visibleColumnsModal__checkboxWrap {
@@ -939,9 +1038,9 @@ button.columnSelectionMenu__item {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-  border: 1px solid #e0e3e8;
+  border: 1px solid var(--modal-border);
   border-radius: 4px;
-  background: #fff;
+  background: var(--table-menu-surface);
   transition: all 0.15s ease;
 }
 
@@ -956,13 +1055,13 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__item input:checked + .visibleColumnsModal__checkboxWrap {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--premium-primary);
+  border-color: var(--premium-primary);
   color: #fff;
 }
 
 .visibleColumnsModal__item input:focus-visible + .visibleColumnsModal__checkboxWrap {
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 25%, transparent);
 }
 
 .visibleColumnsModal__checkboxWrap__check {
@@ -980,7 +1079,7 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__itemIcon {
-  color: #4b5563;
+  color: var(--modal-text-main);
   font-size: 0.875rem;
   flex-shrink: 0;
   line-height: 0.9;
@@ -990,7 +1089,7 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--modal-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1000,8 +1099,8 @@ button.columnSelectionMenu__item {
   display: flex;
   justify-content: flex-end;
   padding: 0.5rem;
-  border-top: 1px solid #f0f0f0;
-  background: linear-gradient(to top, #fefefe, #fff);
+  border-top: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .visibleColumnsModal__footerBtn {
@@ -1012,7 +1111,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #717780;
+  color: var(--modal-text-muted);
   background: transparent;
   border: none;
   border-radius: 0.5rem;
@@ -1021,26 +1120,26 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__footerBtn:hover {
-  background: #f3f4f6;
-  color: #4b5563;
+  background: var(--sidebar-hover-bg);
+  color: var(--modal-text-main);
 }
 
 .visibleColumnsModal__footerBtn:active {
-  background: #e5e7eb;
+  background: var(--modal-border);
 }
 
 .visibleColumnsModal__empty {
   padding: 1rem 0.5rem;
   text-align: center;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
   font-weight: 500;
 }
 
 .columnSelectionMenu__footer {
   padding: 0.5rem;
-  border-top: 1px solid #f0f0f0;
-  background: linear-gradient(to top, #fefefe, #ffffff);
+  border-top: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .columnSelectionMenu__footer__button {
@@ -1055,17 +1154,17 @@ button.columnSelectionMenu__item {
   user-select: none;
 
   &:hover {
-    background: #f3f4f6;
+    background: var(--sidebar-hover-bg);
   }
 
   &:active {
-    background: #e5e7eb;
+    background: var(--modal-border);
     transform: scale(0.99);
   }
 }
 
 .columnSelectionMenu__footer__button__icon {
-  color: #717780;
+  color: var(--modal-text-muted);
   font-size: 0.875rem;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -1076,7 +1175,7 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #717780;
+  color: var(--modal-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1103,7 +1202,7 @@ button.columnSelectionMenu__item {
   position: absolute;
   inset: 0;
   border-radius: 8px;
-  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), color-mix(in srgb, var(--premium-primary) 15%, transparent) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -1117,7 +1216,7 @@ button.columnSelectionMenu__item {
   position: absolute;
   width: 320px;
   max-height: 420px;
-  background: #ffffff;
+  background: var(--table-menu-surface);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1141,7 +1240,7 @@ button.columnSelectionMenu__item {
   overflow-y: auto;
   padding: 0.5rem;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: var(--premium-primary) var(--premium-border);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -1152,12 +1251,12 @@ button.columnSelectionMenu__item {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: var(--premium-primary);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: var(--premium-secondary);
   }
 }
 
@@ -1180,14 +1279,14 @@ button.columnSelectionMenu__item {
 
   &.dragging {
     opacity: 0.5;
-    background: #f0f1f4;
-    border-color: #d0d3da;
+    background: var(--modal-border);
+    border-color: var(--modal-border);
     cursor: grabbing;
   }
 
   &.dragOver {
-    border-color: #6366f1;
-    background: rgba(99, 102, 241, 0.04);
+    border-color: var(--premium-primary);
+    background: color-mix(in srgb, var(--premium-primary) 4%, transparent);
   }
 }
 
@@ -1208,7 +1307,7 @@ button.columnSelectionMenu__item {
   justify-content: center;
   min-width: 1.35rem;
   height: 1.85rem;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   cursor: grab;
   border-radius: 4px;
   transition: all 0.15s ease;
@@ -1232,27 +1331,27 @@ button.columnSelectionMenu__item {
   min-width: 0;
   padding: 0.3rem 0.5rem;
   height: 1.85rem;
-  background: #fff;
-  border: 1px solid #e0e3e8;
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
 
   &:hover {
-    border-color: #d0d3da;
-    background: #fafbfc;
+    border-color: var(--modal-border);
+    background: var(--table-menu-surface);
   }
 
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    border-color: var(--premium-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
   }
 }
 
 .sortMenu__item__columnSelect__icon {
-  color: #6b7280;
+  color: var(--modal-text-muted);
   font-size: 12px;
   flex-shrink: 0;
   line-height: 1 !important;
@@ -1261,7 +1360,7 @@ button.columnSelectionMenu__item {
 .sortMenu__item__columnSelect__label {
   font-size: 0.8rem;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--modal-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1269,7 +1368,7 @@ button.columnSelectionMenu__item {
 }
 
 .sortMenu__item__columnSelect__chevron {
-  color: #9ca3af;
+  color: var(--modal-text-muted);
   font-size: 10px;
   flex-shrink: 0;
   line-height: 1 !important;
@@ -1281,45 +1380,45 @@ button.columnSelectionMenu__item {
   justify-content: center;
   min-width: 1.85rem;
   height: 1.85rem;
-  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
-  border: 1px solid #e0e3e8;
-  border-bottom-color: #d8dbe1;
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
+  border-bottom-color: var(--modal-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.12s ease;
   flex-shrink: 0;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    inset 0 1px 0 var(--modal-border);
 
   &:hover {
-    background: linear-gradient(to bottom, #fafbfc 0%, #f3f4f6 100%);
-    border-color: #d5d8de;
+    background: var(--table-menu-surface);
+    border-color: var(--modal-border);
   }
 
   &:active {
-    background: linear-gradient(to bottom, #f0f1f3 0%, #f5f6f8 100%);
+    background: var(--sidebar-hover-bg);
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     transform: translateY(0.5px);
   }
 
   &.asc {
-    color: #10b981;
-    border-color: #a7f3d0;
-    background: linear-gradient(to bottom, #ecfdf5 0%, #d1fae5 100%);
+    color: var(--table-success);
+    border-color: var(--table-success);
+    background: var(--table-success-bg);
 
     &:hover {
-      background: linear-gradient(to bottom, #d1fae5 0%, #a7f3d0 100%);
+      background: var(--table-success-bg);
     }
   }
 
   &.desc {
-    color: #f59e0b;
-    border-color: #fde68a;
-    background: linear-gradient(to bottom, #fffbeb 0%, #fef3c7 100%);
+    color: var(--table-warning);
+    border-color: var(--table-warning);
+    background: var(--table-warning-bg);
 
     &:hover {
-      background: linear-gradient(to bottom, #fef3c7 0%, #fde68a 100%);
+      background: var(--table-warning-bg);
     }
   }
 }
@@ -1335,7 +1434,7 @@ button.columnSelectionMenu__item {
   justify-content: center;
   min-width: 1.85rem;
   height: 1.85rem;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
   background: transparent;
   border: none;
   border-radius: 4px;
@@ -1344,12 +1443,12 @@ button.columnSelectionMenu__item {
   flex-shrink: 0;
 
   &:hover {
-    color: #ef4444;
-    background: #fef2f2;
+    color: var(--table-error);
+    background: var(--table-error-bg);
   }
 
   &:active {
-    background: #fee2e2;
+    background: var(--table-error-bg);
     transform: scale(0.95);
   }
 }
@@ -1365,7 +1464,7 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
 }
 
 .sortMenu__empty__icon {
@@ -1381,8 +1480,8 @@ button.columnSelectionMenu__item {
 
 .sortMenu__footer {
   padding: 0.5rem;
-  border-top: 1px solid #f0f0f0;
-  background: linear-gradient(to top, #fefefe, #ffffff);
+  border-top: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -1401,44 +1500,45 @@ button.columnSelectionMenu__item {
   border: 1px solid transparent;
   background: transparent;
   width: 100%;
+  color: var(--modal-text-main);
 
   &:hover {
-    background: #f3f4f6;
+    background: var(--sidebar-hover-bg);
   }
 
   &:active {
-    background: #e5e7eb;
+    background: var(--modal-border);
     transform: scale(0.99);
   }
 
   &.primary {
-    background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
-    border: 1px solid #e0e3e8;
-    border-bottom-color: #d8dbe1;
+    background: var(--table-menu-surface);
+    border: 1px solid var(--modal-border);
+    border-bottom-color: var(--modal-border);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      inset 0 1px 0 var(--modal-border);
 
     &:hover {
-      background: linear-gradient(to bottom, #fafbfc 0%, #f3f4f6 100%);
-      border-color: #d5d8de;
+      background: var(--table-menu-surface);
+      border-color: var(--modal-border);
     }
 
     &:active {
-      background: linear-gradient(to bottom, #f0f1f3 0%, #f5f6f8 100%);
+      background: var(--sidebar-hover-bg);
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     }
   }
 
   &.danger {
-    color: #dc2626;
+    color: var(--table-error);
     
     &:hover {
-      background: #fef2f2;
+      background: var(--table-error-bg);
     }
 
     &:active {
-      background: #fee2e2;
+      background: var(--table-error-bg);
     }
   }
 }
@@ -1471,7 +1571,7 @@ button.columnSelectionMenu__item {
 .filterMenu {
   position: absolute;
   width: 280px;
-  background: #ffffff;
+  background: var(--table-menu-surface);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1495,8 +1595,8 @@ button.columnSelectionMenu__item {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 0.75rem;
-  border-bottom: 1px solid #f0f1f4;
-  background: linear-gradient(to bottom, #fafbfc 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .filterMenu__header__icon {
@@ -1506,8 +1606,8 @@ button.columnSelectionMenu__item {
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 6px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--premium-primary) 0%, var(--premium-accent) 100%);
+  color: #fff;
   font-size: 0.7rem;
 }
 
@@ -1515,7 +1615,7 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--modal-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1536,14 +1636,14 @@ button.columnSelectionMenu__item {
   border-radius: 4px;
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   cursor: pointer;
   font-size: 0.7rem;
   transition: all 0.15s ease;
 
   &:hover {
-    background: #f3f4f6;
-    color: #374151;
+    background: var(--sidebar-hover-bg);
+    color: var(--modal-text-main);
   }
 }
 
@@ -1553,8 +1653,8 @@ button.columnSelectionMenu__item {
   right: 0;
   margin-top: 0.25rem;
   min-width: 200px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1572,7 +1672,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--modal-text-main);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -1580,14 +1680,14 @@ button.columnSelectionMenu__item {
   text-align: left;
 
   &:hover {
-    background: #f3f4f6;
+    background: var(--sidebar-hover-bg);
   }
 
   &.danger {
-    color: #dc2626;
+    color: var(--table-error);
 
     &:hover {
-      background: #fef2f2;
+      background: var(--table-error-bg);
     }
   }
 }
@@ -1614,7 +1714,7 @@ button.columnSelectionMenu__item {
 .filterMenu__field__label {
   font-size: 0.65rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1624,10 +1724,10 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #374151;
-  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e0e3e8;
-  border-bottom-color: #d8dbe1;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
+  border-bottom-color: var(--modal-border);
   border-radius: 6px;
   outline: none;
   cursor: pointer;
@@ -1637,18 +1737,18 @@ button.columnSelectionMenu__item {
   background-position: right 0.5rem center;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    inset 0 1px 0 var(--modal-border);
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: #f9fafb;
-    border-color: #d5d8de;
+    background-color: var(--table-menu-surface);
+    border-color: var(--modal-border);
   }
 
   &:focus {
-    border-color: #6366f1;
+    border-color: var(--premium-primary);
     box-shadow: 
-      0 0 0 2px rgba(99, 102, 241, 0.1),
+      0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent),
       0 1px 2px rgba(0, 0, 0, 0.04);
   }
 }
@@ -1658,31 +1758,31 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #374151;
-  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e0e3e8;
-  border-bottom-color: #d8dbe1;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
+  border-bottom-color: var(--modal-border);
   border-radius: 6px;
   outline: none;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    inset 0 1px 0 var(--modal-border);
   transition: all 0.15s ease;
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--modal-text-muted);
     font-weight: 400;
   }
 
   &:hover {
-    background-color: #f9fafb;
-    border-color: #d5d8de;
+    background-color: var(--table-menu-surface);
+    border-color: var(--modal-border);
   }
 
   &:focus {
-    border-color: #6366f1;
+    border-color: var(--premium-primary);
     box-shadow: 
-      0 0 0 2px rgba(99, 102, 241, 0.1),
+      0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent),
       0 1px 2px rgba(0, 0, 0, 0.04);
   }
 }
@@ -1695,7 +1795,7 @@ button.columnSelectionMenu__item {
 
 .filterMenu__field__range__separator {
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
   font-weight: 500;
 }
 
@@ -1704,8 +1804,8 @@ button.columnSelectionMenu__item {
   flex-direction: column;
   gap: 0.375rem;
   padding: 0.5rem 0.75rem 0.625rem;
-  border-top: 1px solid #f0f1f4;
-  background: linear-gradient(to bottom, #fafbfc 0%, #f5f6f8 100%);
+  border-top: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .filterMenu__footer__button {
@@ -1716,7 +1816,7 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.625rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--modal-text-main);
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -1726,61 +1826,61 @@ button.columnSelectionMenu__item {
   user-select: none;
 
   &:hover {
-    background: #f3f4f6;
+    background: var(--sidebar-hover-bg);
   }
 
   &:active {
-    background: #e5e7eb;
+    background: var(--modal-border);
     transform: scale(0.99);
   }
 
   &.primary {
-    background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
-    border: 1px solid #e0e3e8;
-    border-bottom-color: #d8dbe1;
+    background: var(--table-menu-surface);
+    border: 1px solid var(--modal-border);
+    border-bottom-color: var(--modal-border);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      inset 0 1px 0 var(--modal-border);
 
     &:hover {
-      background: linear-gradient(to bottom, #fafbfc 0%, #f3f4f6 100%);
-      border-color: #d5d8de;
+      background: var(--table-menu-surface);
+      border-color: var(--modal-border);
     }
 
     &:active {
-      background: linear-gradient(to bottom, #f0f1f3 0%, #f5f6f8 100%);
+      background: var(--sidebar-hover-bg);
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     }
   }
 
   &.secondary {
-    background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
-    border: 1px solid #e0e3e8;
-    border-bottom-color: #d8dbe1;
+    background: var(--table-menu-surface);
+    border: 1px solid var(--modal-border);
+    border-bottom-color: var(--modal-border);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      inset 0 1px 0 var(--modal-border);
 
     &:hover {
-      background: linear-gradient(to bottom, #fafbfc 0%, #f3f4f6 100%);
-      border-color: #d5d8de;
+      background: var(--table-menu-surface);
+      border-color: var(--modal-border);
     }
 
     &:active {
-      background: linear-gradient(to bottom, #f0f1f3 0%, #f5f6f8 100%);
+      background: var(--sidebar-hover-bg);
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     }
   }
 
   &.danger {
-    color: #dc2626;
+    color: var(--table-error);
     
     &:hover {
-      background: #fef2f2;
+      background: var(--table-error-bg);
     }
 
     &:active {
-      background: #fee2e2;
+      background: var(--table-error-bg);
     }
   }
 }
@@ -1798,7 +1898,7 @@ button.columnSelectionMenu__item {
   position: absolute;
   width: 580px;
   max-height: 520px;
-  background: #ffffff;
+  background: var(--table-menu-surface);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1822,14 +1922,14 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: space-between;
   padding: 0.625rem 0.75rem;
-  border-bottom: 1px solid #f0f1f4;
-  background: linear-gradient(to bottom, #fafbfc 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .advancedFilterMenu__header__title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--modal-text-main);
 }
 
 .advancedFilterMenu__header__close {
@@ -1841,13 +1941,13 @@ button.columnSelectionMenu__item {
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background: #f3f4f6;
-    color: #374151;
+    background: var(--sidebar-hover-bg);
+    color: var(--modal-text-main);
   }
 }
 
@@ -1856,7 +1956,7 @@ button.columnSelectionMenu__item {
   overflow-y: auto;
   padding: 0.5rem;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: var(--premium-primary) var(--premium-border);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -1867,7 +1967,7 @@ button.columnSelectionMenu__item {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: var(--premium-primary);
     border-radius: 3px;
   }
 }
@@ -1879,7 +1979,7 @@ button.columnSelectionMenu__item {
   justify-content: center;
   gap: 0.5rem;
   padding: 1.5rem 1rem;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
 }
 
 .advancedFilterMenu__empty__icon {
@@ -1917,9 +2017,9 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.7rem;
   font-weight: 600;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--premium-primary);
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--premium-primary) 20%, transparent);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1927,22 +2027,22 @@ button.columnSelectionMenu__item {
   appearance: none;
 
   &:hover {
-    background: rgba(99, 102, 241, 0.12);
-    border-color: rgba(99, 102, 241, 0.3);
+    background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
+    border-color: color-mix(in srgb, var(--premium-primary) 30%, transparent);
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 20%, transparent);
   }
 
   &.static {
     cursor: default;
-    background: rgba(99, 102, 241, 0.08);
+    background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
 
     &:hover {
-      background: rgba(99, 102, 241, 0.08);
-      border-color: rgba(99, 102, 241, 0.2);
+      background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+      border-color: color-mix(in srgb, var(--premium-primary) 20%, transparent);
     }
   }
 }
@@ -1958,22 +2058,22 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
-  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e0e3e8;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 4px;
   transition: all 0.15s ease;
 }
 
 .advancedFilterMenu__ruleRow .select__trigger:hover {
-  border-color: #d5d8de;
-  background: linear-gradient(to bottom, #fafbfc 0%, #f5f6f7 100%);
+  border-color: var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .advancedFilterMenu__ruleRow .select__trigger:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  border-color: var(--premium-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
 }
 
 /* Estilo específico para select de coluna */
@@ -1996,14 +2096,14 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.7rem;
   font-weight: 600;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--premium-primary);
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--premium-primary) 20%, transparent);
 }
 
 .advancedFilterMenu__ruleRow .select.advancedFilterMenu__logicSelect .select__trigger:hover {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--premium-primary) 30%, transparent);
 }
 
 /* Value input */
@@ -2014,25 +2114,25 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
-  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e0e3e8;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 4px;
   transition: all 0.15s ease;
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--modal-text-muted);
     font-weight: 400;
   }
 
   &:hover {
-    border-color: #d5d8de;
+    border-color: var(--modal-border);
   }
 
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    border-color: var(--premium-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
   }
 
   &.hidden {
@@ -2048,31 +2148,31 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
-  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e0e3e8;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 4px;
   transition: all 0.15s ease;
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--modal-text-muted);
     font-weight: 400;
   }
 
   &:hover {
-    border-color: #d5d8de;
+    border-color: var(--modal-border);
   }
 
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    border-color: var(--premium-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
   }
 }
 
 .advancedFilterMenu__rangeSeparator {
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
   font-weight: 500;
 }
 
@@ -2086,7 +2186,7 @@ button.columnSelectionMenu__item {
   border-radius: 4px;
   border: none;
   background: transparent;
-  color: #9ca3af;
+  color: var(--modal-text-muted);
   cursor: pointer;
   margin-left: auto;
   flex-shrink: 0;
@@ -2095,8 +2195,8 @@ button.columnSelectionMenu__item {
   position: relative;
 
   &:hover {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--sidebar-hover-bg);
+    color: var(--modal-text-muted);
   }
 }
 
@@ -2104,8 +2204,8 @@ button.columnSelectionMenu__item {
 .advancedFilterMenu__actionDropdown {
   position: absolute;
   min-width: 140px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2123,7 +2223,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--modal-text-main);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2131,14 +2231,14 @@ button.columnSelectionMenu__item {
   text-align: left;
 
   &:hover {
-    background: #f3f4f6;
+    background: var(--sidebar-hover-bg);
   }
 
   &.danger {
-    color: #dc2626;
+    color: var(--table-error);
 
     &:hover {
-      background: #fef2f2;
+      background: var(--table-error-bg);
     }
   }
 }
@@ -2153,9 +2253,9 @@ button.columnSelectionMenu__item {
 .advancedFilterMenu__group {
   margin: 0.375rem 0;
   padding: 0.5rem;
-  background: #f8f9fb;
-  border: 1px solid #e5e7eb;
-  border-left: 3px solid #6366f1;
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
+  border-left: 3px solid var(--premium-primary);
   border-radius: 6px;
 }
 
@@ -2176,9 +2276,9 @@ button.columnSelectionMenu__item {
   padding: 0.375rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #6366f1;
+  color: var(--premium-primary);
   background: transparent;
-  border: 1px dashed #d1d5db;
+  border: 1px dashed var(--modal-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -2186,8 +2286,8 @@ button.columnSelectionMenu__item {
   margin-top: 0.375rem;
 
   &:hover {
-    background: rgba(99, 102, 241, 0.04);
-    border-color: #6366f1;
+    background: color-mix(in srgb, var(--premium-primary) 4%, transparent);
+    border-color: var(--premium-primary);
   }
 }
 
@@ -2202,8 +2302,8 @@ button.columnSelectionMenu__item {
   left: 0;
   margin-top: 0.25rem;
   min-width: 160px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2221,7 +2321,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--modal-text-main);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2229,7 +2329,7 @@ button.columnSelectionMenu__item {
   text-align: left;
 
   &:hover {
-    background: #f3f4f6;
+    background: var(--sidebar-hover-bg);
   }
 }
 
@@ -2237,7 +2337,7 @@ button.columnSelectionMenu__item {
   font-size: 0.7rem;
   width: 1rem;
   text-align: center;
-  color: #6366f1;
+  color: var(--premium-primary);
 }
 
 /* Footer */
@@ -2247,8 +2347,8 @@ button.columnSelectionMenu__item {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid #f0f1f4;
-  background: linear-gradient(to bottom, #fafbfc 0%, #f5f6f8 100%);
+  border-top: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
 }
 
 .advancedFilterMenu__footer__left {
@@ -2269,46 +2369,46 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
-  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
-  border: 1px solid #e0e3e8;
-  border-bottom-color: #d8dbe1;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
+  border-bottom-color: var(--modal-border);
   border-radius: 6px;
   cursor: pointer;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    inset 0 1px 0 var(--modal-border);
   transition: all 0.15s ease;
 
   &:hover {
-    background: linear-gradient(to bottom, #fafbfc 0%, #f3f4f6 100%);
-    border-color: #d5d8de;
+    background: var(--table-menu-surface);
+    border-color: var(--modal-border);
   }
 
   &:active {
-    background: linear-gradient(to bottom, #f0f1f3 0%, #f5f6f8 100%);
+    background: var(--sidebar-hover-bg);
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   &.primary {
-    background: linear-gradient(to bottom, #6366f1 0%, #5558e3 100%);
-    color: #ffffff;
-    border-color: #5558e3;
+    background: linear-gradient(to bottom, var(--premium-primary) 0%, var(--premium-primary) 100%);
+    color: #fff;
+    border-color: var(--premium-primary);
     box-shadow: 
-      0 1px 2px rgba(99, 102, 241, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      0 1px 2px color-mix(in srgb, var(--premium-primary) 30%, transparent),
+      inset 0 1px 0 var(--modal-border);
 
     &:hover {
-      background: linear-gradient(to bottom, #5558e3 0%, #4f52d6 100%);
+      background: var(--premium-primary);
     }
   }
 
   &.danger {
-    color: #dc2626;
+    color: var(--table-error);
 
     &:hover {
-      background: #fef2f2;
-      border-color: #fecaca;
+      background: var(--table-error-bg);
+      border-color: var(--table-error);
     }
   }
 }
@@ -2334,9 +2434,9 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
-  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #e0e3e8;
+  color: var(--modal-text-main);
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -2345,18 +2445,18 @@ button.columnSelectionMenu__item {
   outline: none;
 
   &:hover:not(:disabled) {
-    border-color: #d5d8de;
-    background: linear-gradient(to bottom, #fafbfc 0%, #f5f6f8 100%);
+    border-color: var(--modal-border);
+    background: var(--table-menu-surface);
   }
 
   &:focus:not(:disabled) {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    border-color: var(--premium-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
   }
 
   &.open {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    border-color: var(--premium-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
   }
 
   &:disabled {
@@ -2370,17 +2470,17 @@ button.columnSelectionMenu__item {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #374151;
+  color: var(--modal-text-main);
 
   &:empty::before {
     content: attr(placeholder);
-    color: #9ca3af;
+    color: var(--modal-text-muted);
   }
 }
 
 .select__trigger__icon {
   font-size: 0.65rem;
-  color: #6b7280;
+  color: var(--modal-text-muted);
   transition: transform 0.2s ease;
   margin-left: 0.5rem;
   flex-shrink: 0;
@@ -2398,8 +2498,8 @@ button.columnSelectionMenu__item {
   margin-top: 0.25rem;
   max-height: 200px;
   overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--table-menu-surface);
+  border: 1px solid var(--modal-border);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2407,7 +2507,7 @@ button.columnSelectionMenu__item {
   z-index: 1000;
   animation: menuSlideIn 0.15s ease-out forwards;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: var(--premium-primary) var(--premium-border);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -2418,7 +2518,7 @@ button.columnSelectionMenu__item {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: var(--premium-primary);
     border-radius: 3px;
   }
 }
@@ -2430,30 +2530,30 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--modal-text-main);
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 
   &:hover,
   &.highlighted {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--sidebar-hover-bg);
+    color: var(--modal-text-main);
   }
 
   &.selected {
-    background: rgba(99, 102, 241, 0.08);
-    color: #6366f1;
+    background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+    color: var(--premium-primary);
     font-weight: 600;
   }
 
   &.selected.highlighted {
-    background: rgba(99, 102, 241, 0.12);
+    background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
   }
 }
 
 .select__option__check {
   font-size: 0.7rem;
-  color: #6366f1;
+  color: var(--premium-primary);
   margin-left: 0.5rem;
 }

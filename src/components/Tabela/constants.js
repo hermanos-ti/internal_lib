@@ -25,6 +25,7 @@ export const DEFAULT_COLUMN_CONFIG = {
   searchable: true,
   sortable: true,
   filterable: true,
+  groupable: false,
   render: null, // render(value, row, column, rowIndex, colIndex)
   subColumns: null, // Array de subcolunas ou null
   // TODO: Adicionar tooltip e cellTooltip

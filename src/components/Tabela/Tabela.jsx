@@ -1,11 +1,13 @@
+import '../../styles/themes.css';
 import styles from './Tabela.module.css';
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef, useContext } from 'react';
 import { Loader } from '../Loader/Loader';
 import { Pagination } from '../Pagination/Pagination';
 import { createPortal } from 'react-dom';
 
 import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
 import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu } from './components';
+import { PortalTargetContext } from './PortalTargetContext';
 
 export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
@@ -98,6 +100,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
 
   const [currentEditingFilter, setCurrentEditingFilter] = useState(null);
   const [currentAdvancedFilterGroup, setCurrentAdvancedFilterGroup] = useState(null);
+  const [groupByColumnKey, setGroupByColumnKey] = useState(null);
 
   const [menuState, setMenuState] = useState({
     isOpen: false,
@@ -250,6 +253,27 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
   }, [footer]);
 
+  const getPortalContainerFromContext = useContext(PortalTargetContext);
+  const getPortalContainerFn = mergedOptions.getPortalContainer ?? getPortalContainerFromContext;
+  const getPortalContainerResolved = useCallback(() => (typeof getPortalContainerFn === 'function' ? getPortalContainerFn() : getPortalContainerFn) ?? document.body, [getPortalContainerFn]);
+
+  /** Converte posição (em coordenadas de documento) para coordenadas relativas ao container do portal quando não for body */
+  const positionToPortalCoordinates = useCallback((position, portalContainer) => {
+    if (!position || portalContainer === document.body) return position;
+    const rect = portalContainer.getBoundingClientRect?.();
+    if (!rect) return position;
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+    const viewportHeight = window.innerHeight;
+    const left = position.left - (rect.left + scrollX);
+    if (position.verticalAnchor === 'bottom' && position.bottom != null) {
+      const bottom = rect.bottom - viewportHeight + position.bottom;
+      return { ...position, left, bottom, top: undefined };
+    }
+    const top = position.top != null ? position.top - (rect.top + scrollY) : undefined;
+    return { ...position, left, top };
+  }, []);
+
   const calculateMenuPosition = useCallback((buttonElement, options = {}) => {
     const config = {
       menuWidth: options.menuWidth ?? 280,
@@ -286,27 +310,33 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
 
     let top = 0;
+    let bottom;
+    let verticalAnchor = 'top';
 
     if (config.preferredPosition.startsWith('bottom')) {
       if (availableSpaces.below >= config.menuHeight) {
         top = button.absoluteTop + button.height + config.offset;
       } else if (availableSpaces.above >= config.menuHeight) {
-        top = button.absoluteTop - config.menuHeight - config.offset;
+        verticalAnchor = 'bottom';
+        bottom = viewport.height - (button.top - config.offset);
       } else {
         if (availableSpaces.below >= availableSpaces.above) {
           top = button.absoluteTop + button.height + config.offset;
         } else {
-          top = button.absoluteTop - config.menuHeight - config.offset;
+          verticalAnchor = 'bottom';
+          bottom = viewport.height - (button.top - config.offset);
         }
       }
     } else {
       if (availableSpaces.above >= config.menuHeight) {
-        top = button.absoluteTop - config.menuHeight - config.offset;
+        verticalAnchor = 'bottom';
+        bottom = viewport.height - (button.top - config.offset);
       } else if (availableSpaces.below >= config.menuHeight) {
         top = button.absoluteTop + button.height + config.offset;
       } else {
         if (availableSpaces.above >= availableSpaces.below) {
-          top = button.absoluteTop - config.menuHeight - config.offset;
+          verticalAnchor = 'bottom';
+          bottom = viewport.height - (button.top - config.offset);
         } else {
           top = button.absoluteTop + button.height + config.offset;
         }
@@ -329,10 +359,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       }
     }
 
-    top = Math.max(viewport.scrollY + config.padding, top)
+    if (verticalAnchor === 'top') {
+      top = Math.max(viewport.scrollY + config.padding, top);
+    } else if (bottom != null) {
+      bottom = Math.max(config.padding, Math.min(bottom, viewport.height - config.padding));
+    }
     left = Math.max(viewport.scrollX + config.padding, left)
 
-    return { top, left };
+    return verticalAnchor === 'bottom'
+      ? { top: undefined, left, bottom, verticalAnchor: 'bottom' }
+      : { top, left, verticalAnchor: 'top' };
   });
 
   const closeMenu = useCallback((closingSessionId = null) => {
@@ -425,13 +461,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     const defaultWidth = menuType === 'sort-menu' ? 320 : 280;
     const defaultHeight = menuType === 'sort-menu' ? 380 : 320;
 
-    const position = calculateMenuPosition(buttonRef.current, {
+    const rawPosition = calculateMenuPosition(buttonRef.current, {
       menuWidth: options.menuWidth ?? defaultWidth,
       menuHeight: options.menuHeight ?? defaultHeight,
       preferredPosition: options.preferredPosition ?? 'bottom-start',
       offset: options.offset ?? 8,
       padding: options.padding ?? 16,
     });
+
+    const portalContainer = getPortalContainerResolved();
+    const position = positionToPortalCoordinates(rawPosition, portalContainer);
 
     const newSessionId = Date.now() + Math.random();
 
@@ -440,13 +479,10 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     setMenuState({
       isOpen: true,
       type: menuType,
-      position: {
-        top: position.top,
-        left: position.left,
-      },
+      position: { ...position },
       sessionId: newSessionId,
     });
-  }, [calculateMenuPosition, menuState, filters, sorts, tempFilters, tempSorts, subMenuState.isOpen, isEditingToolbar]);
+  }, [calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates, menuState, filters, sorts, tempFilters, tempSorts, subMenuState.isOpen, isEditingToolbar]);
 
   const closeSubMenu = useCallback((closingSessionId = null) => {
 
@@ -465,7 +501,9 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     setSortMenuEditingIndex(-1);
   }, [menuState.isOpen, menuState.type]);
 
-  const openSortMenuColumnSelection = useCallback((index, buttonElement) => {
+  const openSortMenuColumnSelection = useCallback((columnItemOrNull, index, buttonElement) => {
+    if (!buttonElement || typeof buttonElement.getBoundingClientRect !== 'function') return;
+
     if (subMenuState.isOpen && sortMenuColumnSelectRef.current === buttonElement) {
       closeSubMenu();
       return;
@@ -474,13 +512,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     sortMenuColumnSelectRef.current = buttonElement;
     setSortMenuEditingIndex(index);
 
-    const position = calculateMenuPosition(buttonElement, {
+    const rawPosition = calculateMenuPosition(buttonElement, {
       menuWidth: 280,
       menuHeight: 320,
       preferredPosition: 'right-start',
       offset: 0,
       padding: 16,
     });
+
+    const portalContainer = getPortalContainerResolved();
+    const position = positionToPortalCoordinates(rawPosition, portalContainer);
 
     const newSessionId = Date.now() + Math.random();
 
@@ -489,13 +530,10 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     setSubMenuState({
       isOpen: true,
       type: 'sort-menu-column-selection',
-      position: {
-        top: position.top,
-        left: position.left,
-      },
+      position: { ...position },
       sessionId: newSessionId,
     });
-  }, [calculateMenuPosition, subMenuState.isOpen, closeSubMenu]);
+  }, [calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates, subMenuState.isOpen, closeSubMenu]);
 
   const areFiltersEqual = useCallback((filters1, filters2) => {
     if (filters1.length !== filters2.length) return false;
@@ -585,7 +623,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       setCurrentAdvancedFilterGroup(filter);
       const buttonElement = buttonRef?.current || filterButtonRefs.current.get(filter.key);
       if (buttonElement) {
-        const position = calculateMenuPosition(buttonElement, {
+        const rawPosition = calculateMenuPosition(buttonElement, {
           menuWidth: 580,
           menuHeight: 450,
           preferredPosition: 'bottom-start',
@@ -593,16 +631,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           padding: 16,
         });
 
+        const portalContainer = getPortalContainerResolved();
+        const position = positionToPortalCoordinates(rawPosition, portalContainer);
+
         const newSessionId = Date.now() + Math.random();
         currentSubMenuSessionRef.current = newSessionId;
 
         setSubMenuState({
           isOpen: true,
           type: 'advanced-filter-menu',
-          position: {
-            top: position.top,
-            left: position.left,
-          },
+          position: { ...position },
           sessionId: newSessionId,
         });
       }
@@ -623,7 +661,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       menuWidth: 320,
       menuHeight: 350
     });
-  }, [visibleColumns, openMenu, calculateMenuPosition, isEditingToolbar, sorts, tempSorts, filters, tempFilters]);
+  }, [visibleColumns, openMenu, calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates, isEditingToolbar, sorts, tempSorts, filters, tempFilters]);
 
   const handleFilterUpdate = useCallback((updatedFilter) => {
     setIsEditingToolbar(true);
@@ -693,10 +731,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       setSubMenuState({
         isOpen: true,
         type: 'advanced-filter-menu',
-        position: {
-          top: position.top,
-          left: position.left,
-        },
+        position: { ...position },
         sessionId: newSessionId,
       });
     }
@@ -765,7 +800,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       const newFilterButton = filterButtonRefs.current.get(newGroup.id);
       
       if (newFilterButton) {
-        const position = calculateMenuPosition(newFilterButton, {
+        const rawPosition = calculateMenuPosition(newFilterButton, {
           menuWidth: 580,
           menuHeight: 450,
           preferredPosition: 'bottom-start',
@@ -773,21 +808,21 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           padding: 16,
         });
 
+        const portalContainer = getPortalContainerResolved();
+        const position = positionToPortalCoordinates(rawPosition, portalContainer);
+
         const newSessionId = Date.now() + Math.random();
         currentSubMenuSessionRef.current = newSessionId;
 
         setSubMenuState({
           isOpen: true,
           type: 'advanced-filter-menu',
-          position: {
-            top: position.top,
-            left: position.left,
-          },
+          position: { ...position },
           sessionId: newSessionId,
         });
       }
     }, 0);
-  }, [calculateMenuPosition]);
+  }, [calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates]);
 
   const evaluateFilterCondition = useCallback((value, filter) => {
     const { condition, value: filterValue, valueTo } = filter;
@@ -1305,6 +1340,63 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       : dataSource.slice((currentPage - 1) * itensPerPage, currentPage * itensPerPage);
   }, [originalData, filteredData, filters, tempFilters, sorts, tempSorts, isEditingToolbar, isSorting, sortVersion, currentPage, itensPerPage, sortedDataRef, debouncedSearchTerm]);
 
+  const fullDataForGrouping = useMemo(() => {
+    const activeSorts = isEditingToolbar ? tempSorts : sorts;
+    const dataSource = filteredData.length > 0 || (isEditingToolbar ? tempFilters : filters).length > 0 || debouncedSearchTerm.trim() !== ''
+      ? filteredData
+      : originalData;
+
+    if (!dataSource || dataSource.length === 0) return [];
+    if (!activeSorts || activeSorts.length === 0) return dataSource;
+
+    const hasValidSortedData = sortedDataRef.current.length > 0 && sortedDataRef.current.length === dataSource.length;
+    return hasValidSortedData ? sortedDataRef.current : dataSource;
+  }, [originalData, filteredData, filters, tempFilters, sorts, tempSorts, isEditingToolbar, sortedDataRef, debouncedSearchTerm]);
+
+  const groupedBodyItems = useMemo(() => {
+    if (!groupByColumnKey || fullDataForGrouping.length === 0) return null;
+    const column = headerStructure.leafColumns.find(c => c.key === groupByColumnKey);
+    const columnLabel = column ? (column.label ?? column.key) : groupByColumnKey;
+    const EMPTY_GROUP = '__empty__';
+    const getGroupKey = (value) => (value == null || value === '') ? EMPTY_GROUP : value;
+
+    const order = [];
+    const map = new Map();
+    for (const item of fullDataForGrouping) {
+      const raw = item[groupByColumnKey];
+      const key = getGroupKey(raw);
+      const groupLabel = key === EMPTY_GROUP ? `Sem ${columnLabel}` : String(raw);
+      if (!map.has(key)) {
+        order.push(key);
+        map.set(key, { groupLabel, rows: [] });
+      }
+      map.get(key).rows.push(item);
+    }
+
+    return order.map((groupKey) => {
+      const { groupLabel, rows } = map.get(groupKey);
+      return { groupKey, groupLabel, rows };
+    });
+  }, [fullDataForGrouping, groupByColumnKey, headerStructure.leafColumns]);
+
+  const [groupCurrentPage, setGroupCurrentPage] = useState({});
+  const [collapsedGroupKeys, setCollapsedGroupKeys] = useState({});
+  const [groupItemsPerPage, setGroupItemsPerPage] = useState({});
+
+  const groupItemsPerPageOptions = [5, 10, 25, 50];
+  const defaultItemsPerGroup = 5;
+
+  useEffect(() => {
+    setGroupCurrentPage({});
+    setCollapsedGroupKeys({});
+    setGroupItemsPerPage({});
+  }, [groupByColumnKey]);
+
+  const handleGroupItemsPerPageChange = useCallback((groupKey, newSize) => {
+    setGroupItemsPerPage((prev) => ({ ...prev, [groupKey]: newSize }));
+    setGroupCurrentPage((prev) => ({ ...prev, [groupKey]: 1 }));
+  }, []);
+
   useEffect(() => {
     const activeFilters = isEditingToolbar ? tempFilters : filters;
     const dataSource = filteredData.length > 0 || activeFilters.length > 0 || debouncedSearchTerm.trim() !== ''
@@ -1382,87 +1474,162 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         tableWrapperRef.current.removeEventListener('scroll', scrollHandler);
       }
     };
-  }, [sortedData, originalData, filters, tempFilters, visibleColumns]);
+  }, [sortedData, originalData, filters, tempFilters, visibleColumns, groupedBodyItems, groupCurrentPage, collapsedGroupKeys]);
+
+  const renderTableHead = () => (
+    mergedOptions.showHeader && (
+      <thead className={`${styles.tabela__header} ${headerStructure.headerRows.length > 1 ? styles.isNastedHeader : ''}`}>
+        {headerStructure.leafColumns.length === 0 ? (
+          <tr className={styles.tabela__header__row}>
+            <th colSpan={1} className={styles.tabela__header__cell} style={{ width: '100%' }}>
+              <span className={styles.tabela__header__label}>Nenhuma coluna encontrada/selecionada</span>
+            </th>
+          </tr>
+        ) : headerStructure.headerRows && headerStructure.headerRows.map((headerRow, rowIndex) => (
+          <tr className={styles.tabela__header__row} key={`header-row-${rowIndex}`}>
+            {headerRow.columns.map((column) => {
+              const colSpan = column.colSpan || 1;
+              const rowspan = column.rowspan || 1;
+              const cellClasses = [
+                styles.tabela__header__cell,
+                column.level > 0 ? styles.tabela__header__intern__cell : '',
+                column.sortable && !column.isParent ? styles.tabela__header__cell__sortable : '',
+                column.className || ''
+              ].filter(Boolean).join(' ');
+              const cellStyles = {
+                minWidth: typeof mergedOptions.columnMinWidth === 'number' ? `${mergedOptions.columnMinWidth}px` : 'auto',
+                width: column?.width == 'auto' ? 'auto' : `${column?.width}%`,
+                textAlign: column?.align || 'left',
+                ...column?.style,
+              };
+              return (
+                <th
+                  key={column.key}
+                  className={cellClasses}
+                  style={cellStyles}
+                  colSpan={colSpan > 1 ? colSpan : undefined}
+                  rowSpan={rowspan > 1 ? rowspan : undefined}
+                >
+                  <span className={styles.tabela__header__label}>{column.label}</span>
+                  {column.sortable && !column.isParent && (() => {
+                    const activeSorts = isEditingToolbar ? tempSorts : sorts;
+                    const sortItem = activeSorts.find(s => s.key === column.key);
+                    return (
+                      <i
+                        className={`fas ${sortItem ? sortItem.direction === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down' : ''} ${styles.tabela__header__sortable__icon}`}
+                      />
+                    );
+                  })()}
+                </th>
+              );
+            })}
+          </tr>
+        ))}
+      </thead>
+    )
+  );
 
   const tableContent = useMemo(() => {
     if (mergedOptions.currentMode === 'grid') {
+      if (groupedBodyItems != null && groupedBodyItems.length > 0) {
+        return (
+          <div
+            ref={tableWrapperRef}
+            className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''}`}
+          >
+            {groupedBodyItems.map((group, groupIndex) => {
+              const itensPerGroup = groupItemsPerPage[group.groupKey] ?? defaultItemsPerGroup;
+              const groupPage = groupCurrentPage[group.groupKey] ?? 1;
+              const visibleRows = group.rows.slice((groupPage - 1) * itensPerGroup, groupPage * itensPerGroup);
+              const totalPagesGroup = Math.ceil(group.rows.length / itensPerGroup) || 1;
+              const isCollapsed = collapsedGroupKeys[group.groupKey] === true;
+
+              const toggleCollapsed = () => {
+                setCollapsedGroupKeys((prev) => ({ ...prev, [group.groupKey]: !prev[group.groupKey] }));
+              };
+
+              return (
+                <div key={group.groupKey} className={styles.tabela__group}>
+                  <div className={`${styles.tabela__group__header} ${isCollapsed ? styles.tabela__group__headerCollapsed : ''}`}>
+                    <span className={styles.tabela__group__label}>{group.groupLabel}</span>
+                    <button
+                      type="button"
+                      className={styles.tabela__group__toggleBtn}
+                      onClick={toggleCollapsed}
+                      aria-label={isCollapsed ? 'Expandir grupo' : 'Recolher grupo'}
+                      aria-expanded={!isCollapsed}
+                    >
+                      <i className={`far ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}`} />
+                      <span>{isCollapsed ? 'Expandir' : 'Recolher'}</span>
+                    </button>
+                  </div>
+                  {!isCollapsed && (
+                    <>
+                      <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''}`}>
+                        {renderTableHead()}
+                        <tbody className={styles.tabela__body} ref={groupIndex === 0 ? tableBodyRef : undefined}>
+                          {visibleRows.map((item, rowIndex) => (
+                            <tr className={styles.tabela__body__row} key={item.key ?? `row-${rowIndex}`}>
+                              {headerStructure.leafColumns
+                                .filter(col => col.visible !== false)
+                                .map((column, colIndex) => {
+                                  const cellValue = item[column.key];
+                                  const hasColumnRender = renderFlags.columnRenders.get(column.key) || false;
+                                  return (
+                                    <TableCell
+                                      key={column.key}
+                                      cellValue={cellValue}
+                                      row={item}
+                                      column={column}
+                                      rowIndex={rowIndex}
+                                      colIndex={colIndex}
+                                      hasColumnRender={hasColumnRender}
+                                    />
+                                  );
+                                })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className={styles.tabela__group__pagination}>
+                        <Pagination
+                          totalPages={totalPagesGroup}
+                          currentPage={groupPage}
+                          onPageChange={(page) => setGroupCurrentPage((prev) => ({ ...prev, [group.groupKey]: page }))}
+                          itemsPerPageOptions={groupItemsPerPageOptions}
+                          itemsPerPage={itensPerGroup}
+                          onItemsPerPageChange={(newSize) => handleGroupItemsPerPageChange(group.groupKey, newSize)}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
       return (
-        <div 
+        <div
           ref={tableWrapperRef}
           className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''}`}
         >
           <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''}`}>
-            {mergedOptions.showHeader && (
-              <thead className={`${styles.tabela__header} ${headerStructure.headerRows.length > 1 ? styles.isNastedHeader : ''}`}>
-                {!headerStructure.headerRows.length > 0 && (
-                  <tr>
-                    <td colSpan={headerStructure.leafColumns.length} className={styles.tabela__header__cell}>
-                      <span className={styles.tabela__header__label}>Nenhum header encontrado</span>
-                    </td>
-                  </tr>
-                )}
-                {headerStructure.headerRows && headerStructure.headerRows.map((headerRow, rowIndex) => {
-                  return (
-                    <tr className={styles.tabela__header__row} key={`header-row-${rowIndex}`}>
-                      {headerRow.columns.map((column) => {
-                        const colSpan = column.colSpan || 1;
-                        const rowspan = column.rowspan || 1;
-
-                        const cellClasses = [
-                          styles.tabela__header__cell,
-                          column.level > 0 ? styles.tabela__header__intern__cell : '',
-                          column.sortable && !column.isParent ? styles.tabela__header__cell__sortable : '',
-                          column.className || ''
-                        ].filter(Boolean).join(' ');
-
-                        const cellStyles = {
-                          minWidth: typeof mergedOptions.columnMinWidth === 'number'
-                            ? `${mergedOptions.columnMinWidth}px`
-                            : 'auto',
-                          width: column?.width == 'auto' ? 'auto' : `${column?.width}%`,
-                          textAlign: column?.align || 'left',
-                          ...column?.style,
-                        };
-
-                        return (
-                          <th
-                            key={column.key}
-                            className={cellClasses}
-                            style={cellStyles}
-                            colSpan={colSpan > 1 ? colSpan : undefined}
-                            rowSpan={rowspan > 1 ? rowspan : undefined}
-                          >
-                            <span className={styles.tabela__header__label}>{column.label}</span>
-                            {column.sortable && !column.isParent && (() => {
-                              const activeSorts = isEditingToolbar ? tempSorts : sorts;
-                              const sortItem = activeSorts.find(s => s.key === column.key);
-                              return (
-                                <i
-                                  className={`fas ${sortItem
-                                    ? sortItem.direction === 'asc'
-                                      ? 'fa-arrow-up'
-                                      : 'fa-arrow-down'
-                                    : ''
-                                    } ${styles.tabela__header__sortable__icon}`}
-                                ></i>
-                              );
-                            })()}
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </thead>
-            )}
+            {renderTableHead()}
             <tbody className={styles.tabela__body} ref={tableBodyRef}>
-              {sortedData.length === 0 || !headerStructure.leafColumns.filter(col => col.visible !== false).length > 0 && (
+              {headerStructure.leafColumns.length === 0 ? (
                 <tr className={styles.tabela__body__row}>
-                  <td colSpan={headerStructure.leafColumns.length} className={styles.tabela__body__cell}>
-                    <span className={styles.tabela__body__label}>Nenhum dado encontrado</span>
+                  <td colSpan={1} className={styles.tabela__body__cell} style={{ width: '100%' }}>
+                    <span className={styles.tabela__body__label}>Nenhuma informação encontrada</span>
                   </td>
                 </tr>
-              )}
+              ) : sortedData.length === 0 ? (
+                <tr className={styles.tabela__body__row}>
+                  <td colSpan={headerStructure.leafColumns.length} className={styles.tabela__body__cell}>
+                    <span className={styles.tabela__body__label}>Nenhuma informação encontrada</span>
+                  </td>
+                </tr>
+              ) : null}
               {(isSorting || isLoading) && (
                 <div className={styles.tabela__loader}>
                   <Loader
@@ -1472,14 +1639,13 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   />
                 </div>
               )}
-              {sortedData.map((item, rowIndex) => (
+              {headerStructure.leafColumns.length > 0 && sortedData.map((item, rowIndex) => (
                 <tr className={styles.tabela__body__row} key={item.key}>
                   {headerStructure.leafColumns
                     .filter(col => col.visible !== false)
                     .map((column, colIndex) => {
                       const cellValue = item[column.key];
                       const hasColumnRender = renderFlags.columnRenders.get(column.key) || false;
-
                       return (
                         <TableCell
                           key={column.key}
@@ -1499,7 +1665,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         </div>
       );
     }
-  }, [mergedOptions.currentMode, visibleColumns, sortedData, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure]);
+  }, [mergedOptions.currentMode, visibleColumns, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure]);
 
   const tableFooterContent = useMemo(() => {
     if (mergedOptions.currentMode === 'grid') {
@@ -1711,6 +1877,10 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     );
   }, [mergedOptions.tableIcon, mergedOptions.tableName, sorts, filters, openMenu, tempSorts, tempFilters, isEditingToolbar, handleOpenFilterMenu]);
 
+  const portalContainer = getPortalContainerResolved();
+  const portalTargetIsBody = portalContainer === document.body;
+  const detectedTheme = portalTargetIsBody ? (containerRef.current?.closest?.('[data-theme]')?.getAttribute?.('data-theme') ?? 'light') : null;
+
   return (
     <div 
       ref={containerRef}
@@ -1720,16 +1890,17 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       {mergedOptions.showToolbar && toolbarContent}
       {tableContent}
       {mergedOptions.showFooter && tableFooterContent}
-      {mergedOptions.showPagination && paginationContent}
+      {mergedOptions.showPagination && !groupByColumnKey && paginationContent}
 
-      {menuState.isOpen && createPortal(
-        <>
+      {menuState.isOpen && (() => {
+        const menuContent = (
+          <>
           {(menuState.type === 'sort-selection' || menuState.type === 'filter-selection') && (
             <ColumnSelectionMenu
               ref={columnSelectionMenuRef}
               menuState={menuState}
               columns={visibleColumns.filter(col =>
-                menuState.type === 'filter-selection' ? col.filterable : col.sortable
+                menuState.type === 'filter-selection' ? col.filterable && !col.hasSubColumns : col.sortable && !col.hasSubColumns
               )}
               selectedItems={menuState.type === 'filter-selection' ? filters.concat(tempFilters) : sorts.concat(tempSorts)}
               onClose={closeMenu}
@@ -1767,11 +1938,27 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                     }, 50);
                   }
                 } else {
-                  setTempSorts(prev =>
-                    prev.some(item => item.key === column.key)
-                      ? prev.filter(item => item.key !== column.key)
-                      : [...prev, { key: column.key, direction: 'asc', label: column.label ?? column.key }]
-                  );
+                  const existingSort = tempSorts.find(s => s.key === column.key) || sorts.find(s => s.key === column.key);
+
+                  if (existingSort) {
+                    setTempSorts(prev => prev.filter(item => item.key !== column.key));
+                  } else {
+                    const newSort = { key: column.key, direction: 'asc', label: column.label ?? column.key };
+                    setTempSorts(prev => [...prev, newSort]);
+                    columnSelectionMenuRef.current?.close();
+
+                    setTimeout(() => {
+                      const buttonElement = sortButtonRef.current;
+                      if (buttonElement) {
+                        openMenu('sort-menu', { current: buttonElement }, {
+                          preferredPosition: 'bottom-start',
+                          menuWidth: 320,
+                          menuHeight: 380,
+                          skipTempReset: true
+                        });
+                      }
+                    }, 50);
+                  }
                 }
               }}
               refList={[toolbarFilterButtonRef.current, toolbarSortButtonRef.current]}
@@ -1784,7 +1971,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               ref={sortMenuRef}
               menuState={menuState}
               sortItems={isEditingToolbar ? tempSorts : sorts}
-              columns={visibleColumns.filter(col => col.sortable)}
+              columns={visibleColumns.filter(col => col.sortable && !col.hasSubColumns)}
               onClose={closeMenu}
               onUpdateSorts={handleSortMenuUpdateSorts}
               onOpenColumnSelection={openSortMenuColumnSelection}
@@ -1831,19 +2018,26 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                 setColumnVisibility(nextCol);
                 setFooterVisibility(nextFoot);
               }}
+              groupByColumnKey={groupByColumnKey}
+              onApplyGroupBy={setGroupByColumnKey}
             />
           )}
-        </>
-        , document.body
-      )}
+          </>
+        );
+        return createPortal(
+          portalTargetIsBody ? <div data-theme={detectedTheme || 'light'} style={{ display: 'contents' }}>{menuContent}</div> : menuContent,
+          portalContainer
+        );
+      })()}
 
-      {subMenuState.isOpen && createPortal(
+      {subMenuState.isOpen && (() => {
+        const subMenuContent = (
         <>
           {subMenuState.type === 'sort-menu-column-selection' && (
             <ColumnSelectionMenu
               ref={columnSelectionMenuRef}
               menuState={subMenuState}
-              columns={visibleColumns.filter(col => col.sortable)}
+              columns={visibleColumns.filter(col => col.sortable && !col.hasSubColumns)}
               selectedItems={isEditingToolbar ? tempSorts : sorts}
               onClose={closeSubMenu}
               onSelect={(column) => {
@@ -1883,7 +2077,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               ref={advancedFilterMenuRef}
               menuState={subMenuState}
               filterGroup={currentAdvancedFilterGroup}
-              columns={visibleColumns}
+              columns={visibleColumns.filter(col => !col.hasSubColumns)}
               onClose={(closingSessionId) => {
                 closeSubMenu(closingSessionId);
                 setCurrentAdvancedFilterGroup(null);
@@ -1899,8 +2093,12 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             />
           )}
         </>
-        , document.body
-      )}
+        );
+        return createPortal(
+          portalTargetIsBody ? <div data-theme={detectedTheme || 'light'} style={{ display: 'contents' }}>{subMenuContent}</div> : subMenuContent,
+          portalContainer
+        );
+      })()}
     </div>
   );
 };

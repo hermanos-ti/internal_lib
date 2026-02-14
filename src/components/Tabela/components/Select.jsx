@@ -1,6 +1,7 @@
-import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle } from 'react';
+import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import styles from '../Tabela.module.css';
+import { PortalTargetContext } from '../PortalTargetContext';
 
 /**
  * Select - Componente de seleção customizado
@@ -17,6 +18,29 @@ export const Select = memo(forwardRef(({
   className = '',
   style = {}
 }, ref) => {
+  const getPortalContainer = useContext(PortalTargetContext);
+  
+  // Viewport → relativo ao container do portal
+  const convertToPortalRelativePosition = useCallback((viewportPosition) => {
+    const container = (typeof getPortalContainer === 'function' ? getPortalContainer() : getPortalContainer) ?? document.body;
+
+    if (container === document.body) {
+      return viewportPosition;
+    }
+
+    const rect = container?.getBoundingClientRect?.();
+    if (!rect) {
+      return viewportPosition;
+    }
+
+    return {
+      top: viewportPosition.top - rect.top,
+      left: viewportPosition.left - rect.left,
+    };
+  }, [getPortalContainer]);
+
+  const portalContainer = (typeof getPortalContainer === 'function' ? getPortalContainer() : getPortalContainer) ?? document.body;
+
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -180,42 +204,33 @@ export const Select = memo(forwardRef(({
     const updatePosition = () => {
       if (!containerRef.current) return;
       
-      const container = containerRef.current.getBoundingClientRect();
+      const triggerRect = containerRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
-
-      // Estimar altura do dropdown (máximo 200px)
       const estimatedDropdownHeight = Math.min(filteredOptions.length * 36 + 8, 200);
-      const estimatedDropdownWidth = Math.max(container.width, 200);
+      const estimatedDropdownWidth = Math.max(triggerRect.width, 200);
 
-      // Verificar se cabe abaixo
-      const spaceBelow = viewportHeight - container.bottom;
-      const spaceAbove = container.top;
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
 
-      let top = container.bottom + scrollY;
-      let left = container.left + scrollX;
-
+      let viewportTop = triggerRect.bottom;
+      let viewportLeft = triggerRect.left;
       if (spaceBelow < estimatedDropdownHeight && spaceAbove > spaceBelow) {
-        top = container.top + scrollY - estimatedDropdownHeight;
+        viewportTop = triggerRect.top - estimatedDropdownHeight;
       }
+      if (viewportLeft + estimatedDropdownWidth > viewportWidth) {
+        viewportLeft = viewportWidth - estimatedDropdownWidth;
+      }
+      if (viewportLeft < 0) viewportLeft = 0;
 
-      if (container.left + estimatedDropdownWidth > viewportWidth) {
-        left = viewportWidth - estimatedDropdownWidth + scrollX;
-        if (left < scrollX) left = scrollX;
-      }
-
-      if (left < scrollX) {
-        left = scrollX;
-      }
+      const relativePosition = convertToPortalRelativePosition({ top: viewportTop, left: viewportLeft });
 
       setDropdownPosition({ 
-        top, 
-        left, 
+        top: relativePosition.top, 
+        left: relativePosition.left, 
         position: 'absolute',
-        width: `${Math.max(container.width, 120)}px`,
-        minWidth: `${container.width}px`
+        width: `${Math.max(triggerRect.width, 120)}px`,
+        minWidth: `${triggerRect.width}px`
       });
     };
 
@@ -223,7 +238,7 @@ export const Select = memo(forwardRef(({
     const timeoutId = setTimeout(updatePosition, 0);
     
     return () => clearTimeout(timeoutId);
-  }, [isOpen, filteredOptions.length]);
+  }, [isOpen, filteredOptions.length, convertToPortalRelativePosition]);
 
   return (
     <div 
@@ -248,49 +263,55 @@ export const Select = memo(forwardRef(({
       </button>
 
       {/* Dropdown via Portal */}
-      {isOpen && createPortal(
-        <div 
-          ref={dropdownRef}
-          className={styles.select__dropdown}
-          style={{
-            position: dropdownPosition.position,
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            width: dropdownPosition.width,
-            minWidth: dropdownPosition.minWidth,
-            zIndex: 10000
-          }}
-          role="listbox"
-        >
-          {filteredOptions.length === 0 ? (
-            <div className={styles.select__option} style={{ color: '#9ca3af', cursor: 'default' }}>
-              Nenhuma opção encontrada
-            </div>
-          ) : (
-            filteredOptions.map((option, index) => {
-              const isSelected = option.value === value;
-              const isHighlighted = index === highlightedIndex;
-              
-              return (
-                <div
-                  key={option.value}
-                  className={`${styles.select__option} ${isSelected ? styles.selected : ''} ${isHighlighted ? styles.highlighted : ''}`}
-                  onClick={(e) => handleSelect(option.value, e)}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                  role="option"
-                  aria-selected={isSelected}
-                >
-                  {option.label}
-                  {isSelected && (
-                    <i className={`far fa-check ${styles.select__option__check}`} />
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>,
-        document.body
-      )}
+      {isOpen && (() => {
+        const dropdownContent = (
+          <div 
+            ref={dropdownRef}
+            className={styles.select__dropdown}
+            style={{
+              position: dropdownPosition.position,
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: dropdownPosition.width,
+              minWidth: dropdownPosition.minWidth,
+              zIndex: 10000
+            }}
+            role="listbox"
+          >
+            {filteredOptions.length === 0 ? (
+              <div className={styles.select__option} style={{ color: 'var(--modal-text-muted)', cursor: 'default' }}>
+                Nenhuma opção encontrada
+              </div>
+            ) : (
+              filteredOptions.map((option, index) => {
+                const isSelected = option.value === value;
+                const isHighlighted = index === highlightedIndex;
+                
+                return (
+                  <div
+                    key={option.value}
+                    className={`${styles.select__option} ${isSelected ? styles.selected : ''} ${isHighlighted ? styles.highlighted : ''}`}
+                    onClick={(e) => handleSelect(option.value, e)}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    role="option"
+                    aria-selected={isSelected}
+                  >
+                    {option.label}
+                    {isSelected && (
+                      <i className={`far fa-check ${styles.select__option__check}`} />
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        );
+        const portalTheme = containerRef.current?.closest?.('[data-theme]')?.getAttribute?.('data-theme') ?? 'light';
+        return createPortal(
+          portalContainer === document.body ? <div data-theme={portalTheme} style={{ display: 'contents' }}>{dropdownContent}</div> : dropdownContent,
+          portalContainer
+        );
+      })()}
     </div>
   );
 }));

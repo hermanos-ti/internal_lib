@@ -1,6 +1,7 @@
-import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle } from 'react';
+import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import styles from '../Tabela.module.css';
+import { PortalTargetContext } from '../PortalTargetContext';
 import { COLUMN_ICONS, FILTER_CONDITIONS, EMPTY_CONDITIONS, RANGE_CONDITIONS } from '../constants';
 import { Select } from './Select';
 
@@ -16,6 +17,28 @@ export const AdvancedFilterMenu = memo(forwardRef(({
   refList,
   getExtraRefs
 }, ref) => {
+  const getPortalContainer = useContext(PortalTargetContext);
+  const portalContainer = (typeof getPortalContainer === 'function' ? getPortalContainer() : getPortalContainer) ?? document.body;
+
+  // Viewport → relativo ao container do portal (body = viewport; div = viewport - rect)
+  const convertToPortalRelativePosition = useCallback((viewportPosition) => {
+    const container = (typeof getPortalContainer === 'function' ? getPortalContainer() : getPortalContainer) ?? document.body;
+
+    if (container === document.body) {
+      return viewportPosition;
+    }
+
+    const rect = container?.getBoundingClientRect?.();
+    if (!rect) {
+      return viewportPosition;
+    }
+
+    return {
+      top: viewportPosition.top - rect.top,
+      left: viewportPosition.left - rect.left,
+    };
+  }, [getPortalContainer]);
+
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -180,31 +203,23 @@ export const AdvancedFilterMenu = memo(forwardRef(({
       const buttonRect = buttonElement.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
-      
       const dropdownWidth = 140;
       const dropdownHeight = 120;
-      
-      let top = buttonRect.bottom + scrollY + 4;
-      let left = buttonRect.right + scrollX - dropdownWidth;
-      
-      if (left < scrollX) {
-        left = buttonRect.left + scrollX;
-      }
-      
-      if (top + dropdownHeight > viewportHeight + scrollY) {
-        top = buttonRect.top + scrollY - dropdownHeight - 4;
-      }
-      
-      setActionDropdownPosition({ top, left });
+
+      let viewportTop = buttonRect.bottom + 4;
+      let viewportLeft = buttonRect.right - dropdownWidth;
+      if (viewportLeft < 0) viewportLeft = buttonRect.left;
+      if (viewportTop + dropdownHeight > viewportHeight) viewportTop = buttonRect.top - dropdownHeight - 4;
+
+      const relativePosition = convertToPortalRelativePosition({ top: viewportTop, left: viewportLeft });
+      setActionDropdownPosition({ top: relativePosition.top, left: relativePosition.left });
     };
 
     updatePosition();
     const timeoutId = setTimeout(updatePosition, 0);
     
     return () => clearTimeout(timeoutId);
-  }, [openActionMenu]);
+  }, [openActionMenu, convertToPortalRelativePosition]);
 
   // Calculate add rule dropdown position
   useEffect(() => {
@@ -219,31 +234,23 @@ export const AdvancedFilterMenu = memo(forwardRef(({
       const buttonRect = buttonElement.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
-      
       const dropdownWidth = 180;
       const dropdownHeight = 80;
-      
-      let top = buttonRect.bottom + scrollY + 4;
-      let left = buttonRect.left + scrollX;
-      
-      if (left + dropdownWidth > viewportWidth + scrollX) {
-        left = buttonRect.right + scrollX - dropdownWidth;
-      }
-      
-      if (top + dropdownHeight > viewportHeight + scrollY) {
-        top = buttonRect.top + scrollY - dropdownHeight - 4;
-      }
-      
-      setAddRuleDropdownPosition({ top, left });
+
+      let viewportTop = buttonRect.bottom + 4;
+      let viewportLeft = buttonRect.left;
+      if (viewportLeft + dropdownWidth > viewportWidth) viewportLeft = buttonRect.right - dropdownWidth;
+      if (viewportTop + dropdownHeight > viewportHeight) viewportTop = buttonRect.top - dropdownHeight - 4;
+
+      const relativePosition = convertToPortalRelativePosition({ top: viewportTop, left: viewportLeft });
+      setAddRuleDropdownPosition({ top: relativePosition.top, left: relativePosition.left });
     };
 
     updatePosition();
     const timeoutId = setTimeout(updatePosition, 0);
     
     return () => clearTimeout(timeoutId);
-  }, [openAddRuleMenu]);
+  }, [openAddRuleMenu, convertToPortalRelativePosition]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -258,16 +265,9 @@ export const AdvancedFilterMenu = memo(forwardRef(({
       const clickedOnAddRuleButton = Array.from(addRuleButtonRefs.current.values()).some(
         btn => btn?.contains(event.target)
       );
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:204',message:'Click outside handler triggered',data:{clickedOnActionDropdown,clickedOnActionButton,clickedOnAddRuleDropdown:!!clickedOnAddRuleDropdown,clickedOnAddRuleButton:!!clickedOnAddRuleButton,targetTag:event.target?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
-      
+
       if (!clickedOnActionDropdown && !clickedOnActionButton &&
           !clickedOnAddRuleDropdown && !clickedOnAddRuleButton) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:213',message:'Closing dropdowns - click outside',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         setOpenActionMenu(null);
         setOpenAddRuleMenu(null);
       }
@@ -452,13 +452,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
 
   // Add new rule at path
   const handleAddRule = useCallback((parentPath = []) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:396',message:'handleAddRule called',data:{hasLocalGroup:!!localGroup,parentPath:JSON.stringify(parentPath)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     if (!localGroup) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:398',message:'handleAddRule early return - no localGroup',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       return;
     }
     
@@ -473,17 +467,11 @@ export const AdvancedFilterMenu = memo(forwardRef(({
     // Navigate to the correct parent
     for (const index of parentPath) {
       if (!targetArray[index]) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:410',message:'handleAddRule early return - invalid path index',data:{index,parentPath:JSON.stringify(parentPath),targetArrayLength:targetArray.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         return;
       }
       if (targetArray[index].type === 'group' && targetArray[index].rules) {
         targetArray = targetArray[index].rules;
       } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:414',message:'handleAddRule early return - not a group',data:{index,itemType:targetArray[index]?.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         return;
       }
     }
@@ -506,9 +494,6 @@ export const AdvancedFilterMenu = memo(forwardRef(({
     };
     
     targetArray.push(newRule);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:435',message:'handleAddRule pushing new rule',data:{newRuleId:newRule.id,newRuleKey:newRule.key,targetArrayLength:targetArray.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     setLocalGroup(newGroup);
     onUpdateFilterGroup?.(newGroup);
     setOpenAddRuleMenu(null);
@@ -694,12 +679,6 @@ export const AdvancedFilterMenu = memo(forwardRef(({
     const showAddMenu = openAddRuleMenu && openAddRuleMenuPathKey === pathKey;
     const openActionMenuPathKey = openActionMenu ? (openActionMenu.path.length === 0 ? 'root' : openActionMenu.path.join('-')) : null;
     const showActionMenu = openActionMenu && openActionMenuPathKey === pathKey;
-    // #region agent log
-    if (openAddRuleMenu) {
-      fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:653',message:'Calculating showAddMenu',data:{pathKey,openAddRuleMenuPathKey,showAddMenu,isRootGroup},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-    }
-    // #endregion
-
     const content = (
       <>
         {/* Group header for non-root groups */}
@@ -728,7 +707,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                 className={styles.advancedFilterMenu__logicToggle}
               />
             )}
-            <span style={{ flex: 1, fontSize: '0.75rem', color: '#6b7280', fontWeight: 500 }}>
+            <span style={{ flex: 1, fontSize: '0.75rem', color: 'var(--modal-text-muted)', fontWeight: 500 }}>
               Grupo de regras ({group.logic === 'AND' ? 'Todas' : 'Qualquer'})
             </span>
             
@@ -744,9 +723,6 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                 }}
                 className={styles.advancedFilterMenu__actionBtn}
                 onClick={(e) => {
-                  // #region agent log
-                  fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:739',message:'Group action button clicked',data:{path:JSON.stringify(path),showActionMenu,isRootGroup,pathKey},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-                  // #endregion
                   e.stopPropagation();
                   setOpenActionMenu(showActionMenu ? null : { path, isGroup: true });
                 }}
@@ -782,9 +758,6 @@ export const AdvancedFilterMenu = memo(forwardRef(({
               }}
               className={styles.advancedFilterMenu__addRule}
               onClick={(e) => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:783',message:'Add rule button clicked',data:{pathKey,path:JSON.stringify(path),showAddMenu,openAddRuleMenuPathKey,isRootGroup},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
                 e.stopPropagation();
                 setOpenAddRuleMenu(showAddMenu ? null : { path });
               }}
@@ -813,8 +786,11 @@ export const AdvancedFilterMenu = memo(forwardRef(({
 
   const menuStyle = {
     position: 'absolute',
-    top: `${menuState.position.top}px`,
     left: `${menuState.position.left}px`,
+    ...(menuState.position.verticalAnchor === 'bottom' && menuState.position.bottom != null
+      ? { bottom: `${menuState.position.bottom}px` }
+      : { top: `${menuState.position.top}px` }
+    ),
     zIndex: 1001
   };
 
@@ -892,10 +868,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
       {/* Action dropdown portal */}
       {openActionMenu && (() => {
         const isGroup = openActionMenu.isGroup || false;
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:912',message:'Rendering action dropdown portal',data:{isGroup,path:JSON.stringify(openActionMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        return createPortal(
+        const actionDropdownContent = (
           <div
             ref={actionDropdownRef}
             className={styles.advancedFilterMenu__actionDropdown}
@@ -968,17 +941,18 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                 </button>
               </>
             )}
-          </div>,
-          document.body
+          </div>
+        );
+        const portalTheme = menuRef.current?.closest?.('[data-theme]')?.getAttribute?.('data-theme') ?? 'light';
+        return createPortal(
+          portalContainer === document.body ? <div data-theme={portalTheme} style={{ display: 'contents' }}>{actionDropdownContent}</div> : actionDropdownContent,
+          portalContainer
         );
       })()}
 
       {/* Add rule dropdown portal */}
       {openAddRuleMenu && (() => {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:961',message:'Rendering add rule dropdown portal',data:{path:JSON.stringify(openAddRuleMenu.path),position:JSON.stringify(addRuleDropdownPosition)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
-        return createPortal(
+        const addRuleDropdownContent = (
           <div
             ref={addRuleDropdownRef}
             className={styles.advancedFilterMenu__addRuleDropdown}
@@ -992,9 +966,6 @@ export const AdvancedFilterMenu = memo(forwardRef(({
           <button
             className={styles.advancedFilterMenu__addRuleDropdown__item}
             onClick={(e) => {
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:974',message:'Add rule simple button clicked',data:{pathKey:openAddRuleMenu.path.length === 0 ? 'root' : openAddRuleMenu.path.join('-'),path:JSON.stringify(openAddRuleMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-              // #endregion
               e.stopPropagation();
               e.preventDefault();
               handleAddRule(openAddRuleMenu.path);
@@ -1007,9 +978,6 @@ export const AdvancedFilterMenu = memo(forwardRef(({
           <button
             className={styles.advancedFilterMenu__addRuleDropdown__item}
             onClick={(e) => {
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/414b586e-0497-40c3-b191-ea36a84a71e4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdvancedFilterMenu.jsx:989',message:'Add group button clicked',data:{pathKey:openAddRuleMenu.path.length === 0 ? 'root' : openAddRuleMenu.path.join('-'),path:JSON.stringify(openAddRuleMenu.path)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-              // #endregion
               e.stopPropagation();
               e.preventDefault();
               handleAddGroup(openAddRuleMenu.path);
@@ -1019,8 +987,12 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             <i className={`far fa-layer-group ${styles.advancedFilterMenu__addRuleDropdown__icon}`} />
             Adicionar grupo de regras
           </button>
-        </div>,
-        document.body
+        </div>
+        );
+        const addRulePortalTheme = menuRef.current?.closest?.('[data-theme]')?.getAttribute?.('data-theme') ?? 'light';
+        return createPortal(
+          portalContainer === document.body ? <div data-theme={addRulePortalTheme} style={{ display: 'contents' }}>{addRuleDropdownContent}</div> : addRuleDropdownContent,
+          portalContainer
         );
       })()}
     </div>

@@ -1,5 +1,6 @@
 import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle } from 'react';
 import styles from '../Tabela.module.css';
+import { COLUMN_ICONS } from '../constants';
 import { VisibleColumnsPanel } from './VisibleColumnsPanel';
 
 export const SettingsMenu = memo(forwardRef(({
@@ -11,7 +12,9 @@ export const SettingsMenu = memo(forwardRef(({
   footerItems,
   columnVisibility,
   footerVisibility,
-  onApplyColumns
+  onApplyColumns,
+  groupByColumnKey,
+  onApplyGroupBy
 }, ref) => {
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -99,6 +102,8 @@ export const SettingsMenu = memo(forwardRef(({
   const handleAction = (optionKey) => {
     if (optionKey === 'colunasVisiveis') {
       setCurrentView('colunasVisiveis');
+    } else if (optionKey === 'agrupar') {
+      setCurrentView('agrupar');
     } else if (onAction) {
       onAction(optionKey);
     }
@@ -112,8 +117,11 @@ export const SettingsMenu = memo(forwardRef(({
 
   const menuStyle = {
     position: 'absolute',
-    top: `${menuState.position.top}px`,
     left: `${menuState.position.left}px`,
+    ...(menuState.position.verticalAnchor === 'bottom' && menuState.position.bottom != null
+      ? { bottom: `${menuState.position.bottom}px` }
+      : { top: `${menuState.position.top}px` }
+    ),
     zIndex: 1000
   };
 
@@ -164,7 +172,9 @@ export const SettingsMenu = memo(forwardRef(({
               <span>Voltar</span>
             </button>
             <span className={styles.columnSelectionMenu__header__title}>
-              {currentView === 'colunasVisiveis' ? 'Colunas visíveis' : 'Configurações'}
+              {currentView === 'colunasVisiveis' && 'Colunas visíveis'}
+              {currentView === 'agrupar' && 'Agrupar'}
+              {currentView !== 'colunasVisiveis' && currentView !== 'agrupar' && 'Configurações'}
             </span>
           </div>
 
@@ -177,6 +187,52 @@ export const SettingsMenu = memo(forwardRef(({
                 footerVisibility={footerVisibility}
                 onApply={onApplyColumns}
               />
+            )}
+            {currentView === 'agrupar' && headerColumns && onApplyGroupBy && (
+              <div className={styles.visibleColumnsModal__body}>
+                <div className={styles.visibleColumnsModal__section}>
+                  <div className={styles.visibleColumnsModal__list}>
+                    <label className={styles.visibleColumnsModal__item}>
+                      <input
+                        type="radio"
+                        name="groupBy"
+                        checked={groupByColumnKey == null}
+                        onChange={() => onApplyGroupBy(null)}
+                      />
+                      <span className={styles.visibleColumnsModal__checkboxWrap}>
+                        <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
+                      </span>
+                      <i className={`far fa-layer-group ${styles.visibleColumnsModal__itemIcon}`} />
+                      <span className={styles.visibleColumnsModal__itemLabel}>Não agrupar</span>
+                    </label>
+                    {headerColumns
+                      .filter(col => col.groupable === true)
+                      .map((column) => {
+                        const icon = COLUMN_ICONS[column?.type ?? 'text'];
+                        return (
+                          <label key={column.key} className={styles.visibleColumnsModal__item}>
+                            <input
+                              type="radio"
+                              name="groupBy"
+                              checked={groupByColumnKey === column.key}
+                              onChange={() => onApplyGroupBy(column.key)}
+                            />
+                            <span className={styles.visibleColumnsModal__checkboxWrap}>
+                              <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
+                            </span>
+                            <i className={`${icon} ${styles.visibleColumnsModal__itemIcon}`} />
+                            <span className={styles.visibleColumnsModal__itemLabel}>{column.label ?? column.key}</span>
+                          </label>
+                        );
+                      })}
+                  </div>
+                  {headerColumns.filter(col => col.groupable === true).length === 0 && (
+                    <div className={styles.visibleColumnsModal__empty}>
+                      Nenhuma coluna agrupável disponível.
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </>
