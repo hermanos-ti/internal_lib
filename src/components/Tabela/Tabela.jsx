@@ -6,7 +6,8 @@ import { Pagination } from '../Pagination/Pagination';
 import { createPortal } from 'react-dom';
 
 import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
-import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu } from './components';
+import { computeCalculation, CALCULATION_OPTIONS } from './calculationUtils';
+import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal } from './components';
 import { PortalTargetContext } from './PortalTargetContext';
 
 export const Tabela = ({ id, columns, data, footer, options = {} }) => {
@@ -101,6 +102,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const [currentEditingFilter, setCurrentEditingFilter] = useState(null);
   const [currentAdvancedFilterGroup, setCurrentAdvancedFilterGroup] = useState(null);
   const [groupByColumnKey, setGroupByColumnKey] = useState(null);
+  const [calculationByColumn, setCalculationByColumn] = useState(mergedOptions.initialCalculationByColumn ?? {});
 
   const [menuState, setMenuState] = useState({
     isOpen: false,
@@ -440,7 +442,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         }
       }
     } else if (menuType === 'sort-menu') {
-      if (tempSorts.length === 0) {
+      if (tempSorts.length === 0 && !options.skipTempReset) {
         setTempSorts([...sorts]);
       }
       // Preservar tempFilters
@@ -750,18 +752,27 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     };
 
     setTempFilters(prev => {
+      // Se tempFilters está vazio (ex: após "Salvar" da toolbar), usar filters comprometidos como base
+      const base = prev.length > 0 ? prev : filters;
+
+      // Coletar IDs dos filtros simples que agora são regras do filtro avançado
+      const ruleIds = new Set(filterGroup.rules?.map(r => r.id) || []);
+
+      // Remover filtros simples que foram incorporados ao filtro avançado
+      const withoutConvertedSimple = base.filter(f => f.isAdvanced || !ruleIds.has(f.id));
+
       // Verificar se já existe um filtro avançado com o mesmo ID
-      const existingIndex = prev.findIndex(f => f.id === filterGroup.id);
+      const existingIndex = withoutConvertedSimple.findIndex(f => f.id === filterGroup.id);
       if (existingIndex >= 0) {
-        const newFilters = [...prev];
+        const newFilters = [...withoutConvertedSimple];
         newFilters[existingIndex] = advancedFilterItem;
         return newFilters;
       }
-      return [...prev, advancedFilterItem];
+      return [...withoutConvertedSimple, advancedFilterItem];
     });
 
     setCurrentAdvancedFilterGroup(null);
-  }, []);
+  }, [filters]);
 
   const handleAdvancedFilterCancel = useCallback(() => {
     setCurrentAdvancedFilterGroup(null);
@@ -1529,13 +1540,59 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     )
   );
 
+  const hasCalculationRow =
+    mergedOptions.currentMode === 'grid' &&
+    Object.keys(calculationByColumn).some(
+      (key) =>
+        calculationByColumn[key]?.calculationId &&
+        calculationByColumn[key].calculationId !== 'none' &&
+        (calculationByColumn[key].calculationId !== 'pctByGroup' || calculationByColumn[key].groupValue !== undefined)
+    );
+
+  const handleApplyCalculation = useCallback((columnKey, config) => {
+    setCalculationByColumn((prev) => {
+      const next = { ...prev };
+      if (config == null || config.calculationId === 'none') {
+        delete next[columnKey];
+      } else {
+        next[columnKey] = config;
+      }
+      return next;
+    });
+  }, []);
+
+  const openCalculationSubmenu = useCallback(
+    (columnKey, buttonRef) => {
+      if (!buttonRef?.current || typeof buttonRef.current.getBoundingClientRect !== 'function') return;
+      const rawPosition = calculateMenuPosition(buttonRef.current, {
+        menuWidth: 280,
+        menuHeight: 360,
+        preferredPosition: 'top-start',
+        offset: 0,
+        padding: 16,
+      });
+      const portalContainer = getPortalContainerResolved();
+      const position = positionToPortalCoordinates(rawPosition, portalContainer);
+      const newSessionId = Date.now() + Math.random();
+      currentSubMenuSessionRef.current = newSessionId;
+      setSubMenuState({
+        isOpen: true,
+        type: 'calculation-submenu',
+        position: { ...position },
+        sessionId: newSessionId,
+        columnKey,
+      });
+    },
+    [calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates]
+  );
+
   const tableContent = useMemo(() => {
     if (mergedOptions.currentMode === 'grid') {
       if (groupedBodyItems != null && groupedBodyItems.length > 0) {
         return (
           <div
             ref={tableWrapperRef}
-            className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''}`}
+            className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''} ${hasCalculationRow ? styles.hasCalculationFooter : ''}`}
           >
             {groupedBodyItems.map((group, groupIndex) => {
               const itensPerGroup = groupItemsPerPage[group.groupKey] ?? defaultItemsPerGroup;
@@ -1565,7 +1622,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   </div>
                   {!isCollapsed && (
                     <>
-                      <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''}`}>
+                      <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''} ${hasCalculationRow ? styles.hasCalculationRow : ''}`}>
                         {renderTableHead()}
                         <tbody className={styles.tabela__body} ref={groupIndex === 0 ? tableBodyRef : undefined}>
                           {visibleRows.map((item, rowIndex) => (
@@ -1590,6 +1647,59 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                             </tr>
                           ))}
                         </tbody>
+                        {hasCalculationRow && (
+                          <tfoot>
+                            <tr className={styles.tabela__calculationRow}>
+                              {headerStructure.leafColumns
+                                .filter((col) => col.visible !== false)
+                                .map((column) => {
+                                  if (column.calculable === false) {
+                                    return <td key={column.key} className={styles.tabela__calculationCell} />;
+                                  }
+                                  const config = calculationByColumn[column.key];
+                                  const hasValidCalc =
+                                    config?.calculationId &&
+                                    config.calculationId !== 'none' &&
+                                    (config.calculationId !== 'pctByGroup' || config.groupValue !== undefined);
+                                  const result = hasValidCalc
+                                    ? computeCalculation(fullDataForGrouping, column, config.calculationId, { groupValue: config.groupValue })
+                                    : null;
+                                  const calculationLabel = hasValidCalc && config?.calculationId
+                                    ? config.calculationId === 'pctByGroup'
+                                      ? `Porcentagem por grupo${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
+                                      : (CALCULATION_OPTIONS[config.calculationId]?.label ?? config.calculationId)
+                                    : '';
+                                  return (
+                                    <td key={column.key} className={styles.tabela__calculationCell}>
+                                      {hasValidCalc ? (
+                                        <>
+                                          <span className={styles.tabela__calculationCell__label}>{calculationLabel}</span>
+                                          <span className={styles.tabela__calculationCell__value}>{result.formatted}</span>
+                                          <button
+                                            type="button"
+                                            className={styles.tabela__calculationCell__editBtn}
+                                            onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
+                                            aria-label="Alterar cálculo"
+                                          >
+                                            <i className="far fa-calculator" />
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          className={styles.tabela__calculationCell__addBtn}
+                                          onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
+                                          aria-label="Calcular"
+                                        >
+                                          <i className="far fa-calculator" /> Calcular
+                                        </button>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                            </tr>
+                          </tfoot>
+                        )}
                       </table>
                       <div className={styles.tabela__group__pagination}>
                         <Pagination
@@ -1612,9 +1722,9 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       return (
         <div
           ref={tableWrapperRef}
-          className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''}`}
+          className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''} ${hasCalculationRow ? styles.hasCalculationFooter : ''}`}
         >
-          <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''}`}>
+          <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''} ${hasCalculationRow ? styles.hasCalculationRow : ''}`}>
             {renderTableHead()}
             <tbody className={styles.tabela__body} ref={tableBodyRef}>
               {headerStructure.leafColumns.length === 0 ? (
@@ -1661,11 +1771,64 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                 </tr>
               ))}
             </tbody>
+            {hasCalculationRow && (
+              <tfoot>
+                <tr className={styles.tabela__calculationRow}>
+                  {headerStructure.leafColumns
+                    .filter((col) => col.visible !== false)
+                    .map((column) => {
+                      if (column.calculable === false) {
+                        return <td key={column.key} className={styles.tabela__calculationCell} />;
+                      }
+                      const config = calculationByColumn[column.key];
+                      const hasValidCalc =
+                        config?.calculationId &&
+                        config.calculationId !== 'none' &&
+                        (config.calculationId !== 'pctByGroup' || config.groupValue !== undefined);
+                      const result = hasValidCalc
+                        ? computeCalculation(fullDataForGrouping, column, config.calculationId, { groupValue: config.groupValue })
+                        : null;
+                      const calculationLabel = hasValidCalc && config?.calculationId
+                        ? config.calculationId === 'pctByGroup'
+                          ? `${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
+                          : (CALCULATION_OPTIONS[config.calculationId]?.labelShort ?? config.calculationId)
+                        : '';
+                      return (
+                        <td key={column.key} className={styles.tabela__calculationCell}>
+                          {hasValidCalc ? (
+                            <>
+                              <span className={styles.tabela__calculationCell__label}>{calculationLabel}</span>
+                              <span className={styles.tabela__calculationCell__value}>{result.formatted}</span>
+                              <button
+                                type="button"
+                                className={styles.tabela__calculationCell__editBtn}
+                                onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
+                                aria-label="Alterar cálculo"
+                              >
+                                <i className="far fa-calculator" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              className={styles.tabela__calculationCell__addBtn}
+                              onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
+                              aria-label="Calcular"
+                            >
+                              <i className="far fa-calculator" /> Calcular
+                            </button>
+                          )}
+                        </td>
+                      );
+                    })}
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       );
     }
-  }, [mergedOptions.currentMode, visibleColumns, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure]);
+  }, [mergedOptions.currentMode, visibleColumns, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, fullDataForGrouping, openCalculationSubmenu]);
 
   const tableFooterContent = useMemo(() => {
     if (mergedOptions.currentMode === 'grid') {
@@ -2010,7 +2173,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               menuState={menuState}
               onClose={closeMenu}
               refList={[toolbarSettingsButtonRef.current]}
-              headerColumns={tableColumns.filter(c => !c.hasSubColumns)}
+              headerColumns={tableColumns.filter(c => !c.hasSubColumns && c.calculable !== false)}
               footerItems={tableFooter}
               columnVisibility={columnVisibility}
               footerVisibility={footerVisibility}
@@ -2020,6 +2183,9 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               }}
               groupByColumnKey={groupByColumnKey}
               onApplyGroupBy={setGroupByColumnKey}
+              calculationByColumn={calculationByColumn}
+              onApplyCalculation={handleApplyCalculation}
+              dataForCalculation={fullDataForGrouping}
             />
           )}
           </>
@@ -2071,6 +2237,24 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               ]}
             />
           )}
+
+          {subMenuState.type === 'calculation-submenu' && subMenuState.columnKey && (() => {
+            const leafColumns = tableColumns.filter((c) => !c.hasSubColumns && c.calculable !== false);
+            const hasColumn = leafColumns.some((c) => c.key === subMenuState.columnKey);
+            return hasColumn ? (
+              <CalculationModal
+                key={subMenuState.columnKey + '-' + subMenuState.sessionId}
+                headerColumns={leafColumns}
+                calculationByColumn={calculationByColumn ?? {}}
+                onApplyCalculation={handleApplyCalculation}
+                dataForCalculation={fullDataForGrouping}
+                initialColumnKey={subMenuState.columnKey}
+                onClose={closeSubMenu}
+                embedded={false}
+                menuState={subMenuState}
+              />
+            ) : null;
+          })()}
 
           {subMenuState.type === 'advanced-filter-menu' && currentAdvancedFilterGroup && (
             <AdvancedFilterMenu

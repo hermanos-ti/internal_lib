@@ -178,7 +178,7 @@
 }
 
 .tabela__group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .tabela__group:last-child {
@@ -192,7 +192,7 @@
   gap: 0.75rem;
   padding: 0.625rem 0.875rem;
   margin-bottom: 0;
-  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
+  background: var(--table-menu-surface, rgba(0, 0, 0, 0.04));
   border: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
   border-bottom: none;
   border-radius: 0.5rem 0.5rem 0 0;
@@ -204,7 +204,6 @@
   border-radius: 0.5rem;
 }
 
-/* Modo grupo: remover borda arredondada do header da tabela para encaixar no título do grupo */
 .tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:first-child {
   border-top-left-radius: 0;
 }
@@ -219,6 +218,14 @@
 
 .tabela__group .isNastedHeader .tabela__header__row:first-child .tabela__header__cell:last-child {
   border-top-right-radius: 0;
+}
+
+.tabela__group .tabela .tabela__body__row:last-child .tabela__body__cell:first-child {
+  border-bottom-left-radius: 0;
+}
+
+.tabela__group .tabela .tabela__body__row:last-child .tabela__body__cell:last-child {
+  border-bottom-right-radius: 0;
 }
 
 .tabela__group__label {
@@ -252,35 +259,10 @@
 }
 
 .tabela__group__pagination {
-  margin-top: 0.5rem;
-  padding: 0.5rem 0;
-}
-
-.tabela__body__loadMoreRow {
-  display: table-row;
-  border: none;
-  cursor: pointer;
-}
-
-.tabela__body__loadMoreRow:hover {
-  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
-}
-
-.tabela__body__loadMoreCell {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--premium-primary, #0066cc);
-  text-align: left;
-  border-left: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
-  border-right: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
-  border-bottom: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--modal-border);
+  border-top: none;
   border-radius: 0 0 0.5rem 0.5rem;
-  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.02));
-}
-
-.tabela__body__loadMoreRow:hover .tabela__body__loadMoreCell {
-  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
+  background: var(--table-menu-surface);
 }
 
 .tabela__wrapper.hasScroll .tabela.hasFooter .tabela__body__row:last-child .tabela__body__cell {
@@ -306,6 +288,105 @@
 .tabela.hasFooter .tabela__body .tabela__body__row:last-child .tabela__body__cell{
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+.tabela.hasCalculationFooter .tabela__body .tabela__body__row:last-child .tabela__body__cell,
+.tabela.hasCalculationRow .tabela__body .tabela__body__row:last-child .tabela__body__cell {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.tabela__calculationRow {
+  background: var(--table-menu-surface);
+}
+
+.tabela__calculationCell {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--modal-text-main);
+  letter-spacing: 0.035em;
+  border-bottom: 1px solid var(--modal-border);
+  vertical-align: middle;
+}
+
+.tabela__calculationCell:first-child {
+  border-left: 1px solid var(--modal-border);
+}
+
+.tabela__calculationCell:last-child {
+  border-right: 1px solid var(--modal-border);
+}
+
+.tabela.hasCalculationRow .tabela__calculationRow .tabela__calculationCell:first-child {
+  border-bottom-left-radius: 0.5rem;
+}
+
+.tabela.hasCalculationRow .tabela__calculationRow .tabela__calculationCell:last-child {
+  border-bottom-right-radius: 0.5rem;
+}
+
+.tabela__calculationCell__label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--modal-text-muted);
+  margin-right: 0.35rem;
+  white-space: nowrap;
+}
+
+.tabela__calculationCell__value {
+  margin-right: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--modal-text-main);
+}
+
+.tabela__calculationCell__editBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  margin: 0;
+  border: none;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--modal-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tabela__calculationCell__editBtn:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--modal-text-main);
+}
+
+.tabela__calculationCell__addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px dashed var(--modal-border);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--modal-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+  opacity: 0;
+}
+
+.tabela__calculationCell:hover .tabela__calculationCell__addBtn {
+  opacity: 1;
+}
+
+.tabela__calculationCell__addBtn:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--modal-text-main);
+  border-color: var(--modal-text-muted);
 }
 
 .tabela__body__cell {
@@ -371,6 +452,38 @@
   &:not(:first-child) {
     border-left: none;
   }
+}
+
+.tabela__calculationFooter {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--modal-border);
+  border-top: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+  background: var(--table-menu-surface);
+  flex-shrink: 0;
+}
+
+.tabela__calculationFooter__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--modal-text-main);
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tabela__calculationFooter__value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--modal-text-main);
+  letter-spacing: 0.035em;
+  flex-shrink: 0;
 }
 
 .tabela__pagination {
@@ -1093,6 +1206,51 @@ button.columnSelectionMenu__item {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.visibleColumnsModal__itemLabelBadge {
+  font-size: 0.65rem;
+  color: var(--premium-primary, #0066cc);
+  flex-shrink: 0;
+}
+
+.calculationModal__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.calculationModal__item:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+.calculationModal__item:active {
+  background: var(--modal-border);
+}
+
+.calculationModal__itemSelected {
+  background: var(--sidebar-hover-bg);
+}
+
+.calculationModal__itemCheck {
+  color: var(--premium-primary);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .visibleColumnsModal__footer {

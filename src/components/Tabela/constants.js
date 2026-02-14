@@ -16,16 +16,31 @@ export const DEFAULT_OPTIONS = {
   onFilterChange: null, // (filters, sqlWhere) => {}
 }
 
+/**
+ * Supported column display formats. Used in cells (when no custom render) and in calculation footer.
+ * @see formatUtils.formatDisplayValue
+ */
+export const COLUMN_FORMATS = {
+  text: 'text',
+  money: 'money',
+  percentage: 'percentage',
+  number: 'number',
+  integer: 'integer',
+  date: 'date',
+  datetime: 'datetime',
+};
+
 export const DEFAULT_COLUMN_CONFIG = {
   type: 'text', // text, number, date, select
   visible: true,
   width: 'auto',
   align: 'left',
-  format: 'text',
+  format: 'text', // COLUMN_FORMATS: text | money | percentage | number | integer | date | datetime
   searchable: true,
   sortable: true,
   filterable: true,
   groupable: false,
+  calculable: true, // false = column does not appear in calculation modal or footer calculation row
   render: null, // render(value, row, column, rowIndex, colIndex)
   subColumns: null, // Array de subcolunas ou null
   // TODO: Adicionar tooltip e cellTooltip

@@ -2,6 +2,7 @@ import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperati
 import styles from '../Tabela.module.css';
 import { COLUMN_ICONS } from '../constants';
 import { VisibleColumnsPanel } from './VisibleColumnsPanel';
+import { CalculationModal } from './CalculationModal';
 
 export const SettingsMenu = memo(forwardRef(({
   menuState,
@@ -14,7 +15,10 @@ export const SettingsMenu = memo(forwardRef(({
   footerVisibility,
   onApplyColumns,
   groupByColumnKey,
-  onApplyGroupBy
+  onApplyGroupBy,
+  calculationByColumn,
+  onApplyCalculation,
+  dataForCalculation,
 }, ref) => {
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -104,6 +108,8 @@ export const SettingsMenu = memo(forwardRef(({
       setCurrentView('colunasVisiveis');
     } else if (optionKey === 'agrupar') {
       setCurrentView('agrupar');
+    } else if (optionKey === 'calcular') {
+      setCurrentView('calcular');
     } else if (onAction) {
       onAction(optionKey);
     }
@@ -174,7 +180,8 @@ export const SettingsMenu = memo(forwardRef(({
             <span className={styles.columnSelectionMenu__header__title}>
               {currentView === 'colunasVisiveis' && 'Colunas visíveis'}
               {currentView === 'agrupar' && 'Agrupar'}
-              {currentView !== 'colunasVisiveis' && currentView !== 'agrupar' && 'Configurações'}
+              {currentView === 'calcular' && 'Calcular'}
+              {currentView !== 'colunasVisiveis' && currentView !== 'agrupar' && currentView !== 'calcular' && 'Configurações'}
             </span>
           </div>
 
@@ -233,6 +240,15 @@ export const SettingsMenu = memo(forwardRef(({
                   )}
                 </div>
               </div>
+            )}
+            {currentView === 'calcular' && headerColumns && onApplyCalculation && (
+              <CalculationModal
+                headerColumns={headerColumns}
+                calculationByColumn={calculationByColumn ?? {}}
+                onApplyCalculation={onApplyCalculation}
+                dataForCalculation={dataForCalculation}
+                embedded={true}
+              />
             )}
           </div>
         </>

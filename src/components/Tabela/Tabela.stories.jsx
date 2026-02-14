@@ -3,7 +3,7 @@ import { Tabela } from './Tabela';
 import '../../assets/icons/css/all.css'
 
 const THEME_OPTIONS = [
-  { value: 'light', label: 'Claro', background: '#f8fafc' },
+  { value: 'light', label: 'Claro', background: '#ffffff' },
   { value: 'dark', label: 'Escuro', background: '#0f172a' },
   { value: 'tokyoNight', label: 'Tokyo Night', background: '#1a1b26' },
 ];
@@ -252,10 +252,11 @@ export const ComFooterRender = {
 const columnsPerformance = [
   { key: 'id', label: 'ID', sortable: true, width: 10 },
   { key: 'nome', label: 'Nome', sortable: true },
-  { key: 'idade', label: 'Idade', sortable: true },
-  { key: 'salario', label: 'Salário', sortable: true },
+  { key: 'dataNascimento', label: 'Data de Nascimento', type: 'date', sortable: true },
+  { key: 'idade', label: 'Idade', type: 'number', sortable: true },
+  { key: 'salario', label: 'Salário', type: 'number', sortable: true, format: 'money' },
   { key: 'cidade', label: 'Cidade', sortable: true },
-  { key: 'ativo', label: 'Ativo', sortable: true, groupable: true },
+  { key: 'ativo', label: 'Ativo', sortable: true, groupable: true, type: 'select' },
 ];
 
 // Gerar 1000 registros para teste de performance
@@ -269,7 +270,15 @@ const generateLargeDataset = (count = 1000) => {
       key: `row-${i}`,
       id: i + 1,
       nome: `${nomes[i % nomes.length]} ${i}`,
-      idade: Math.floor(Math.random() * 50) + 18,
+      ...(function () {
+        const idade = Math.floor(Math.random() * (60 - 18 + 1)) + 18;
+        const birthYear = new Date().getFullYear() - idade;
+        const birthMonth = Math.floor(Math.random() * 12);
+        const daysInMonth = new Date(birthYear, birthMonth + 1, 0).getDate();
+        const birthDay = 1 + Math.floor(Math.random() * daysInMonth);
+        const dataNascimento = new Date(birthYear, birthMonth, birthDay).toISOString().split('T')[0];
+        return { dataNascimento, idade };
+      })(),
       salario: Math.floor(Math.random() * 10000) + 1000,
       cidade: cidades[i % cidades.length],
       ativo: i % 3 === 0 ? 'Ativo' : 'Inativo',
@@ -282,7 +291,7 @@ const generateLargeDataset = (count = 1000) => {
   return data;
 };
 
-const dataPerformance = generateLargeDataset(1000);
+const dataPerformance = generateLargeDataset(100);
 
 export const PerformanceTest = {
   render: () => 
@@ -301,18 +310,6 @@ const columnsPerformanceExternal = [
   { key: 'cidade', label: 'Cidade', sortable: true, type: 'text' },
   { key: 'dataAdmissao', label: 'Data Admissão', sortable: true, type: 'date' },
   { key: 'status', label: 'Status', sortable: true, type: 'select' },
-  { key: 'a', label: 'A', sortable: true, type: 'boolean' },
-  { key: 'b', label: 'B', sortable: true, type: 'boolean' },
-  { key: 'c', label: 'C', sortable: true, type: 'boolean' },
-  { key: 'd', label: 'D', sortable: true, type: 'boolean' },
-  { key: 'e', label: 'E', sortable: true, type: 'boolean' },
-  { key: 'f', label: 'F', sortable: true, type: 'boolean' },
-  { key: 'g', label: 'G', sortable: true, type: 'boolean' },
-  { key: 'h', label: 'H', sortable: true, type: 'boolean' },
-  { key: 'i', label: 'I', sortable: true, type: 'boolean' },
-  { key: 'j', label: 'J', sortable: true, type: 'boolean' },
-  { key: 'k', label: 'K', sortable: true, type: 'boolean' },
-  { key: 'l', label: 'L', sortable: true, type: 'boolean' },
 ];
 
 // Gerar dataset com mais campos para teste de filtros externos
@@ -575,5 +572,41 @@ const dataComSubcolunasAninhadas = [
 
 export const ComSubcolunasAninhadas = {
   render: () => <TabelaWithPortal id="tabela-7" columns={columnsComSubcolunasAninhadas} data={dataComSubcolunasAninhadas} />,
+};
+
+// Exemplo: Colunas com format (money, percentage, date) – células e footer de cálculo formatados
+const columnsFormat = [
+  { key: 'produto', label: 'Produto', sortable: true },
+  { key: 'preco', label: 'Preço', type: 'number', format: 'money', sortable: true },
+  { key: 'participacao', label: 'Participação', type: 'number', format: 'percentage', sortable: true },
+  { key: 'data', label: 'Data', type: 'date', format: 'date', sortable: true },
+];
+
+const dataFormat = [
+  { key: '1', produto: 'Item A', preco: 1234.56, participacao: 25.5, data: '2024-01-15' },
+  { key: '2', produto: 'Item B', preco: 890.12, participacao: 40.0, data: '2024-02-20' },
+  { key: '3', produto: 'Item C', preco: 2450, participacao: 34.5, data: '2024-03-10' },
+];
+
+const initialCalculationByColumn = {
+  preco: { calculationId: 'sum' },
+  participacao: { calculationId: 'average' },
+  data: { calculationId: 'dateLatest' },
+};
+
+export const FormatosColuna = {
+  render: () => (
+    <div>
+      <p style={{ marginBottom: '1rem', color: '#666' }}>
+        Colunas com <code>format</code>: money (R$), percentage (%), date. Células e footer de cálculo usam a mesma formatação.
+      </p>
+      <TabelaWithPortal
+        id="tabela-format"
+        columns={columnsFormat}
+        data={dataFormat}
+        options={{ initialCalculationByColumn }}
+      />
+    </div>
+  ),
 };
 

@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import styles from '../Tabela.module.css';
+import { formatDisplayValue } from '../formatUtils';
 
 export const TableCell = memo(({ 
   cellValue, 
@@ -11,7 +12,7 @@ export const TableCell = memo(({
 }) => {
   const content = hasColumnRender 
     ? column.render(cellValue, row, column, rowIndex, colIndex)
-    : cellValue;
+    : formatDisplayValue(cellValue, column?.format ?? 'text');
   
   return (
     <td className={`${styles.tabela__body__cell} ${column?.cellClassName}`} style={column?.cellStyle}>
