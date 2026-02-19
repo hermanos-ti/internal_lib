@@ -55,6 +55,8 @@
   --modal-border: rgba(0, 0, 0, 0.08);
   --modal-overlay: rgba(0, 0, 0, 0.5);
   --table-surface: var(--modal-background, #ffffff);
+  --table-footer-surface: linear-gradient(0deg, #ffffff 0%, #f8fafc 100%);
+  --table-header-surface: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   --table-menu-surface: #ffffff;
   --table-success: #10b981;
   --table-success-bg: #ecfdf5;
@@ -124,6 +126,8 @@
   --modal-border: rgba(255, 255, 255, 0.1);
   --modal-overlay: rgba(0, 0, 0, 0.7);
   --table-surface: #0f172a;
+  --table-footer-surface: linear-gradient(0deg, #0f172a 0%, #1e293b 100%);
+  --table-header-surface: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   --table-menu-surface: #1e293b;
   --table-success: #34d399;
   --table-success-bg: rgba(16, 185, 129, 0.15);
@@ -193,6 +197,8 @@
   --modal-border: rgba(0, 0, 0, 0.08);
   --modal-overlay: rgba(0, 0, 0, 0.5);
   --table-surface: #ffffff;
+  --table-footer-surface: linear-gradient(0deg, #ffffff 0%, #f8fafc 100%);
+  --table-header-surface: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   --table-menu-surface: #ffffff;
   --table-success: #10b981;
   --table-success-bg: #ecfdf5;
@@ -262,6 +268,8 @@
   --modal-border: rgba(192, 202, 245, 0.1);
   --modal-overlay: rgba(26, 27, 38, 0.85);
   --table-surface: #1a1b26;
+  --table-footer-surface: linear-gradient(0deg, #1a1b26 0%, #24283b 100%);
+  --table-header-surface: linear-gradient(180deg, #1a1b26 0%, #24283b 100%);
   --table-menu-surface: #24283b;
   --table-success: #9ece6a;
   --table-success-bg: rgba(158, 206, 106, 0.15);

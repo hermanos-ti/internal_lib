@@ -52,8 +52,28 @@
   flex-shrink: 0;
 }
 
+.tabela__title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.6rem 0px;
+}
+
+.tabela__title__icon {
+  font-size: 1.25rem;
+  color: var(--modal-text-main);
+}
+
+.tabela__title__label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--modal-text-main);
+}
+
 .tabela__header {
   border: none;
+  background: var(--table-header-surface);
 }
 
 .tabela__header__row {
@@ -192,8 +212,8 @@
   gap: 0.75rem;
   padding: 0.625rem 0.875rem;
   margin-bottom: 0;
-  background: var(--table-menu-surface, rgba(0, 0, 0, 0.04));
-  border: 1px solid var(--tabela-border-color, rgba(0, 0, 0, 0.08));
+  background: var(--table-header-surface);
+  border: 1px solid var(--modal-border);
   border-bottom: none;
   border-radius: 0.5rem 0.5rem 0 0;
   min-height: 2.5rem;
@@ -204,18 +224,16 @@
   border-radius: 0.5rem;
 }
 
-.tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:first-child {
-  border-top-left-radius: 0;
+.tabela__group .tabela .tabela__header__row{
+  background: var(--table-menu-surface);
 }
 
-.tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:last-child {
-  border-top-right-radius: 0;
-}
-
+.tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:first-child,
 .tabela__group .isNastedHeader .tabela__header__row:first-child .tabela__header__cell:first-child {
   border-top-left-radius: 0;
 }
 
+.tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:last-child,
 .tabela__group .isNastedHeader .tabela__header__row:first-child .tabela__header__cell:last-child {
   border-top-right-radius: 0;
 }
@@ -262,7 +280,7 @@
   border: 1px solid var(--modal-border);
   border-top: none;
   border-radius: 0 0 0.5rem 0.5rem;
-  background: var(--table-menu-surface);
+  background: var(--table-footer-surface);
 }
 
 .tabela__wrapper.hasScroll .tabela.hasFooter .tabela__body__row:last-child .tabela__body__cell {
@@ -285,11 +303,6 @@
   }
 }
 
-.tabela.hasFooter .tabela__body .tabela__body__row:last-child .tabela__body__cell{
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
 .tabela.hasCalculationFooter .tabela__body .tabela__body__row:last-child .tabela__body__cell,
 .tabela.hasCalculationRow .tabela__body .tabela__body__row:last-child .tabela__body__cell {
   border-bottom-left-radius: 0;
@@ -298,6 +311,14 @@
 
 .tabela__calculationRow {
   background: var(--table-menu-surface);
+
+  &:not(.tabela__calculationRowGrouped) .tabela__calculationCell:first-child {
+    border-bottom-left-radius: 0.5rem;
+  }
+
+  &:not(.tabela__calculationRowGrouped) .tabela__calculationCell:last-child {
+    border-bottom-right-radius: 0.5rem;
+  }
 }
 
 .tabela__calculationCell {
@@ -317,14 +338,6 @@
 
 .tabela__calculationCell:last-child {
   border-right: 1px solid var(--modal-border);
-}
-
-.tabela.hasCalculationRow .tabela__calculationRow .tabela__calculationCell:first-child {
-  border-bottom-left-radius: 0.5rem;
-}
-
-.tabela.hasCalculationRow .tabela__calculationRow .tabela__calculationCell:last-child {
-  border-bottom-right-radius: 0.5rem;
 }
 
 .tabela__calculationCell__label {
@@ -418,20 +431,21 @@
   border: none;
   display: flex;
   flex-shrink: 0;
+  margin-top: 0.75rem;
 }
 
 .tabela__footer__row {
   border: none;
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
 }
 
 .tabela__footer__cell {
   display: flex;
-  width: 100%;
-  border-left: 1px solid var(--modal-border);
-  border-right: 1px solid var(--modal-border);
-  border-bottom: 1px solid var(--modal-border);
+  flex: 1 1 200px;
+  border: 1px solid var(--modal-border);
+  border-radius: 0;
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
@@ -440,18 +454,31 @@
   letter-spacing: 0.035em;
   margin: 0 auto;
   white-space: nowrap;
+  background: var(--table-menu-surface);
+}
 
-  &:first-child {
-    border-bottom-left-radius: 0.5rem;
-  }
+.footerCell__topLeft {
+  border-top-left-radius: 0.5rem;
+}
 
-  &:last-child {
-    border-bottom-right-radius: 0.5rem;
-  }
+.footerCell__topRight {
+  border-top-right-radius: 0.5rem;
+}
 
-  &:not(:first-child) {
-    border-left: none;
-  }
+.footerCell__bottomLeft {
+  border-bottom-left-radius: 0.5rem;
+}
+
+.footerCell__bottomRight {
+  border-bottom-right-radius: 0.5rem;
+}
+
+.footerCell__notFirstInRow {
+  border-left: none;
+}
+
+.footerCell__notFirstRow {
+  border-top: none;
 }
 
 .tabela__calculationFooter {
@@ -491,7 +518,7 @@
   display: flex;
   border-radius: 0.5rem;
   border: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  background: var(--table-footer-surface);
   flex-shrink: 0;
 }
 
@@ -532,6 +559,162 @@
   gap: 0.5rem;
 }
 
+/* ============================================
+   View Switcher
+   ============================================ */
+
+.tabela__toolbar__tableViews {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 0;
+  /* border-bottom: 2px solid var(--modal-border); */
+  padding-bottom: 0;
+}
+
+.tabela__toolbar__tableViews__indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  height: 2px;
+  width: 0;
+  opacity: 0;
+  background: var(--premium-primary);
+  border-radius: 2px 2px 0 0;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tabela__toolbar__tableViews__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: transparent;
+  color: var(--modal-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+  flex-shrink: 0;
+  font-family: inherit;
+  position: relative;
+  white-space: nowrap;
+  /* border-radius: 0.375rem 0.375rem 0 0; */
+  
+  height: 1.85rem;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 var(--modal-border);
+  border: 1px solid var(--modal-border);
+  background: var(--table-menu-surface);
+
+  &:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+  }
+
+  &:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+  }
+  
+  &:hover {
+    background: var(--sidebar-hover-bg);
+    border-color: var(--modal-border);
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.06),
+      0 2px 3px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 var(--modal-border);
+  }
+
+  &.tabela__toolbar__tableViews__button__active {
+    background: var(--sidebar-hover-bg);
+    border-color: var(--modal-border);
+    box-shadow: 
+      inset 0 1px 2px rgba(0, 0, 0, 0.08),
+      inset 0 1px 3px rgba(0, 0, 0, 0.04);
+    transform: translateY(0.5px);
+  }
+}
+
+/* .tabela__toolbar__tableViews__button:hover {
+  color: var(--modal-text-main);
+  background: color-mix(in srgb, var(--sidebar-hover-bg) 60%, transparent);
+}
+
+.tabela__toolbar__tableViews__button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 12%, transparent);
+}
+
+.tabela__toolbar__tableViews__button__active {
+  color: var(--premium-primary);
+  background: color-mix(in srgb, var(--premium-primary) 6%, transparent);
+}
+
+.tabela__toolbar__tableViews__button__active:hover {
+  color: var(--premium-primary);
+  background: color-mix(in srgb, var(--premium-primary) 10%, transparent);
+} */
+
+.tabela__toolbar__tableViews__button__label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ============================================
+   View Placeholder (Em breve)
+   ============================================ */
+
+.tabela__view__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--modal-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--sidebar-hover-bg) 30%, transparent);
+}
+
+.tabela__view__placeholder__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.tabela__view__placeholder__icon {
+  font-size: 2rem;
+  color: color-mix(in srgb, var(--modal-text-muted) 50%, transparent);
+  margin-bottom: 0.25rem;
+}
+
+.tabela__view__placeholder__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--modal-text-main);
+  letter-spacing: -0.01em;
+}
+
+.tabela__view__placeholder__subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--modal-text-muted);
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  color: var(--premium-primary);
+}
+
 .tabela__toolbar__bottom__left {
   display: flex;
   align-items: center;
@@ -563,17 +746,6 @@
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
-}
-
-.tabela__toolbar__icon {
-  font-size: 1.25rem;
-  color: var(--modal-text-main);
-}
-
-.tabela__toolbar__label {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--modal-text-main);
 }
 
 .tabela__toolbar__button,
@@ -2714,4 +2886,469 @@ button.columnSelectionMenu__item {
   font-size: 0.7rem;
   color: var(--premium-primary);
   margin-left: 0.5rem;
+}
+
+/* ── Selection column ── */
+
+.tabela__selection__headerCell {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
+  padding: 0.5rem;
+  text-align: center;
+  vertical-align: middle;
+  border-top: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--modal-border);
+  border-left: 1px solid var(--modal-border);
+  border-top-left-radius: 0.5rem;
+  user-select: none;
+}
+
+.isNastedHeader .tabela__header__row .tabela__selection__headerCell {
+  border-right: 1px solid var(--modal-border);
+}
+
+.tabela__selection__headerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--modal-text-muted);
+  border-radius: 0.25rem;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: var(--premium-primary);
+    background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--premium-primary);
+    outline-offset: 2px;
+  }
+}
+
+.tabela__selection__headerBtn__partial {
+  color: var(--premium-primary);
+}
+
+.tabela__selection__headerBtn__allSelected {
+  color: var(--premium-primary);
+}
+
+.tabela__selection__cell {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
+  padding: 0.5rem;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--modal-border);
+  border-left: 1px solid var(--modal-border);
+  user-select: none;
+}
+
+.tabela__selection__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+}
+
+.tabela__selection__checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.tabela__selection__checkmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--modal-text-muted);
+  transition: color 0.15s ease;
+}
+
+.tabela__selection__checkbox:checked + .tabela__selection__checkmark {
+  color: var(--premium-primary);
+}
+
+.tabela__selection__label:hover .tabela__selection__checkmark {
+  color: var(--premium-primary);
+}
+
+.tabela__body__row__selected {
+  background: color-mix(in srgb, var(--premium-primary) 6%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--premium-primary) 10%, transparent);
+  }
+}
+
+.tabela__body__row__selected .tabela__body__cell,
+.tabela__body__row__selected .tabela__selection__cell {
+  border-bottom-color: color-mix(in srgb, var(--premium-primary) 18%, var(--modal-border));
+}
+
+.tabela__group .tabela .tabela__header__row:first-child .tabela__selection__headerCell {
+  border-top-left-radius: 0;
+}
+
+.tabela__body__row:last-child .tabela__selection__cell {
+  border-bottom-left-radius: 0.5rem;
+}
+
+.tabela__group .tabela .tabela__body__row:last-child .tabela__selection__cell {
+  border-bottom-left-radius: 0;
+}
+
+.tabela__wrapper.hasScroll .tabela.hasFooter .tabela__body__row:last-child .tabela__selection__cell {
+  border-bottom-left-radius: 0;
+}
+
+.tabela.hasCalculationRow .tabela__body .tabela__body__row:last-child .tabela__selection__cell {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.tabela__calculationRow .tabela__selection__cell {
+  border-bottom: none;
+}
+
+/* ── Row status backgrounds ── */
+
+.tabela__body__row__success {
+  background: color-mix(in srgb, var(--status-success, #22c55e) 10%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--status-success, #22c55e) 16%, transparent);
+  }
+}
+
+.tabela__body__row__warning {
+  background: color-mix(in srgb, var(--status-warning, #eab308) 10%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--status-warning, #eab308) 16%, transparent);
+  }
+}
+
+.tabela__body__row__error {
+  background: color-mix(in srgb, var(--status-error, #ef4444) 10%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--status-error, #ef4444) 16%, transparent);
+  }
+}
+
+.tabela__body__row__success .tabela__body__cell,
+.tabela__body__row__success .tabela__selection__cell {
+  border-bottom-color: color-mix(in srgb, var(--status-success, #22c55e) 20%, var(--modal-border));
+}
+
+.tabela__body__row__warning .tabela__body__cell,
+.tabela__body__row__warning .tabela__selection__cell {
+  border-bottom-color: color-mix(in srgb, var(--status-warning, #eab308) 20%, var(--modal-border));
+}
+
+.tabela__body__row__error .tabela__body__cell,
+.tabela__body__row__error .tabela__selection__cell {
+  border-bottom-color: color-mix(in srgb, var(--status-error, #ef4444) 20%, var(--modal-border));
+}
+
+/* ── Cell-specific status highlights ── */
+
+.tabela__body__cell__status_success {
+  background: color-mix(in srgb, var(--status-success, #22c55e) 14%, transparent);
+}
+
+.tabela__body__cell__status_warning {
+  background: color-mix(in srgb, var(--status-warning, #eab308) 14%, transparent);
+}
+
+.tabela__body__cell__status_error {
+  background: color-mix(in srgb, var(--status-error, #ef4444) 14%, transparent);
+}
+
+/* ── Editable cell indicator ── */
+
+.tabela__body__cell__editable {
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--sidebar-hover-bg);
+  }
+}
+
+/* ── Editing cell ── */
+
+.tabela__body__cell__editing {
+  padding: 0;
+  overflow: visible;
+}
+
+/* ── Text edit input ── */
+
+.tabela__editInput {
+  width: 100%;
+  height: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--premium-primary);
+  border-radius: 0;
+  background: var(--modal-background, #fff);
+  color: var(--modal-text-main);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: 0.035em;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* ── Select editor ── */
+
+.tabela__editSelect {
+  position: relative;
+  width: 100%;
+  outline: none;
+}
+
+.tabela__editSelect__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--premium-primary);
+  border-radius: 0;
+  background: var(--modal-background, #fff);
+  color: var(--modal-text-main);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: 0.035em;
+  cursor: pointer;
+  text-align: left;
+  gap: 0.5rem;
+}
+
+.tabela__editSelect__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.tabela__editSelect__icon {
+  font-size: 0.75rem;
+  color: var(--modal-text-muted);
+  flex-shrink: 0;
+}
+
+.tabela__editSelect__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--modal-background, #fff);
+  border: 1px solid var(--modal-border);
+  border-top: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.tabela__editSelect__option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  color: var(--modal-text-main);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  gap: 0.5rem;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--sidebar-hover-bg);
+  }
+}
+
+.tabela__editSelect__optionSelected {
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  font-weight: 600;
+}
+
+.tabela__editSelect__checkbox {
+  font-size: 0.875rem;
+  color: var(--premium-primary);
+}
+
+.tabela__editSelect__empty {
+  padding: 0.75rem;
+  text-align: center;
+  color: var(--modal-text-muted);
+  font-size: 0.8125rem;
+}
+
+.tabela__editSelect__confirm {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-top: 1px solid var(--modal-border);
+  background: color-mix(in srgb, var(--premium-primary) 6%, transparent);
+  color: var(--premium-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
+  }
+}
+
+/* ── Edit toolbar row ── */
+
+.tabela__toolbar__editRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--modal-border);
+}
+
+.tabela__toolbar__editRow__left {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.tabela__toolbar__editRow__right {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.tabela__toolbar__editRow__counter {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--premium-primary);
+  white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+}
+
+.tabela__toolbar__editRow__counter__icon {
+  font-size: 0.75rem;
+}
+
+.tabela__toolbar__editRow__filterGroup {
+  position: relative;
+}
+
+.tabela__toolbar__editRow__chevron {
+  font-size: 0.625rem;
+  margin-left: 0.125rem;
+  color: var(--modal-text-muted);
+}
+
+.tabela__toolbar__editRow__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 140px;
+  background: var(--modal-background, #fff);
+  border: 1px solid var(--modal-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 0.25rem;
+  overflow: hidden;
+}
+
+.tabela__toolbar__editRow__dropdown__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.625rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: none;
+  color: var(--modal-text-main);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--sidebar-hover-bg);
+  }
+}
+
+.tabela__toolbar__editRow__dropdown__optionActive {
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  color: var(--premium-primary);
+  font-weight: 600;
+}
+
+.tabela__toolbar__editRow__statusDot__success,
+.tabela__toolbar__editRow__statusDot__warning,
+.tabela__toolbar__editRow__statusDot__error {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tabela__toolbar__editRow__statusDot__success {
+  background: var(--status-success, #22c55e);
+}
+
+.tabela__toolbar__editRow__statusDot__warning {
+  background: var(--status-warning, #eab308);
+}
+
+.tabela__toolbar__editRow__statusDot__error {
+  background: var(--status-error, #ef4444);
+}
+
+.tabela__toolbar__editRow__saveBtn {
+  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  color: var(--premium-primary);
+
+  &:hover {
+    background: color-mix(in srgb, var(--premium-primary) 14%, transparent);
+  }
 }

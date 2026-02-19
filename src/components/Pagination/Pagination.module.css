@@ -197,22 +197,3 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
   }
 }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .pagination {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .pagination__controls {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .pagination__itemsPerPage {
-    justify-content: center;
-    width: 100%;
-  }
-}
-

@@ -81,7 +81,6 @@ export const VisibleColumnsPanel = memo(({
                 <span className={styles.visibleColumnsModal__checkboxWrap}>
                   <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
                 </span>
-                <i className={`${getColumnIcon(column)} ${styles.visibleColumnsModal__itemIcon}`} />
                 <span className={styles.visibleColumnsModal__itemLabel}>{column.label ?? column.key}</span>
               </label>
             ))}
@@ -112,7 +111,6 @@ export const VisibleColumnsPanel = memo(({
                 <span className={styles.visibleColumnsModal__checkboxWrap}>
                   <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
                 </span>
-                <i className={`far fa-hashtag ${styles.visibleColumnsModal__itemIcon}`} />
                 <span className={styles.visibleColumnsModal__itemLabel}>{item.label ?? item.key}</span>
               </label>
             ))}

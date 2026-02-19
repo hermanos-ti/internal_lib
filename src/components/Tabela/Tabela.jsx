@@ -5,10 +5,11 @@ import { Loader } from '../Loader/Loader';
 import { Pagination } from '../Pagination/Pagination';
 import { createPortal } from 'react-dom';
 
-import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
+import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, TABLE_VIEWS, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
 import { computeCalculation, CALCULATION_OPTIONS } from './calculationUtils';
 import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal } from './components';
 import { PortalTargetContext } from './PortalTargetContext';
+import { GridView, ListView, KanbanView, CalendarView } from './components/views';
 
 export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
@@ -83,6 +84,40 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+  const [selectedKeys, setSelectedKeys] = useState(() => new Set());
+  const onSelectionChangeRef = useRef(mergedOptions.onSelectionChange);
+
+  useEffect(() => {
+    onSelectionChangeRef.current = mergedOptions.onSelectionChange;
+  }, [mergedOptions.onSelectionChange]);
+
+  const [editedData, setEditedData] = useState(() => new Map());
+  const [editedKeys, setEditedKeys] = useState(() => new Set());
+  const [editingCell, setEditingCell] = useState(null);
+  const [rowStatuses, setRowStatuses] = useState(() => new Map());
+  const [editViewFilter, setEditViewFilter] = useState('all');
+  const [editViewDropdownOpen, setEditViewDropdownOpen] = useState(false);
+  const onEditChangeRef = useRef(mergedOptions.onEditChange);
+  const onSaveRef = useRef(mergedOptions.onSave);
+
+  useEffect(() => {
+    onEditChangeRef.current = mergedOptions.onEditChange;
+  }, [mergedOptions.onEditChange]);
+
+  useEffect(() => {
+    onSaveRef.current = mergedOptions.onSave;
+  }, [mergedOptions.onSave]);
+
+  const rowKeyMap = useMemo(() => {
+    const map = new WeakMap();
+    originalData.forEach((item, index) => {
+      map.set(item, item.key ?? `__row_${index}`);
+    });
+    return map;
+  }, [originalData]);
+
+  const getRowKey = useCallback((item) => rowKeyMap.get(item) ?? '', [rowKeyMap]);
+
   const columnSelectionMenuRef = useRef(null);
   const sortMenuRef = useRef(null);
   const filterMenuRef = useRef(null);
@@ -98,11 +133,37 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
   const wasSearchFocusedRef = useRef(false);
+  const viewsContainerRef = useRef(null);
+  const viewIndicatorRef = useRef(null);
 
   const [currentEditingFilter, setCurrentEditingFilter] = useState(null);
   const [currentAdvancedFilterGroup, setCurrentAdvancedFilterGroup] = useState(null);
   const [groupByColumnKey, setGroupByColumnKey] = useState(null);
   const [calculationByColumn, setCalculationByColumn] = useState(mergedOptions.initialCalculationByColumn ?? {});
+
+  const [currentTableView, setCurrentTableView] = useState(mergedOptions.currentTableView ?? 'grid');
+
+  useEffect(() => {
+    if (mergedOptions.onTableViewChange) {
+      mergedOptions.onTableViewChange(currentTableView);
+    }
+  }, [currentTableView]);
+
+  useEffect(() => {
+    const container = viewsContainerRef.current;
+    const indicator = viewIndicatorRef.current;
+    if (!container || !indicator) return;
+
+    const activeBtn = container.querySelector(`[data-view-active="true"]`);
+    if (!activeBtn) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+
+    indicator.style.left = `${btnRect.left - containerRect.left}px`;
+    indicator.style.width = `${btnRect.width}px`;
+    indicator.style.opacity = '1';
+  }, [currentTableView]);
 
   const [menuState, setMenuState] = useState({
     isOpen: false,
@@ -225,6 +286,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       sortedDataRef.current = data;
       setSorts([]);
       setFilters([]);
+      setSelectedKeys(new Set());
     }
   }, [data]);
 
@@ -1364,6 +1426,283 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     return hasValidSortedData ? sortedDataRef.current : dataSource;
   }, [originalData, filteredData, filters, tempFilters, sorts, tempSorts, isEditingToolbar, sortedDataRef, debouncedSearchTerm]);
 
+  // ── Selection logic ──
+
+  const toggleRowSelection = useCallback((item) => {
+    const key = getRowKey(item);
+    setSelectedKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, [getRowKey]);
+
+
+  useEffect(() => {
+    if (!mergedOptions.selectable || !onSelectionChangeRef.current) return;
+    const selected = originalData.filter(item => selectedKeys.has(getRowKey(item)));
+    onSelectionChangeRef.current(selected);
+  }, [selectedKeys, mergedOptions.selectable, originalData, getRowKey]);
+
+  useEffect(() => {
+    if (!mergedOptions.selectable || !mergedOptions.selectionRef) return;
+    const ref = mergedOptions.selectionRef;
+    ref.current = {
+      select(keys) {
+        if (keys === 'all') {
+          setSelectedKeys(new Set(originalData.map(getRowKey)));
+        } else {
+          const arr = Array.isArray(keys) ? keys : [keys];
+          setSelectedKeys(prev => {
+            const next = new Set(prev);
+            arr.forEach(k => next.add(String(k)));
+            return next;
+          });
+        }
+      },
+      deselect(keys) {
+        if (keys === 'all') {
+          setSelectedKeys(new Set());
+        } else {
+          const arr = Array.isArray(keys) ? keys : [keys];
+          setSelectedKeys(prev => {
+            const next = new Set(prev);
+            arr.forEach(k => next.delete(String(k)));
+            return next;
+          });
+        }
+      },
+      getSelected() {
+        return originalData.filter(item => selectedKeys.has(getRowKey(item)));
+      },
+    };
+  }, [mergedOptions.selectable, mergedOptions.selectionRef, originalData, selectedKeys, getRowKey]);
+
+  // ── End selection logic ──
+
+  // ── Edit logic ──
+
+  const handleCellClick = useCallback((row, column, rowIndex, colIndex) => {
+    if (!mergedOptions.editable) return;
+    const rowKey = getRowKey(row);
+    setEditingCell({ rowKey, colKey: column.key, rowIndex, colIndex });
+  }, [mergedOptions.editable, getRowKey]);
+
+  const handleCellCommit = useCallback((row, colKey, newValue) => {
+    const rowKey = getRowKey(row);
+    const originalValue = row[colKey];
+
+    const valueChanged = Array.isArray(originalValue) || Array.isArray(newValue)
+      ? JSON.stringify(originalValue) !== JSON.stringify(newValue)
+      : !Object.is(originalValue, newValue);
+
+    if (!valueChanged) {
+      setEditingCell(null);
+      return;
+    }
+
+    setEditedData(prev => {
+      const next = new Map(prev);
+      const existing = next.get(rowKey) || {};
+      next.set(rowKey, { ...existing, [colKey]: newValue });
+      return next;
+    });
+    setEditedKeys(prev => {
+      const next = new Set(prev);
+      next.add(rowKey);
+      return next;
+    });
+    setEditingCell(null);
+
+    if (onEditChangeRef.current) {
+      const allData = originalData.map(item => {
+        const key = getRowKey(item);
+        const edits = key === rowKey
+          ? { ...(editedData.get(key) || {}), [colKey]: newValue }
+          : editedData.get(key);
+        return edits ? { ...item, ...edits } : item;
+      });
+      const changedRow = { ...row, [colKey]: newValue };
+      onEditChangeRef.current(allData, changedRow, colKey);
+    }
+  }, [getRowKey, originalData, editedData]);
+
+  const handleCellCancel = useCallback(() => {
+    setEditingCell(null);
+  }, []);
+
+  const handleEditNavigate = useCallback((direction, rowIndex, colIndex) => {
+    const leafColumns = headerStructure.leafColumns.filter(col => col.visible !== false && col.editable);
+    if (leafColumns.length === 0) {
+      setEditingCell(null);
+      return;
+    }
+
+    const allVisibleLeafs = headerStructure.leafColumns.filter(col => col.visible !== false);
+    const editableIndices = allVisibleLeafs
+      .map((col, idx) => col.editable ? idx : -1)
+      .filter(idx => idx >= 0);
+
+    if (editableIndices.length === 0) {
+      setEditingCell(null);
+      return;
+    }
+
+    const currentEditableIdx = editableIndices.indexOf(colIndex);
+    let nextRowIndex = rowIndex;
+    let nextColEditableIdx = currentEditableIdx >= 0 ? currentEditableIdx : 0;
+
+    switch (direction) {
+      case 'down':
+        nextRowIndex = rowIndex + 1;
+        break;
+      case 'up':
+        nextRowIndex = rowIndex - 1;
+        break;
+      case 'right':
+        nextColEditableIdx = currentEditableIdx + 1;
+        if (nextColEditableIdx >= editableIndices.length) {
+          nextColEditableIdx = 0;
+          nextRowIndex = rowIndex + 1;
+        }
+        break;
+      case 'left':
+        nextColEditableIdx = currentEditableIdx - 1;
+        if (nextColEditableIdx < 0) {
+          nextColEditableIdx = editableIndices.length - 1;
+          nextRowIndex = rowIndex - 1;
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (nextRowIndex < 0 || nextRowIndex >= sortedData.length) {
+      setEditingCell(null);
+      return;
+    }
+
+    const nextColIndex = editableIndices[nextColEditableIdx];
+    const nextColumn = allVisibleLeafs[nextColIndex];
+    const nextRow = sortedData[nextRowIndex];
+    if (!nextRow || !nextColumn) {
+      setEditingCell(null);
+      return;
+    }
+
+    const nextRowKey = getRowKey(nextRow);
+    setEditingCell({ rowKey: nextRowKey, colKey: nextColumn.key, rowIndex: nextRowIndex, colIndex: nextColIndex });
+  }, [headerStructure, sortedData, getRowKey]);
+
+  useEffect(() => {
+    if (!mergedOptions.editable || !mergedOptions.editRef) return;
+    const ref = mergedOptions.editRef;
+    ref.current = {
+      getData() {
+        return originalData.map(item => {
+          const key = getRowKey(item);
+          const edits = editedData.get(key);
+          return edits ? { ...item, ...edits } : { ...item };
+        });
+      },
+      getEditedRows() {
+        return originalData
+          .filter(item => editedKeys.has(getRowKey(item)))
+          .map(item => {
+            const key = getRowKey(item);
+            const edits = editedData.get(key) || {};
+            return {
+              original: item,
+              edited: { ...item, ...edits },
+              changes: edits,
+            };
+          });
+      },
+      resetEdits(keys) {
+        if (!keys) {
+          setEditedData(new Map());
+          setEditedKeys(new Set());
+        } else {
+          const arr = Array.isArray(keys) ? keys : [keys];
+          setEditedData(prev => {
+            const next = new Map(prev);
+            arr.forEach(k => next.delete(String(k)));
+            return next;
+          });
+          setEditedKeys(prev => {
+            const next = new Set(prev);
+            arr.forEach(k => next.delete(String(k)));
+            return next;
+          });
+        }
+        setEditingCell(null);
+      },
+      setRowStatus(keys, status, columns) {
+        const arr = Array.isArray(keys) ? keys : [keys];
+        const cols = columns
+          ? (Array.isArray(columns) ? columns : [columns])
+          : undefined;
+        setRowStatuses(prev => {
+          const next = new Map(prev);
+          arr.forEach(k => {
+            next.set(String(k), { status, columns: cols });
+          });
+          return next;
+        });
+      },
+      clearRowStatus(keys) {
+        if (!keys) {
+          setRowStatuses(new Map());
+        } else {
+          const arr = Array.isArray(keys) ? keys : [keys];
+          setRowStatuses(prev => {
+            const next = new Map(prev);
+            arr.forEach(k => next.delete(String(k)));
+            return next;
+          });
+        }
+      },
+    };
+  }, [mergedOptions.editable, mergedOptions.editRef, originalData, editedData, editedKeys, getRowKey]);
+
+  const displayData = useMemo(() => {
+    if (!mergedOptions.editable || editViewFilter === 'all') return sortedData;
+    if (editViewFilter === 'edited') {
+      return sortedData.filter(item => editedKeys.has(getRowKey(item)));
+    }
+    return sortedData.filter(item => {
+      const status = rowStatuses.get(getRowKey(item));
+      return status?.status === editViewFilter;
+    });
+  }, [sortedData, editViewFilter, editedKeys, rowStatuses, getRowKey, mergedOptions.editable]);
+
+  const handleRevertEdits = useCallback(() => {
+    setEditedData(new Map());
+    setEditedKeys(new Set());
+    setEditingCell(null);
+    setEditViewFilter('all');
+  }, []);
+
+  const handleSaveEdits = useCallback(() => {
+    if (!onSaveRef.current) return;
+    const allData = originalData.map(item => {
+      const key = getRowKey(item);
+      const edits = editedData.get(key);
+      return edits ? { ...item, ...edits } : { ...item };
+    });
+    const editedRows = originalData
+      .filter(item => editedKeys.has(getRowKey(item)))
+      .map(item => {
+        const key = getRowKey(item);
+        const edits = editedData.get(key) || {};
+        return { original: item, edited: { ...item, ...edits }, changes: edits };
+      });
+    onSaveRef.current(allData, editedRows);
+  }, [originalData, editedData, editedKeys, getRowKey]);
+
+  // ── End edit logic ──
+
   const groupedBodyItems = useMemo(() => {
     if (!groupByColumnKey || fullDataForGrouping.length === 0) return null;
     const column = headerStructure.leafColumns.find(c => c.key === groupByColumnKey);
@@ -1407,6 +1746,50 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     setGroupItemsPerPage((prev) => ({ ...prev, [groupKey]: newSize }));
     setGroupCurrentPage((prev) => ({ ...prev, [groupKey]: 1 }));
   }, []);
+
+  const getVisiblePageKeys = useCallback(() => {
+    if (groupedBodyItems != null && groupedBodyItems.length > 0) {
+      const keys = [];
+      for (const group of groupedBodyItems) {
+        if (collapsedGroupKeys[group.groupKey]) continue;
+        const perGroup = groupItemsPerPage[group.groupKey] ?? defaultItemsPerGroup;
+        const page = groupCurrentPage[group.groupKey] ?? 1;
+        const visibleRows = group.rows.slice((page - 1) * perGroup, page * perGroup);
+        keys.push(...visibleRows.map(getRowKey));
+      }
+      return keys;
+    }
+    return sortedData.map(getRowKey);
+  }, [groupedBodyItems, collapsedGroupKeys, groupItemsPerPage, groupCurrentPage, defaultItemsPerGroup, sortedData, getRowKey]);
+
+  const selectionState = useMemo(() => {
+    if (!mergedOptions.selectable) return { allPageSelected: false, allTableSelected: false, someSelected: false };
+    const pageKeys = getVisiblePageKeys();
+    const allKeys = fullDataForGrouping.map(getRowKey);
+    const allPageSelected = pageKeys.length > 0 && pageKeys.every(k => selectedKeys.has(k));
+    const allTableSelected = allKeys.length > 0 && allKeys.every(k => selectedKeys.has(k));
+    const someSelected = selectedKeys.size > 0;
+    return { allPageSelected, allTableSelected, someSelected };
+  }, [mergedOptions.selectable, getVisiblePageKeys, fullDataForGrouping, selectedKeys, getRowKey, groupedBodyItems]);
+
+  const handleHeaderCheckboxClick = useCallback(() => {
+    const pageKeys = getVisiblePageKeys();
+    const allKeys = fullDataForGrouping.map(getRowKey);
+    const allPageSelected = pageKeys.length > 0 && pageKeys.every(k => selectedKeys.has(k));
+    const allTableSelected = allKeys.length > 0 && allKeys.every(k => selectedKeys.has(k));
+
+    if (!allPageSelected) {
+      setSelectedKeys(prev => {
+        const next = new Set(prev);
+        pageKeys.forEach(k => next.add(k));
+        return next;
+      });
+    } else if (!allTableSelected) {
+      setSelectedKeys(new Set(allKeys));
+    } else {
+      setSelectedKeys(new Set());
+    }
+  }, [getVisiblePageKeys, fullDataForGrouping, selectedKeys, getRowKey]);
 
   useEffect(() => {
     const activeFilters = isEditingToolbar ? tempFilters : filters;
@@ -1492,12 +1875,48 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       <thead className={`${styles.tabela__header} ${headerStructure.headerRows.length > 1 ? styles.isNastedHeader : ''}`}>
         {headerStructure.leafColumns.length === 0 ? (
           <tr className={styles.tabela__header__row}>
+            {mergedOptions.selectable && (
+              <th className={styles.tabela__selection__headerCell} />
+            )}
             <th colSpan={1} className={styles.tabela__header__cell} style={{ width: '100%' }}>
               <span className={styles.tabela__header__label}>Nenhuma coluna encontrada/selecionada</span>
             </th>
           </tr>
         ) : headerStructure.headerRows && headerStructure.headerRows.map((headerRow, rowIndex) => (
           <tr className={styles.tabela__header__row} key={`header-row-${rowIndex}`}>
+            {mergedOptions.selectable && rowIndex === 0 && (
+              <th
+                className={styles.tabela__selection__headerCell}
+                rowSpan={headerStructure.headerRows.length}
+              >
+                <button
+                  type="button"
+                  className={`${styles.tabela__selection__headerBtn} ${
+                    selectionState.allTableSelected
+                      ? styles.tabela__selection__headerBtn__allSelected
+                      : selectionState.someSelected
+                        ? styles.tabela__selection__headerBtn__partial
+                        : ''
+                  }`}
+                  onClick={handleHeaderCheckboxClick}
+                  aria-label={
+                    selectionState.allTableSelected
+                      ? 'Remover todas as seleções'
+                      : selectionState.allPageSelected
+                        ? 'Selecionar todas as linhas da tabela'
+                        : 'Selecionar todas as linhas da página'
+                  }
+                >
+                  <i className={`far ${
+                    selectionState.allTableSelected
+                      ? 'fa-square-check'
+                      : selectionState.someSelected
+                        ? 'fa-square-minus'
+                        : 'fa-square'
+                  }`} />
+                </button>
+              </th>
+            )}
             {headerRow.columns.map((column) => {
               const colSpan = column.colSpan || 1;
               const rowspan = column.rowspan || 1;
@@ -1541,7 +1960,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   );
 
   const hasCalculationRow =
-    mergedOptions.currentMode === 'grid' &&
+    currentTableView === 'grid' &&
     Object.keys(calculationByColumn).some(
       (key) =>
         calculationByColumn[key]?.calculationId &&
@@ -1587,269 +2006,152 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   );
 
   const tableContent = useMemo(() => {
-    if (mergedOptions.currentMode === 'grid') {
-      if (groupedBodyItems != null && groupedBodyItems.length > 0) {
+    switch (currentTableView) {
+      case 'grid':
         return (
-          <div
-            ref={tableWrapperRef}
-            className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''} ${hasCalculationRow ? styles.hasCalculationFooter : ''}`}
-          >
-            {groupedBodyItems.map((group, groupIndex) => {
-              const itensPerGroup = groupItemsPerPage[group.groupKey] ?? defaultItemsPerGroup;
-              const groupPage = groupCurrentPage[group.groupKey] ?? 1;
-              const visibleRows = group.rows.slice((groupPage - 1) * itensPerGroup, groupPage * itensPerGroup);
-              const totalPagesGroup = Math.ceil(group.rows.length / itensPerGroup) || 1;
-              const isCollapsed = collapsedGroupKeys[group.groupKey] === true;
-
-              const toggleCollapsed = () => {
-                setCollapsedGroupKeys((prev) => ({ ...prev, [group.groupKey]: !prev[group.groupKey] }));
-              };
-
-              return (
-                <div key={group.groupKey} className={styles.tabela__group}>
-                  <div className={`${styles.tabela__group__header} ${isCollapsed ? styles.tabela__group__headerCollapsed : ''}`}>
-                    <span className={styles.tabela__group__label}>{group.groupLabel}</span>
-                    <button
-                      type="button"
-                      className={styles.tabela__group__toggleBtn}
-                      onClick={toggleCollapsed}
-                      aria-label={isCollapsed ? 'Expandir grupo' : 'Recolher grupo'}
-                      aria-expanded={!isCollapsed}
-                    >
-                      <i className={`far ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}`} />
-                      <span>{isCollapsed ? 'Expandir' : 'Recolher'}</span>
-                    </button>
-                  </div>
-                  {!isCollapsed && (
-                    <>
-                      <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''} ${hasCalculationRow ? styles.hasCalculationRow : ''}`}>
-                        {renderTableHead()}
-                        <tbody className={styles.tabela__body} ref={groupIndex === 0 ? tableBodyRef : undefined}>
-                          {visibleRows.map((item, rowIndex) => (
-                            <tr className={styles.tabela__body__row} key={item.key ?? `row-${rowIndex}`}>
-                              {headerStructure.leafColumns
-                                .filter(col => col.visible !== false)
-                                .map((column, colIndex) => {
-                                  const cellValue = item[column.key];
-                                  const hasColumnRender = renderFlags.columnRenders.get(column.key) || false;
-                                  return (
-                                    <TableCell
-                                      key={column.key}
-                                      cellValue={cellValue}
-                                      row={item}
-                                      column={column}
-                                      rowIndex={rowIndex}
-                                      colIndex={colIndex}
-                                      hasColumnRender={hasColumnRender}
-                                    />
-                                  );
-                                })}
-                            </tr>
-                          ))}
-                        </tbody>
-                        {hasCalculationRow && (
-                          <tfoot>
-                            <tr className={styles.tabela__calculationRow}>
-                              {headerStructure.leafColumns
-                                .filter((col) => col.visible !== false)
-                                .map((column) => {
-                                  if (column.calculable === false) {
-                                    return <td key={column.key} className={styles.tabela__calculationCell} />;
-                                  }
-                                  const config = calculationByColumn[column.key];
-                                  const hasValidCalc =
-                                    config?.calculationId &&
-                                    config.calculationId !== 'none' &&
-                                    (config.calculationId !== 'pctByGroup' || config.groupValue !== undefined);
-                                  const result = hasValidCalc
-                                    ? computeCalculation(fullDataForGrouping, column, config.calculationId, { groupValue: config.groupValue })
-                                    : null;
-                                  const calculationLabel = hasValidCalc && config?.calculationId
-                                    ? config.calculationId === 'pctByGroup'
-                                      ? `Porcentagem por grupo${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
-                                      : (CALCULATION_OPTIONS[config.calculationId]?.label ?? config.calculationId)
-                                    : '';
-                                  return (
-                                    <td key={column.key} className={styles.tabela__calculationCell}>
-                                      {hasValidCalc ? (
-                                        <>
-                                          <span className={styles.tabela__calculationCell__label}>{calculationLabel}</span>
-                                          <span className={styles.tabela__calculationCell__value}>{result.formatted}</span>
-                                          <button
-                                            type="button"
-                                            className={styles.tabela__calculationCell__editBtn}
-                                            onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                                            aria-label="Alterar cálculo"
-                                          >
-                                            <i className="far fa-calculator" />
-                                          </button>
-                                        </>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className={styles.tabela__calculationCell__addBtn}
-                                          onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                                          aria-label="Calcular"
-                                        >
-                                          <i className="far fa-calculator" /> Calcular
-                                        </button>
-                                      )}
-                                    </td>
-                                  );
-                                })}
-                            </tr>
-                          </tfoot>
-                        )}
-                      </table>
-                      <div className={styles.tabela__group__pagination}>
-                        <Pagination
-                          totalPages={totalPagesGroup}
-                          currentPage={groupPage}
-                          onPageChange={(page) => setGroupCurrentPage((prev) => ({ ...prev, [group.groupKey]: page }))}
-                          itemsPerPageOptions={groupItemsPerPageOptions}
-                          itemsPerPage={itensPerGroup}
-                          onItemsPerPageChange={(newSize) => handleGroupItemsPerPageChange(group.groupKey, newSize)}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <GridView
+            groupedBodyItems={groupedBodyItems}
+            sortedData={displayData}
+            headerStructure={headerStructure}
+            renderFlags={renderFlags}
+            calculationByColumn={calculationByColumn}
+            fullDataForGrouping={fullDataForGrouping}
+            hasCalculationRow={hasCalculationRow}
+            hasScroll={hasScroll}
+            visibleFooter={visibleFooter}
+            isSorting={isSorting}
+            isLoading={isLoading}
+            renderTableHead={renderTableHead}
+            tableWrapperRef={tableWrapperRef}
+            tableBodyRef={tableBodyRef}
+            groupCurrentPage={groupCurrentPage}
+            collapsedGroupKeys={collapsedGroupKeys}
+            setCollapsedGroupKeys={setCollapsedGroupKeys}
+            groupItemsPerPage={groupItemsPerPage}
+            setGroupCurrentPage={setGroupCurrentPage}
+            groupItemsPerPageOptions={groupItemsPerPageOptions}
+            defaultItemsPerGroup={defaultItemsPerGroup}
+            handleGroupItemsPerPageChange={handleGroupItemsPerPageChange}
+            openCalculationSubmenu={openCalculationSubmenu}
+            selectable={mergedOptions.selectable}
+            selectedKeys={selectedKeys}
+            getRowKey={getRowKey}
+            toggleRowSelection={toggleRowSelection}
+            editable={mergedOptions.editable}
+            editingCell={editingCell}
+            editedData={editedData}
+            rowStatuses={rowStatuses}
+            onCellClick={handleCellClick}
+            onCellCommit={handleCellCommit}
+            onCellCancel={handleCellCancel}
+            onEditNavigate={handleEditNavigate}
+          />
         );
-      }
-      return (
-        <div
-          ref={tableWrapperRef}
-          className={`${styles.tabela__wrapper} ${hasScroll ? styles.hasScroll : ''} ${hasCalculationRow ? styles.hasCalculationFooter : ''}`}
-        >
-          <table className={`${styles.tabela} ${visibleFooter.length > 0 ? styles.hasFooter : ''} ${hasCalculationRow ? styles.hasCalculationRow : ''}`}>
-            {renderTableHead()}
-            <tbody className={styles.tabela__body} ref={tableBodyRef}>
-              {headerStructure.leafColumns.length === 0 ? (
-                <tr className={styles.tabela__body__row}>
-                  <td colSpan={1} className={styles.tabela__body__cell} style={{ width: '100%' }}>
-                    <span className={styles.tabela__body__label}>Nenhuma informação encontrada</span>
-                  </td>
-                </tr>
-              ) : sortedData.length === 0 ? (
-                <tr className={styles.tabela__body__row}>
-                  <td colSpan={headerStructure.leafColumns.length} className={styles.tabela__body__cell}>
-                    <span className={styles.tabela__body__label}>Nenhuma informação encontrada</span>
-                  </td>
-                </tr>
-              ) : null}
-              {(isSorting || isLoading) && (
-                <div className={styles.tabela__loader}>
-                  <Loader
-                    loading={true}
-                    size="medium"
-                    text={isSorting ? "Ordenando..." : "Carregando..."}
-                  />
-                </div>
-              )}
-              {headerStructure.leafColumns.length > 0 && sortedData.map((item, rowIndex) => (
-                <tr className={styles.tabela__body__row} key={item.key}>
-                  {headerStructure.leafColumns
-                    .filter(col => col.visible !== false)
-                    .map((column, colIndex) => {
-                      const cellValue = item[column.key];
-                      const hasColumnRender = renderFlags.columnRenders.get(column.key) || false;
-                      return (
-                        <TableCell
-                          key={column.key}
-                          cellValue={cellValue}
-                          row={item}
-                          column={column}
-                          rowIndex={rowIndex}
-                          colIndex={colIndex}
-                          hasColumnRender={hasColumnRender}
-                        />
-                      );
-                    })}
-                </tr>
-              ))}
-            </tbody>
-            {hasCalculationRow && (
-              <tfoot>
-                <tr className={styles.tabela__calculationRow}>
-                  {headerStructure.leafColumns
-                    .filter((col) => col.visible !== false)
-                    .map((column) => {
-                      if (column.calculable === false) {
-                        return <td key={column.key} className={styles.tabela__calculationCell} />;
-                      }
-                      const config = calculationByColumn[column.key];
-                      const hasValidCalc =
-                        config?.calculationId &&
-                        config.calculationId !== 'none' &&
-                        (config.calculationId !== 'pctByGroup' || config.groupValue !== undefined);
-                      const result = hasValidCalc
-                        ? computeCalculation(fullDataForGrouping, column, config.calculationId, { groupValue: config.groupValue })
-                        : null;
-                      const calculationLabel = hasValidCalc && config?.calculationId
-                        ? config.calculationId === 'pctByGroup'
-                          ? `${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
-                          : (CALCULATION_OPTIONS[config.calculationId]?.labelShort ?? config.calculationId)
-                        : '';
-                      return (
-                        <td key={column.key} className={styles.tabela__calculationCell}>
-                          {hasValidCalc ? (
-                            <>
-                              <span className={styles.tabela__calculationCell__label}>{calculationLabel}</span>
-                              <span className={styles.tabela__calculationCell__value}>{result.formatted}</span>
-                              <button
-                                type="button"
-                                className={styles.tabela__calculationCell__editBtn}
-                                onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                                aria-label="Alterar cálculo"
-                              >
-                                <i className="far fa-calculator" />
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              className={styles.tabela__calculationCell__addBtn}
-                              onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                              aria-label="Calcular"
-                            >
-                              <i className="far fa-calculator" /> Calcular
-                            </button>
-                          )}
-                        </td>
-                      );
-                    })}
-                </tr>
-              </tfoot>
-            )}
-          </table>
-        </div>
-      );
+      case 'list':
+        return <ListView sortedData={sortedData} headerStructure={headerStructure} />;
+      case 'kanban':
+        return <KanbanView sortedData={sortedData} headerStructure={headerStructure} />;
+      case 'calendar':
+        return <CalendarView sortedData={sortedData} headerStructure={headerStructure} />;
+      default:
+        return null;
     }
-  }, [mergedOptions.currentMode, visibleColumns, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, fullDataForGrouping, openCalculationSubmenu]);
+  }, [currentTableView, visibleColumns, displayData, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, fullDataForGrouping, openCalculationSubmenu, hasScroll, visibleFooter, renderTableHead, handleGroupItemsPerPageChange, mergedOptions.selectable, selectedKeys, getRowKey, toggleRowSelection, mergedOptions.editable, editingCell, editedData, rowStatuses, handleCellClick, handleCellCommit, handleCellCancel, handleEditNavigate]);
+
+  const footerRowRef = useRef(null);
+  const [footerCellMeta, setFooterCellMeta] = useState({});
+
+  useEffect(() => {
+    const row = footerRowRef.current;
+    if (!row) return;
+
+    const computeLayout = () => {
+      const cells = Array.from(row.children);
+      if (cells.length === 0) { setFooterCellMeta({}); return; }
+
+      const visualRows = [];
+      let currentRowTop = null;
+      let currentRow = [];
+      for (const cell of cells) {
+        if (cell.offsetTop !== currentRowTop) {
+          if (currentRow.length > 0) visualRows.push(currentRow);
+          currentRow = [cell];
+          currentRowTop = cell.offsetTop;
+        } else {
+          currentRow.push(cell);
+        }
+      }
+      if (currentRow.length > 0) visualRows.push(currentRow);
+
+      const firstRow = visualRows[0];
+      const lastRow = visualRows[visualRows.length - 1];
+      const meta = {};
+
+      for (let ri = 0; ri < visualRows.length; ri++) {
+        for (let ci = 0; ci < visualRows[ri].length; ci++) {
+          const key = visualRows[ri][ci].dataset.key;
+          if (!key) continue;
+          meta[key] = {
+            topLeft: ri === 0 && ci === 0,
+            topRight: ri === 0 && ci === firstRow.length - 1,
+            bottomLeft: ri === visualRows.length - 1 && ci === 0,
+            bottomRight: ri === visualRows.length - 1 && ci === lastRow.length - 1,
+            notFirstInRow: ci > 0,
+            notFirstRow: ri > 0,
+          };
+        }
+      }
+
+      setFooterCellMeta(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(meta)) return prev;
+        return meta;
+      });
+    };
+
+    const observer = new ResizeObserver(computeLayout);
+    observer.observe(row);
+    computeLayout();
+
+    return () => observer.disconnect();
+  }, [visibleFooter]);
 
   const tableFooterContent = useMemo(() => {
-    if (mergedOptions.currentMode === 'grid') {
-      return (
-        <div className={styles.tabela__footer}>
-          {visibleFooter.length > 0 && (
-            <div className={styles.tabela__footer__row}>
-              {visibleFooter.map((footerItem) => {
-                const content = footerItem.render && typeof footerItem.render === 'function' ? footerItem.render(sortedData, footerItem) : footerItem.value || '';
-                return (
-                  <div key={footerItem.key} className={`${styles.tabela__footer__cell} ${footerItem.className || ''}`} style={footerItem.style}>
-                    {footerItem.label ? footerItem.label + ' ' : ''}{content}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      );
+    switch (currentTableView) {
+      case 'grid':
+        return (
+          <div className={`${styles.tabela__footer} ${hasCalculationRow ? styles.hasCalculationFooter : ''}`}>
+            {visibleFooter.length > 0 && (
+              <div className={styles.tabela__footer__row} ref={footerRowRef}>
+                {visibleFooter.map((footerItem) => {
+                  const content = footerItem.render && typeof footerItem.render === 'function' ? footerItem.render(sortedData, footerItem) : footerItem.value || '';
+                  const meta = footerCellMeta[footerItem.key] || {};
+                  const cellClasses = [
+                    styles.tabela__footer__cell,
+                    footerItem.className || '',
+                    meta.topLeft && styles.footerCell__topLeft,
+                    meta.topRight && styles.footerCell__topRight,
+                    meta.bottomLeft && styles.footerCell__bottomLeft,
+                    meta.bottomRight && styles.footerCell__bottomRight,
+                    meta.notFirstInRow && styles.footerCell__notFirstInRow,
+                    meta.notFirstRow && styles.footerCell__notFirstRow,
+                  ].filter(Boolean).join(' ');
+                  return (
+                    <div key={footerItem.key} data-key={footerItem.key} className={cellClasses} style={footerItem.style}>
+                      {footerItem.label ? footerItem.label + ' ' : ''}{content}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      case 'list':
+      case 'kanban':
+      case 'calendar':
+      default:
+        return null;
     }
-  }, [mergedOptions.currentMode, visibleFooter]);
+  }, [currentTableView, visibleFooter, footerCellMeta, hasCalculationRow, sortedData]);
 
   const paginationContent = useMemo(() => {
     return (
@@ -1884,8 +2186,24 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       <div className={styles.tabela__toolbar}>
         <div className={`${styles.tabela__toolbar__top} ${sorts.length > 0 || filters.length > 0 || isEditingToolbar ? styles.tabela__toolbar__top_with_buttons : ''}`}>
           <div className={styles.tabela__toolbar__top__left}>
-            <i className={`${mergedOptions.tableIcon} ${styles.tabela__toolbar__icon}`} />
-            <span className={styles.tabela__toolbar__label}>{mergedOptions.tableName}</span>
+            {mergedOptions.showTableViews && (
+              <div ref={viewsContainerRef} className={styles.tabela__toolbar__tableViews}>
+                {/* <div ref={viewIndicatorRef} className={styles.tabela__toolbar__tableViews__indicator} /> */}
+                {Object.values(TABLE_VIEWS).filter(view => mergedOptions.tableViews.includes(view.key)).map((view) => (
+                  <button
+                    key={view.key}
+                    className={`${styles.tabela__toolbar__tableViews__button} ${currentTableView === view.key ? styles.tabela__toolbar__tableViews__button__active : ''}`}
+                    onClick={() => setCurrentTableView(view.key)}
+                    aria-label={view.label}
+                    aria-pressed={currentTableView === view.key}
+                    data-view-active={currentTableView === view.key ? 'true' : 'false'}
+                  >
+                    <i className={view.icon} />
+                    <span className={styles.tabela__toolbar__tableViews__button__label}>{view.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className={styles.tabela__toolbar__top__right}>
             {mergedOptions.showSearch && (
@@ -1934,13 +2252,15 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                 <i className={`far fa-bars-filter ${styles.tabela__toolbar__button__icon}`} />
               </button>
             )}
-            <button
-              ref={toolbarSettingsButtonRef}
-              className={styles.tabela__toolbar__button}
-              onClick={() => openMenu('settings-menu', toolbarSettingsButtonRef, { preferredPosition: 'bottom-end' })}
-            >
-              <i className={`far fa-sliders ${styles.tabela__toolbar__button__icon}`} />
-            </button>
+            {mergedOptions.showSettings && (
+              <button
+                ref={toolbarSettingsButtonRef}
+                className={styles.tabela__toolbar__button}
+                onClick={() => openMenu('settings-menu', toolbarSettingsButtonRef, { preferredPosition: 'bottom-end' })}
+              >
+                <i className={`far fa-sliders ${styles.tabela__toolbar__button__icon}`} />
+              </button>
+            )}
           </div>
         </div>
         {(sorts.length > 0 || filters.length > 0 || isEditingToolbar) && (
@@ -2036,9 +2356,90 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             </div>
           </div>
         )}
+        {mergedOptions.editable && editedKeys.size > 0 && (
+          <div className={styles.tabela__toolbar__editRow}>
+            <div className={styles.tabela__toolbar__editRow__left}>
+              <span className={styles.tabela__toolbar__editRow__counter}>
+                <i className={`far fa-pen-to-square ${styles.tabela__toolbar__editRow__counter__icon}`} />
+                {editedKeys.size} {editedKeys.size === 1 ? 'alteração' : 'alterações'}
+              </span>
+              <div className={styles.tabela__toolbar__editRow__filterGroup}>
+                <button
+                  className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label}`}
+                  onClick={() => setEditViewDropdownOpen(prev => !prev)}
+                >
+                  <i className={`far fa-eye ${styles.tabela__toolbar__button__icon}`} />
+                  <span className={styles.tabela__toolbar__button__label}>
+                    {editViewFilter === 'all' ? 'Todas' : editViewFilter === 'edited' ? 'Editadas' : editViewFilter === 'success' ? 'Sucesso' : editViewFilter === 'warning' ? 'Alerta' : 'Erro'}
+                  </span>
+                  <i className={`far fa-chevron-${editViewDropdownOpen ? 'up' : 'down'} ${styles.tabela__toolbar__editRow__chevron}`} />
+                </button>
+                {editViewDropdownOpen && (
+                  <div className={styles.tabela__toolbar__editRow__dropdown}>
+                    <button
+                      className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'all' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
+                      onClick={() => { setEditViewFilter('all'); setEditViewDropdownOpen(false); }}
+                    >
+                      Todas
+                    </button>
+                    <button
+                      className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'edited' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
+                      onClick={() => { setEditViewFilter('edited'); setEditViewDropdownOpen(false); }}
+                    >
+                      Editadas
+                    </button>
+                    {[...rowStatuses.values()].some(s => s.status === 'success') && (
+                      <button
+                        className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'success' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
+                        onClick={() => { setEditViewFilter('success'); setEditViewDropdownOpen(false); }}
+                      >
+                        <span className={styles.tabela__toolbar__editRow__statusDot__success} />
+                        Sucesso
+                      </button>
+                    )}
+                    {[...rowStatuses.values()].some(s => s.status === 'warning') && (
+                      <button
+                        className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'warning' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
+                        onClick={() => { setEditViewFilter('warning'); setEditViewDropdownOpen(false); }}
+                      >
+                        <span className={styles.tabela__toolbar__editRow__statusDot__warning} />
+                        Alerta
+                      </button>
+                    )}
+                    {[...rowStatuses.values()].some(s => s.status === 'error') && (
+                      <button
+                        className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'error' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
+                        onClick={() => { setEditViewFilter('error'); setEditViewDropdownOpen(false); }}
+                      >
+                        <span className={styles.tabela__toolbar__editRow__statusDot__error} />
+                        Erro
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className={styles.tabela__toolbar__editRow__right}>
+              <button
+                className={`${styles.tabela__toolbar__button} ${styles.without_border} ${styles.tabela__toolbar__button_with_label}`}
+                onClick={handleRevertEdits}
+              >
+                <i className={`far fa-rotate-left ${styles.tabela__toolbar__button__icon}`} />
+                <span className={styles.tabela__toolbar__button__label}>Reverter</span>
+              </button>
+              <button
+                className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${styles.tabela__toolbar__editRow__saveBtn}`}
+                onClick={handleSaveEdits}
+              >
+                <i className={`far fa-floppy-disk ${styles.tabela__toolbar__button__icon}`} />
+                <span className={styles.tabela__toolbar__button__label}>Salvar</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
-  }, [mergedOptions.tableIcon, mergedOptions.tableName, sorts, filters, openMenu, tempSorts, tempFilters, isEditingToolbar, handleOpenFilterMenu]);
+  }, [mergedOptions.tableIcon, mergedOptions.tableName, sorts, filters, openMenu, tempSorts, tempFilters, isEditingToolbar, handleOpenFilterMenu, currentTableView, mergedOptions.editable, editedKeys, editViewFilter, editViewDropdownOpen, rowStatuses, handleRevertEdits, handleSaveEdits]);
 
   const portalContainer = getPortalContainerResolved();
   const portalTargetIsBody = portalContainer === document.body;
@@ -2050,6 +2451,12 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       className={styles.tabela__container}
       style={maxWidth !== null ? { maxWidth: `${maxWidth}px` } : undefined}
     >
+      {mergedOptions.showTableTitle && (
+        <div className={styles.tabela__title}>
+          <i className={`${mergedOptions.tableIcon} ${styles.tabela__title__icon}`} />
+          <span className={styles.tabela__title__label}>{mergedOptions.tableName}</span>
+        </div>
+      )}
       {mergedOptions.showToolbar && toolbarContent}
       {tableContent}
       {mergedOptions.showFooter && tableFooterContent}
@@ -2186,6 +2593,8 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               calculationByColumn={calculationByColumn}
               onApplyCalculation={handleApplyCalculation}
               dataForCalculation={fullDataForGrouping}
+              showSettingsOptions={mergedOptions.showSettingsOptions}
+              additionalSettingsOptions={mergedOptions.additionalSettingsOptions}
             />
           )}
           </>

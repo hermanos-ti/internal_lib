@@ -1,4 +1,5 @@
 export { TableCell } from './TableCell';
+export { EditableCell } from './EditableCell';
 export { ColumnSelectionMenu } from './ColumnSelectionMenu';
 export { SortMenu } from './SortMenu';
 export { FilterMenu } from './FilterMenu';

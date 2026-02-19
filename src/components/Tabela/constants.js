@@ -5,15 +5,30 @@ export const DEFAULT_OPTIONS = {
   showPagination: true,
   itensPerPage: 10,
   itensPerPageOptions: [10, 25, 50, 100],
-  currentMode: 'grid',
+  showTableTitle: true,
   tableIcon: 'fas fa-table',
   tableName: 'Tabela',
   columnMinWidth: 'auto',
-  showFilters: true,
-  showSorts: true,
   showSearch: true,
+  showSorts: true,
+  showFilters: true,
+  showSettings: true,
+  showSettingsOptions: ['colunasVisiveis', 'agrupar', 'calcular', 'importar', 'exportar'],
+  additionalSettingsOptions: [], //{ key: '', label: '', icon: 'far fa-<icon-name>', tooltip: 'Tooltip text', onClick: () => {}},
+  currentTableView: 'grid',
+  showTableViews: true,
+  tableViews: ['grid', 'list', 'kanban', 'calendar'],
+  additionalTableViews: [], // { key: '', label: '', icon: 'far fa-<icon-name>', render: (columns, data, footer) => {}},
+  onTableViewChange: null, // (tableView) => {}
   filterMode: 'internal',
   onFilterChange: null, // (filters, sqlWhere) => {}
+  selectable: false,
+  onSelectionChange: null, // (selectedRows: object[]) => void
+  selectionRef: null, // React ref — receives { select, deselect, getSelected }
+  editable: false,
+  editRef: null, // React ref — receives { getData, getEditedRows, resetEdits, setRowStatus, clearRowStatus }
+  onEditChange: null, // (allData: object[], changedRow: object, changedColumn: string) => void
+  onSave: null, // (allData: object[], editedRows: object[]) => void
 }
 
 /**
@@ -43,18 +58,17 @@ export const DEFAULT_COLUMN_CONFIG = {
   calculable: true, // false = column does not appear in calculation modal or footer calculation row
   render: null, // render(value, row, column, rowIndex, colIndex)
   subColumns: null, // Array de subcolunas ou null
-  // TODO: Adicionar tooltip e cellTooltip
   className: '',
   style: {},
   cellClassName: '',
   cellStyle: {},
+  editable: false, // false | true | { type: 'text' } | { type: 'select', options: [], multiple: false }
 }
 
 export const DEFAULT_FOOTER_CONFIG = {
   visible: true,
   align: 'center',
-  format: 'text',
-  render: null,
+  render: null, // render(value, row, column, rowIndex, colIndex)
   value: null,
   className: '',
   style: {},
@@ -127,6 +141,13 @@ export const DEFAULT_FILTER_GROUP = {
   label: 'Filtro Avançado',
   logic: 'AND',
   rules: [],
+}
+
+export const TABLE_VIEWS = {
+  grid: { key: 'grid', label: 'Grade', icon: 'fas fa-th' },
+  list: { key: 'list', label: 'Lista', icon: 'fas fa-list' },
+  kanban: { key: 'kanban', label: 'Kanban', icon: 'fas fa-th-large' },
+  calendar: { key: 'calendar', label: 'Calendário', icon: 'fas fa-calendar-days' },
 }
 
 // ============================================

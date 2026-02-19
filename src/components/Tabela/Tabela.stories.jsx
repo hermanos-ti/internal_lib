@@ -93,24 +93,49 @@ export default {
 
 const columns = [
   { key: 'name', label: 'Nome', sortable: true },
-  { key: 'email', label: 'Email', sortable: true },
-  { key: 'phone', label: 'Telefone', sortable: true },
-  { key: 'address', label: 'Endereço', sortable: true },
-  { key: 'city', label: 'Cidade', sortable: true, subColumns: {
-    city: { key: 'city', label: 'Cidade', sortable: true },
-    state: { key: 'state', label: 'Estado', sortable: true },
-    zip: { key: 'zip', label: 'CEP', sortable: true },
-    country: { key: 'country', label: 'País', sortable: true },
-  } },
+  { key: 'age', label: 'Idade', sortable: true },
+  { key: 'salary', label: 'Salário', sortable: true, type: 'number' },
+  { key: 'status', label: 'Status', sortable: true, groupable: true },
+  { key: 'date', label: 'Data', sortable: true, type: 'date' },
 ];
 
 const data = [
-  { name: 'John Doe', email: 'john.doe@example.com', phone: '1234567890', address: '123 Main St, Anytown, USA', city: 'Anytown', state: 'CA', zip: '12345', country: 'USA' },
-  { name: 'Jane Smith', email: 'jane.smith@example.com', phone: '0987654321', address: '456 Elm St, Othertown, USA', city: 'Othertown', state: 'NY', zip: '67890', country: 'USA' },
+  { name: 'John Doe', age: 30, salary: 1000, status: 'Ativo', date: '2024-01-01' },
+  { name: 'Jane Smith', age: 25, salary: 2000, status: 'Inativo', date: '2024-01-01' },
+  { name: 'Jim Beam', age: 35, salary: 3000, status: 'Ativo', date: '2024-01-01' },
+  { name: 'Jill Johnson', age: 40, salary: 4000, status: 'Inativo', date: '2024-01-01' },
+  { name: 'Jack Daniels', age: 45, salary: 5000, status: 'Ativo', date: '2024-01-01' },
+  { name: 'Jill Johnson', age: 40, salary: 4000, status: 'Inativo', date: '2024-01-01' },
 ];
 
 const footer = [
-  { key: 'total', label: 'Total' },
+  { key: 'total', label: 'Total', render: (tableData) => {
+    return `Total: ${tableData.reduce((acc, row) => acc + row.salary, 0)}`;
+  } },
+  { key: 'average', label: 'Média', render: (tableData) => {
+    return `Média: ${tableData.reduce((acc, row) => acc + row.salary, 0) / tableData.length}`;
+  } },
+  { key: 'min', label: 'Mínimo', render: (tableData) => {
+    return `Mínimo: ${Math.min(...tableData.map(row => row.salary))}`;
+  } },
+  { key: 'max', label: 'Máximo', render: (tableData) => {
+    return `Máximo: ${Math.max(...tableData.map(row => row.salary))}`;
+  } },
+  { key: 'sum', label: 'Soma', render: (tableData) => {
+    return `Soma: ${tableData.reduce((acc, row) => acc + row.salary, 0)}`;
+  } },
+  { key: 'range', label: 'Faixa', render: (tableData) => {
+    return `Faixa: ${Math.max(...tableData.map(row => row.salary)) - Math.min(...tableData.map(row => row.salary))}`;
+  } },
+  { key: 'dateEarliest', label: 'Mais antiga', render: (tableData) => {
+    return `Mais antiga: ${Math.min(...tableData.map(row => row.date))}`;
+  } },
+  { key: 'dateLatest', label: 'Mais recente', render: (tableData) => {
+    return `Mais recente: ${Math.max(...tableData.map(row => row.date))}`;
+  } },
+  { key: 'dateRange', label: 'Faixa', render: (tableData) => {
+    return `Faixa: ${Math.max(...tableData.map(row => row.date)) - Math.min(...tableData.map(row => row.date))}`;
+  } },
 ];
 
 export const Default = {
@@ -296,7 +321,9 @@ const dataPerformance = generateLargeDataset(100);
 export const PerformanceTest = {
   render: () => 
     // <div style={{ width: '100%', height: '200dvh', display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-      <TabelaWithPortal id="tabela-4" columns={columnsPerformance} data={dataPerformance} options={{ columnMinWidth: 100 }} />
+      <TabelaWithPortal id="tabela-4" columns={columnsPerformance} data={dataPerformance} options={{
+        columnMinWidth: 100,
+      }} />
     // </div>
     ,
 };
@@ -608,5 +635,344 @@ export const FormatosColuna = {
       />
     </div>
   ),
+};
+
+// ── Selection stories ──
+
+const selectableData = Array.from({ length: 25 }, (_, i) => ({
+  key: `row-${i + 1}`,
+  name: `Pessoa ${i + 1}`,
+  age: 20 + (i % 30),
+  salary: 1000 + i * 500,
+  status: i % 3 === 0 ? 'Ativo' : i % 3 === 1 ? 'Inativo' : 'Pendente',
+  date: `2024-0${(i % 9) + 1}-${String((i % 28) + 1).padStart(2, '0')}`,
+}));
+
+function SelectableStory() {
+  const [selected, setSelected] = useState([]);
+  return (
+    <div>
+      <div style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
+        <strong>Selecionados:</strong> {selected.length === 0 ? 'Nenhum' : `${selected.length} linha(s)`}
+        {selected.length > 0 && (
+          <span> — [{selected.map(r => r.name).join(', ')}]</span>
+        )}
+      </div>
+      <TabelaWithPortal
+        id="tabela-selectable"
+        columns={columns}
+        data={selectableData}
+        options={{
+          selectable: true,
+          onSelectionChange: setSelected,
+          itensPerPage: 5,
+        }}
+      />
+    </div>
+  );
+}
+
+export const Selectable = {
+  render: () => <SelectableStory />,
+};
+
+function SelectableExternalStory() {
+  const selectionRef = useRef(null);
+  const [selected, setSelected] = useState([]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <button onClick={() => selectionRef.current?.select('all')} style={btnStyle}>
+          Selecionar Todos
+        </button>
+        <button onClick={() => selectionRef.current?.deselect('all')} style={btnStyle}>
+          Limpar Seleção
+        </button>
+        <button onClick={() => selectionRef.current?.select(['row-1', 'row-5', 'row-10'])} style={btnStyle}>
+          Selecionar 1, 5, 10
+        </button>
+        <button onClick={() => selectionRef.current?.deselect(['row-1', 'row-5'])} style={btnStyle}>
+          Remover 1, 5
+        </button>
+        <button
+          onClick={() => {
+            const sel = selectionRef.current?.getSelected();
+            alert(`Selecionados: ${sel?.length ?? 0}\n${sel?.map(r => r.name).join(', ') ?? ''}`);
+          }}
+          style={btnStyle}
+        >
+          getSelected()
+        </button>
+      </div>
+      <div style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
+        <strong>Selecionados:</strong> {selected.length === 0 ? 'Nenhum' : `${selected.length} linha(s)`}
+      </div>
+      <TabelaWithPortal
+        id="tabela-selectable-ext"
+        columns={columns}
+        data={selectableData}
+        options={{
+          selectable: true,
+          onSelectionChange: setSelected,
+          selectionRef,
+          itensPerPage: 5,
+        }}
+      />
+    </div>
+  );
+}
+
+const btnStyle = {
+  padding: '0.4rem 0.75rem',
+  fontSize: '0.8rem',
+  borderRadius: '6px',
+  border: '1px solid #d1d5db',
+  background: '#f9fafb',
+  cursor: 'pointer',
+};
+
+export const SelectableWithExternalControl = {
+  render: () => <SelectableExternalStory />,
+};
+
+// ── Editable stories ──
+
+const editableColumns = [
+  { key: 'id', label: 'ID', sortable: true, width: 8 },
+  { key: 'nome', label: 'Nome', sortable: true, editable: true },
+  { key: 'email', label: 'Email', sortable: true, editable: true },
+  {
+    key: 'cargo',
+    label: 'Cargo',
+    sortable: true,
+    editable: {
+      type: 'select',
+      options: ['Desenvolvedor', 'Designer', 'Gerente', 'Analista', 'Suporte'],
+    },
+  },
+  {
+    key: 'habilidades',
+    label: 'Habilidades',
+    sortable: true,
+    editable: {
+      type: 'select',
+      options: [
+        { value: 'react', label: 'React' },
+        { value: 'node', label: 'Node.js' },
+        { value: 'python', label: 'Python' },
+        { value: 'java', label: 'Java' },
+        { value: 'sql', label: 'SQL' },
+        { value: 'figma', label: 'Figma' },
+      ],
+      multiple: true,
+    },
+    render: (value) => {
+      if (!value || !Array.isArray(value) || value.length === 0) return '—';
+      return value.join(', ');
+    },
+  },
+  { key: 'salario', label: 'Salário', sortable: true, type: 'number', format: 'money', editable: true },
+];
+
+const editableData = Array.from({ length: 15 }, (_, i) => ({
+  key: `row-${i + 1}`,
+  id: i + 1,
+  nome: ['Ana Silva', 'Bruno Costa', 'Carla Dias', 'Daniel Souza', 'Elena Ferreira', 'Felipe Lima', 'Gabriela Santos', 'Hugo Oliveira', 'Isabela Rocha', 'João Moreira', 'Karen Alves', 'Lucas Pereira', 'Mariana Ribeiro', 'Nelson Barbosa', 'Olívia Mendes'][i],
+  email: `pessoa${i + 1}@empresa.com`,
+  cargo: ['Desenvolvedor', 'Designer', 'Gerente', 'Analista', 'Suporte'][i % 5],
+  habilidades: [['react', 'node'], ['figma'], ['sql', 'python'], ['java', 'sql'], ['react']][i % 5],
+  salario: 3000 + i * 500,
+}));
+
+function EditableStory() {
+  const editRef = useRef(null);
+  const [log, setLog] = useState([]);
+
+  const addLog = (msg) => {
+    setLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 20));
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => {
+            const data = editRef.current?.getData();
+            addLog(`getData(): ${data?.length} linhas`);
+            console.log('getData():', data);
+          }}
+          style={btnStyle}
+        >
+          getData()
+        </button>
+        <button
+          onClick={() => {
+            const rows = editRef.current?.getEditedRows();
+            addLog(`getEditedRows(): ${rows?.length} linhas editadas`);
+            console.log('getEditedRows():', rows);
+          }}
+          style={btnStyle}
+        >
+          getEditedRows()
+        </button>
+        <button
+          onClick={() => {
+            editRef.current?.resetEdits();
+            addLog('resetEdits(): Edições resetadas');
+          }}
+          style={btnStyle}
+        >
+          Resetar Edições
+        </button>
+        <button
+          onClick={() => {
+            editRef.current?.setRowStatus(['row-1', 'row-2'], 'success');
+            addLog('setRowStatus([row-1, row-2], success)');
+          }}
+          style={{ ...btnStyle, borderColor: '#22c55e', color: '#16a34a' }}
+        >
+          Status Success (1,2)
+        </button>
+        <button
+          onClick={() => {
+            editRef.current?.setRowStatus('row-3', 'warning', 'salario');
+            addLog('setRowStatus(row-3, warning, salario)');
+          }}
+          style={{ ...btnStyle, borderColor: '#eab308', color: '#ca8a04' }}
+        >
+          Status Warning (3, col: salário)
+        </button>
+        <button
+          onClick={() => {
+            editRef.current?.setRowStatus(['row-4', 'row-5'], 'error', ['nome', 'email']);
+            addLog('setRowStatus([row-4, row-5], error, [nome, email])');
+          }}
+          style={{ ...btnStyle, borderColor: '#ef4444', color: '#dc2626' }}
+        >
+          Status Error (4,5 cols: nome, email)
+        </button>
+        <button
+          onClick={() => {
+            editRef.current?.clearRowStatus();
+            addLog('clearRowStatus(): Todos os status limpos');
+          }}
+          style={btnStyle}
+        >
+          Limpar Status
+        </button>
+      </div>
+
+      <TabelaWithPortal
+        id="tabela-editable"
+        columns={editableColumns}
+        data={editableData}
+        options={{
+          editable: true,
+          editRef,
+          onEditChange: (allData, changedRow, changedCol) => {
+            addLog(`Editado: ${changedRow.nome || changedRow.key} → coluna "${changedCol}"`);
+          },
+          onSave: (allData, editedRows) => {
+            addLog(`Salvar: ${editedRows.length} linha(s) editada(s)`);
+            console.log('onSave allData:', allData);
+            console.log('onSave editedRows:', editedRows);
+          },
+          itensPerPage: 10,
+        }}
+      />
+
+      {log.length > 0 && (
+        <div style={{
+          marginTop: '1rem',
+          padding: '0.75rem',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '0.5rem',
+          maxHeight: '200px',
+          overflow: 'auto',
+          fontSize: '0.8rem',
+          fontFamily: 'monospace',
+        }}>
+          <strong style={{ display: 'block', marginBottom: '0.5rem' }}>Log:</strong>
+          {log.map((entry, i) => (
+            <div key={i} style={{ padding: '0.15rem 0', borderBottom: '1px solid #f1f5f9' }}>
+              {entry}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export const Editable = {
+  render: () => <EditableStory />,
+};
+
+function EditableWithSelectionStory() {
+  const editRef = useRef(null);
+  const selectionRef = useRef(null);
+  const [selected, setSelected] = useState([]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => {
+            const rows = editRef.current?.getEditedRows();
+            alert(`Linhas editadas: ${rows?.length ?? 0}\n${rows?.map(r => `${r.edited.nome}: ${JSON.stringify(r.changes)}`).join('\n') ?? ''}`);
+          }}
+          style={btnStyle}
+        >
+          Ver Edições
+        </button>
+        <button
+          onClick={() => selectionRef.current?.select('all')}
+          style={btnStyle}
+        >
+          Selecionar Todos
+        </button>
+        <button
+          onClick={() => {
+            const sel = selectionRef.current?.getSelected();
+            sel?.forEach(row => {
+              editRef.current?.setRowStatus(row.key, 'success');
+            });
+          }}
+          style={{ ...btnStyle, borderColor: '#22c55e', color: '#16a34a' }}
+        >
+          Marcar Selecionados como Sucesso
+        </button>
+        <button onClick={() => editRef.current?.clearRowStatus()} style={btnStyle}>
+          Limpar Status
+        </button>
+      </div>
+      <div style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
+        <strong>Selecionados:</strong> {selected.length === 0 ? 'Nenhum' : `${selected.length} linha(s)`}
+      </div>
+      <TabelaWithPortal
+        id="tabela-editable-sel"
+        columns={editableColumns}
+        data={editableData}
+        options={{
+          editable: true,
+          editRef,
+          selectable: true,
+          selectionRef,
+          onSelectionChange: setSelected,
+          onSave: (allData, editedRows) => {
+            alert(`Salvando ${editedRows.length} linha(s) editada(s)`);
+            console.log('onSave:', allData, editedRows);
+          },
+          itensPerPage: 10,
+        }}
+      />
+    </div>
+  );
+}
+
+export const EditableWithSelection = {
+  render: () => <EditableWithSelectionStory />,
 };
 

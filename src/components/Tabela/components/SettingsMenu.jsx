@@ -19,6 +19,8 @@ export const SettingsMenu = memo(forwardRef(({
   calculationByColumn,
   onApplyCalculation,
   dataForCalculation,
+  showSettingsOptions,
+  additionalSettingsOptions = [],
 }, ref) => {
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -110,9 +112,16 @@ export const SettingsMenu = memo(forwardRef(({
       setCurrentView('agrupar');
     } else if (optionKey === 'calcular') {
       setCurrentView('calcular');
-    } else if (onAction) {
-      onAction(optionKey);
-    }
+    } else {
+      // Check if it's an additional option with its own onClick
+      const additionalOption = additionalSettingsOptions.find(opt => opt.key === optionKey);
+      if (additionalOption?.onClick) {
+        additionalOption.onClick();
+        handleClose();
+      } else if (onAction) {
+        onAction(optionKey);
+      }
+    } 
   };
 
   const handleBack = () => {
@@ -139,6 +148,11 @@ export const SettingsMenu = memo(forwardRef(({
     { key: 'exportar', label: 'Exportar', icon: 'far fa-file-export' }
   ];
 
+  const filteredOptions = [
+    ...options.filter((option) => showSettingsOptions.includes(option.key)),
+    ...additionalSettingsOptions,
+  ];
+
   return (
     <div
       ref={menuRef}
@@ -152,12 +166,13 @@ export const SettingsMenu = memo(forwardRef(({
           </div>
 
           <div className={styles.columnSelectionMenu__body}>
-            {options.map((option) => (
+            {filteredOptions.map((option) => (
               <button
                 key={option.key}
                 type="button"
                 className={styles.columnSelectionMenu__item}
                 onClick={() => handleAction(option.key)}
+                title={option.tooltip || undefined}
               >
                 <i className={`${option.icon} ${styles.columnSelectionMenu__item__icon}`} />
                 <span className={styles.columnSelectionMenu__item__label}>{option.label}</span>
