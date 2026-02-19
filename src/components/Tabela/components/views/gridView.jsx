@@ -118,7 +118,7 @@ export function GridView({
 
   const renderCalcSelectionCell = () => {
     if (!selectable) return null;
-    return <td className={styles.tabela__selection__cell} />;
+    return <td className={styles.tabela__calculationCell} />;
   };
 
   const renderDataCell = (item, column, rowIndex, colIndex) => {

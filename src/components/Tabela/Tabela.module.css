@@ -238,11 +238,13 @@
   border-top-right-radius: 0;
 }
 
-.tabela__group .tabela .tabela__body__row:last-child .tabela__body__cell:first-child {
+.tabela__group .tabela .tabela__body__row:last-child .tabela__body__cell:first-child,
+.tabela__group .tabela .tabela__calculationRow .tabela__calculationCell:first-child {
   border-bottom-left-radius: 0;
 }
 
-.tabela__group .tabela .tabela__body__row:last-child .tabela__body__cell:last-child {
+.tabela__group .tabela .tabela__body__row:last-child .tabela__body__cell:last-child,
+.tabela__group .tabela .tabela__calculationRow .tabela__calculationCell:last-child {
   border-bottom-right-radius: 0;
 }
 
@@ -424,6 +426,14 @@
 
   &:last-child {
     border-right: 1px solid var(--modal-border);
+  }
+
+  &.tabela__body__cell__editable {
+    cursor: pointer;
+  }
+
+  &.tabela__body__cell__editable:hover {
+    background: var(--sidebar-hover-bg);
   }
 }
 
@@ -2085,19 +2095,15 @@ button.columnSelectionMenu__item {
 
 .filterMenu__field__input {
   width: 100%;
-  padding: 0.4rem 0.5rem;
+  min-height: 1.85rem;
+  padding: 0 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--modal-text-main);
   background: var(--table-menu-surface);
   border: 1px solid var(--modal-border);
-  border-bottom-color: var(--modal-border);
   border-radius: 6px;
   outline: none;
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 var(--modal-border);
-  transition: all 0.15s ease;
 
   &::placeholder {
     color: var(--modal-text-muted);
@@ -2761,13 +2767,14 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.3rem 0.4rem;
-  font-size: 0.75rem;
+  min-height: 1.85rem;
+  padding: 0 0.5rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--modal-text-main);
   background: var(--table-menu-surface);
   border: 1px solid var(--modal-border);
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
@@ -3078,22 +3085,13 @@ button.columnSelectionMenu__item {
   background: color-mix(in srgb, var(--status-error, #ef4444) 14%, transparent);
 }
 
-/* ── Editable cell indicator ── */
-
-.tabela__body__cell__editable {
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: var(--sidebar-hover-bg);
-  }
-}
-
 /* ── Editing cell ── */
 
 .tabela__body__cell__editing {
   padding: 0;
   overflow: visible;
+  background: var(--modal-background, #fff);
+  border-bottom-color: var(--modal-border);
 }
 
 /* ── Text edit input ── */

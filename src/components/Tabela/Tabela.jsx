@@ -2332,23 +2332,31 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             <div className={styles.tabela__toolbar__bottom__right}>
               {isEditingToolbar && (
                 <>
-                  <button className={`${styles.tabela__toolbar__button} ${styles.without_border} ${styles.tabela__toolbar__button_with_label}`} onClick={() => {
-                    setIsEditingToolbar(false);
-                    setTempSorts([]);
-                    setTempFilters([]);
-                  }}>
+                  <button
+                    className={`${styles.tabela__toolbar__button} ${styles.without_border} ${styles.tabela__toolbar__button_with_label}`}
+                    onClick={() => {
+                      setIsEditingToolbar(false);
+                      setTempSorts([]);
+                      setTempFilters([]);
+                    }}
+                  >
+                    <i className={`far fa-rotate-left ${styles.tabela__toolbar__button__icon}`} />
                     <span className={styles.tabela__toolbar__button__label}>Reverter</span>
                   </button>
-                  <button className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label}`} onClick={() => {
-                    if (menuState.type === 'sort-menu' && menuState.isOpen) {
-                      sortMenuRef.current?.close();
-                    }
-                    setIsEditingToolbar(false);
-                    setSorts([...tempSorts]);
-                    setFilters([...tempFilters]);
-                    setTempSorts([]);
-                    setTempFilters([]);
-                  }}>
+                  <button
+                    className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${styles.tabela__toolbar__editRow__saveBtn}`}
+                    onClick={() => {
+                      if (menuState.type === 'sort-menu' && menuState.isOpen) {
+                        sortMenuRef.current?.close();
+                      }
+                      setIsEditingToolbar(false);
+                      setSorts([...tempSorts]);
+                      setFilters([...tempFilters]);
+                      setTempSorts([]);
+                      setTempFilters([]);
+                    }}
+                  >
+                    <i className={`far fa-floppy-disk ${styles.tabela__toolbar__button__icon}`} />
                     <span className={styles.tabela__toolbar__button__label}>Salvar</span>
                   </button>
                 </>
