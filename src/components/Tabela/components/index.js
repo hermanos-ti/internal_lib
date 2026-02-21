@@ -8,6 +8,7 @@ export { SettingsMenu } from './SettingsMenu';
 export { CalculationPanel } from './CalculationPanel';
 export { CalculationSubmenu } from './CalculationSubmenu';
 export { CalculationModal } from './CalculationModal';
+export { ImportModal } from './ImportModal';
 export { VisibleColumnsPanel } from './VisibleColumnsPanel';
 export { VisibleColumnsModal } from './VisibleColumnsModal';
 export { Select } from './Select';

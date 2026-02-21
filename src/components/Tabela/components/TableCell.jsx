@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import styles from '../Tabela.module.css';
 import { formatDisplayValue } from '../formatUtils';
 
@@ -11,7 +11,7 @@ export const TableCell = memo(({
   hasColumnRender,
   isEditable,
   cellStatus,
-  onCellClick,
+  onCellClickWithDbl,
 }) => {
   const content = hasColumnRender 
     ? column.render(cellValue, row, column, rowIndex, colIndex)
@@ -26,17 +26,21 @@ export const TableCell = memo(({
     statusClass,
   ].filter(Boolean).join(' ');
 
-  const handleClick = () => {
-    if (isEditable && onCellClick) {
-      onCellClick(row, column, rowIndex, colIndex);
-    }
-  };
+  const handleClick = useCallback((e) => {
+    if (e.target.closest?.('input[type="checkbox"], input[type="radio"]')) return;
+    if (!onCellClickWithDbl) return;
+
+    const event = { row, column, cell: cellValue, rowIndex, colIndex };
+    onCellClickWithDbl(event);
+  }, [row, column, cellValue, rowIndex, colIndex, onCellClickWithDbl]);
+
+  const hasClickHandler = !!onCellClickWithDbl;
 
   return (
     <td
       className={className}
       style={column?.cellStyle}
-      onClick={handleClick}
+      onClick={hasClickHandler ? handleClick : undefined}
     >
       {content}
     </td>
@@ -51,7 +55,7 @@ export const TableCell = memo(({
     prevProps.hasColumnRender === nextProps.hasColumnRender &&
     prevProps.isEditable === nextProps.isEditable &&
     prevProps.cellStatus === nextProps.cellStatus &&
-    prevProps.onCellClick === nextProps.onCellClick
+    prevProps.onCellClickWithDbl === nextProps.onCellClickWithDbl
   );
 });
 

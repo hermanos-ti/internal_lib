@@ -975,4 +975,296 @@ function EditableWithSelectionStory() {
 export const EditableWithSelection = {
   render: () => <EditableWithSelectionStory />,
 };
+  
+// ── onClick / onDoubleClick stories ──
 
+const onClickDblClickColumns = [
+  { key: 'name', label: 'Nome', sortable: true },
+  { key: 'age', label: 'Idade', sortable: true },
+  { key: 'salary', label: 'Salário', sortable: true },
+  { key: 'status', label: 'Status', sortable: true },
+];
+
+const onClickDblClickData = [
+  { key: 'row-1', name: 'João Silva', age: 30, salary: 5000, status: 'Ativo' },
+  { key: 'row-2', name: 'Maria Santos', age: 25, salary: 4500, status: 'Inativo' },
+  { key: 'row-3', name: 'Pedro Costa', age: 35, salary: 6000, status: 'Ativo' },
+  { key: 'row-4', name: 'Ana Oliveira', age: 28, salary: 4200, status: 'Pendente' },
+  { key: 'row-5', name: 'Carlos Souza', age: 42, salary: 7500, status: 'Ativo' },
+];
+
+function OnClickOnDoubleClickStory() {
+  const [log, setLog] = useState([]);
+
+  const addLog = (type, event) => {
+    const msg = `${type}: linha ${event.rowIndex}, col ${event.colIndex} | cell="${event.cell}" | col.key="${event.column?.key}"`;
+    setLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 15));
+  };
+
+  return (
+    <div>
+      <div style={{
+        marginBottom: '1rem',
+        padding: '1rem',
+        background: '#f0f9ff',
+        border: '1px solid #0ea5e9',
+        borderRadius: '8px',
+      }}>
+        <h4 style={{ margin: '0 0 0.5rem 0' }}>onClick e onDoubleClick</h4>
+        <p style={{ margin: 0, fontSize: '0.875rem', color: '#0369a1' }}>
+          Clique simples: dispara onClick após ~300ms. Clique duplo: dispara onDoubleClick.
+          O evento retorna: row, column, cell, rowIndex, colIndex.
+        </p>
+      </div>
+      <div style={{
+        marginBottom: '1rem',
+        padding: '0.75rem',
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '6px',
+        maxHeight: '180px',
+        overflow: 'auto',
+        fontSize: '0.8rem',
+        fontFamily: 'monospace',
+      }}>
+        <strong>Log de eventos:</strong>
+        {log.length === 0 ? (
+          <div style={{ color: '#94a3b8', marginTop: '0.25rem' }}>Clique ou dê duplo clique em uma célula...</div>
+        ) : (
+          log.map((entry, i) => (
+            <div key={i} style={{ padding: '0.25rem 0', borderBottom: '1px solid #f1f5f9' }}>{entry}</div>
+          ))
+        )}
+      </div>
+      <TabelaWithPortal
+        id="tabela-onclick"
+        columns={onClickDblClickColumns}
+        data={onClickDblClickData}
+        options={{
+          onClick: (e) => addLog('onClick', e),
+          onDoubleClick: (e) => addLog('onDoubleClick', e),
+        }}
+      />
+    </div>
+  );
+}
+
+export const OnClickOnDoubleClick = {
+  render: () => <OnClickOnDoubleClickStory />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Testa onClick e onDoubleClick com resolução de conflito (delay ~300ms). Clique simples dispara onClick; duplo clique dispara onDoubleClick. O evento retorna { row, column, cell, rowIndex, colIndex }.',
+      },
+    },
+  },
+};
+
+// ── selectionMode: single (radio-like) ──
+
+function SelectionModeSingleStory() {
+  const [selected, setSelected] = useState([]);
+
+  return (
+    <div>
+      <div style={{
+        marginBottom: '1rem',
+        padding: '1rem',
+        background: '#f0fdf4',
+        border: '1px solid #22c55e',
+        borderRadius: '8px',
+      }}>
+        <h4 style={{ margin: '0 0 0.5rem 0' }}>selectionMode: single</h4>
+        <p style={{ margin: 0, fontSize: '0.875rem', color: '#15803d' }}>
+          Apenas um item pode ser selecionado por vez (comportamento tipo radio).
+          O header não exibe checkbox "selecionar todos".
+        </p>
+      </div>
+      <div style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
+        <strong>Selecionado:</strong> {selected.length === 0 ? 'Nenhum' : selected[0]?.name}
+      </div>
+      <TabelaWithPortal
+        id="tabela-selection-single"
+        columns={onClickDblClickColumns}
+        data={onClickDblClickData}
+        options={{
+          selectable: true,
+          selectionMode: 'single',
+          onSelectionChange: setSelected,
+        }}
+      />
+    </div>
+  );
+}
+
+export const SelectionModeSingle = {
+  render: () => <SelectionModeSingleStory />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Modo de seleção única: apenas um elemento pode ser selecionado por vez, como um radio button.',
+      },
+    },
+  },
+};
+
+// ── onClick/onDoubleClick + selection (sem conflito) ──
+
+function OnClickWithSelectionStory() {
+  const [log, setLog] = useState([]);
+  const [selected, setSelected] = useState([]);
+
+  const addLog = (type, event) => {
+    const msg = `${type}: ${event.column?.key}="${event.cell}" (linha ${event.rowIndex})`;
+    setLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 12));
+  };
+
+  return (
+    <div>
+      <div style={{
+        marginBottom: '1rem',
+        padding: '1rem',
+        background: '#fefce8',
+        border: '1px solid #eab308',
+        borderRadius: '8px',
+      }}>
+        <h4 style={{ margin: '0 0 0.5rem 0' }}>onClick/onDoubleClick + Selection</h4>
+        <p style={{ margin: 0, fontSize: '0.875rem', color: '#a16207' }}>
+          Clique no checkbox: apenas altera seleção (não dispara onClick/onDoubleClick).
+          Clique nas células de dados: dispara os eventos normalmente.
+        </p>
+      </div>
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+        <div style={{
+          flex: '1 1 200px',
+          padding: '0.75rem',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '6px',
+          maxHeight: '140px',
+          overflow: 'auto',
+          fontSize: '0.8rem',
+          fontFamily: 'monospace',
+        }}>
+          <strong>Log onClick/onDoubleClick:</strong>
+          {log.length === 0 ? (
+            <div style={{ color: '#94a3b8', marginTop: '0.25rem' }}>Clique em uma célula de dados...</div>
+          ) : (
+            log.map((entry, i) => (
+              <div key={i} style={{ padding: '0.2rem 0', borderBottom: '1px solid #f1f5f9' }}>{entry}</div>
+            ))
+          )}
+        </div>
+        <div style={{
+          flex: '0 0 auto',
+          padding: '0.75rem',
+          background: '#f0fdf4',
+          border: '1px solid #bbf7d0',
+          borderRadius: '6px',
+          fontSize: '0.85rem',
+        }}>
+          <strong>Selecionados:</strong> {selected.length === 0 ? 'Nenhum' : selected.map(r => r.name).join(', ')}
+        </div>
+      </div>
+      <TabelaWithPortal
+        id="tabela-onclick-selection"
+        columns={onClickDblClickColumns}
+        data={onClickDblClickData}
+        options={{
+          selectable: true,
+          onSelectionChange: setSelected,
+          onClick: (e) => addLog('onClick', e),
+          onDoubleClick: (e) => addLog('onDoubleClick', e),
+        }}
+      />
+    </div>
+  );
+}
+
+export const OnClickWithSelection = {
+  render: () => <OnClickWithSelectionStory />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Verifica que o checkbox de seleção não conflita com onClick/onDoubleClick. Cliques no checkbox apenas alteram a seleção; cliques nas células disparam os eventos.',
+      },
+    },
+  },
+};
+
+// ── Import CSV story ──
+
+const importColumns = [
+  { key: 'nome', label: 'Nome', format: 'text', obrigatorio: true, validator: (v) => (v?.trim() ? true : 'Campo obrigatório') },
+  { key: 'idade', label: 'Idade', format: 'integer', obrigatorio: false, validator: (v) => (v === '' || v == null) ? true : (!Number.isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= 150) },
+  { key: 'salario', label: 'Salário', format: 'money', obrigatorio: false, validator: (v) => (v === '' || v == null || !Number.isNaN(parseFloat(v))) },
+];
+
+const importData = [
+  { nome: 'João Silva', idade: 30, salario: 5000 },
+  { nome: 'Maria Santos', idade: 25, salario: 4500 },
+  { nome: 'Pedro Costa', idade: 35, salario: 6000 },
+];
+
+function ImportStory() {
+  const [tableData, setTableData] = useState(importData);
+
+  return (
+    <div>
+      <div style={{
+        marginBottom: '1rem',
+        padding: '1rem',
+        background: '#f0f9ff',
+        border: '1px solid #0ea5e9',
+        borderRadius: '8px',
+      }}>
+        <h4 style={{ margin: '0 0 0.5rem 0' }}>Importar CSV</h4>
+        <p style={{ margin: 0, fontSize: '0.875rem', color: '#0369a1' }}>
+          Clique em Configurações (ícone de engrenagem) e depois em &quot;Importar&quot;.
+          Selecione um arquivo CSV com as colunas: <code>nome</code>, <code>idade</code>, <code>salario</code>.
+          Exemplo de conteúdo:
+        </p>
+        <pre style={{
+          margin: '0.5rem 0 0 0',
+          padding: '0.75rem',
+          background: '#e0f2fe',
+          borderRadius: '6px',
+          fontSize: '0.8rem',
+          overflow: 'auto',
+        }}>
+{`nome,idade,salario
+João Silva,30,5000
+Maria Santos,25,4500
+Pedro Costa,35,6000`}
+        </pre>
+      </div>
+      <TabelaWithPortal
+        id="tabela-import"
+        columns={[
+          { key: 'nome', label: 'Nome', sortable: true },
+          { key: 'idade', label: 'Idade', sortable: true },
+          { key: 'salario', label: 'Salário', sortable: true, format: 'money' },
+        ]}
+        data={tableData}
+        options={{
+          importConfig: { columns: importColumns },
+          onImportComplete: (importedData) => {
+            setTableData(importedData);
+            console.log('Importação concluída:', importedData);
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+export const Import = {
+  render: () => <ImportStory />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstra a funcionalidade de importação CSV. Clique em Configurações > Importar, selecione um arquivo CSV com o layout esperado, revise os dados na pré-visualização e finalize a importação.',
+      },
+    },
+  },
+};

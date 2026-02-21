@@ -23,12 +23,17 @@ export const DEFAULT_OPTIONS = {
   filterMode: 'internal',
   onFilterChange: null, // (filters, sqlWhere) => {}
   selectable: false,
+  selectionMode: 'multiple', // 'multiple' | 'single' — single = radio-like, only one item at a time
   onSelectionChange: null, // (selectedRows: object[]) => void
   selectionRef: null, // React ref — receives { select, deselect, getSelected }
+  onClick: null, // (event: { row, column, cell, rowIndex, colIndex }) => void
+  onDoubleClick: null, // (event: { row, column, cell, rowIndex, colIndex }) => void
   editable: false,
   editRef: null, // React ref — receives { getData, getEditedRows, resetEdits, setRowStatus, clearRowStatus }
   onEditChange: null, // (allData: object[], changedRow: object, changedColumn: string) => void
   onSave: null, // (allData: object[], editedRows: object[]) => void
+  importConfig: null, // { columns: [{ key, label, format, obrigatorio?, validator }] }
+  onImportComplete: null, // (importedData: object[]) => void
 }
 
 /**

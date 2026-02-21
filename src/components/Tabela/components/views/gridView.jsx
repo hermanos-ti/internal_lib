@@ -31,6 +31,7 @@ export function GridView({
   handleGroupItemsPerPageChange,
   openCalculationSubmenu,
   selectable,
+  selectionMode,
   selectedKeys,
   getRowKey,
   toggleRowSelection,
@@ -38,6 +39,7 @@ export function GridView({
   editingCell,
   editedData,
   rowStatuses,
+  onCellClickWithDbl,
   onCellClick,
   onCellCommit,
   onCellCancel,
@@ -100,7 +102,7 @@ export function GridView({
     const key = getRowKey(item);
     const checked = selectedKeys.has(key);
     return (
-      <td className={styles.tabela__selection__cell}>
+      <td className={styles.tabela__selection__cell} onClick={(e) => e.stopPropagation()}>
         <label className={styles.tabela__selection__label}>
           <input
             type="checkbox"
@@ -154,7 +156,7 @@ export function GridView({
         hasColumnRender={hasColumnRender}
         isEditable={colIsEditable}
         cellStatus={getCellStatusClass(item, column.key)}
-        onCellClick={colIsEditable ? onCellClick : undefined}
+        onCellClickWithDbl={onCellClickWithDbl}
       />
     );
   };

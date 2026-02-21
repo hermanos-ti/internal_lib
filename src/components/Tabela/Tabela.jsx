@@ -7,7 +7,8 @@ import { createPortal } from 'react-dom';
 
 import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, TABLE_VIEWS, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
 import { computeCalculation, CALCULATION_OPTIONS } from './calculationUtils';
-import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal } from './components';
+import { prepareExportData, toCSV, downloadFile, getExportFilename } from './exportUtils';
+import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal, ImportModal } from './components';
 import { PortalTargetContext } from './PortalTargetContext';
 import { GridView, ListView, KanbanView, CalendarView } from './components/views';
 
@@ -142,6 +143,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const [calculationByColumn, setCalculationByColumn] = useState(mergedOptions.initialCalculationByColumn ?? {});
 
   const [currentTableView, setCurrentTableView] = useState(mergedOptions.currentTableView ?? 'grid');
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   useEffect(() => {
     if (mergedOptions.onTableViewChange) {
@@ -1428,15 +1430,20 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
 
   // ── Selection logic ──
 
+  const selectionMode = mergedOptions.selectionMode ?? 'multiple';
+
   const toggleRowSelection = useCallback((item) => {
     const key = getRowKey(item);
     setSelectedKeys(prev => {
       const next = new Set(prev);
+      if (selectionMode === 'single') {
+        next.clear();
+      }
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
-  }, [getRowKey]);
+  }, [getRowKey, selectionMode]);
 
 
   useEffect(() => {
@@ -1448,10 +1455,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   useEffect(() => {
     if (!mergedOptions.selectable || !mergedOptions.selectionRef) return;
     const ref = mergedOptions.selectionRef;
+    const mode = mergedOptions.selectionMode ?? 'multiple';
     ref.current = {
       select(keys) {
         if (keys === 'all') {
-          setSelectedKeys(new Set(originalData.map(getRowKey)));
+          if (mode === 'single') {
+            const firstKey = originalData.length > 0 ? getRowKey(originalData[0]) : null;
+            setSelectedKeys(firstKey != null ? new Set([firstKey]) : new Set());
+          } else {
+            setSelectedKeys(new Set(originalData.map(getRowKey)));
+          }
         } else {
           const arr = Array.isArray(keys) ? keys : [keys];
           setSelectedKeys(prev => {
@@ -1477,7 +1490,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         return originalData.filter(item => selectedKeys.has(getRowKey(item)));
       },
     };
-  }, [mergedOptions.selectable, mergedOptions.selectionRef, originalData, selectedKeys, getRowKey]);
+  }, [mergedOptions.selectable, mergedOptions.selectionRef, mergedOptions.selectionMode, originalData, selectedKeys, getRowKey]);
 
   // ── End selection logic ──
 
@@ -1488,6 +1501,43 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     const rowKey = getRowKey(row);
     setEditingCell({ rowKey, colKey: column.key, rowIndex, colIndex });
   }, [mergedOptions.editable, getRowKey]);
+
+  const clickDelayTimerRef = useRef(null);
+  const clickPendingRef = useRef(null);
+  const CLICK_DELAY_MS = 300;
+
+  const handleCellClickWithDbl = useCallback((event) => {
+    const { row, column, cell, rowIndex, colIndex } = event;
+    const cellKey = `${rowIndex}-${colIndex}`;
+    const now = Date.now();
+
+    const pending = clickPendingRef.current;
+    if (pending && pending.cellKey === cellKey && now - pending.time < CLICK_DELAY_MS) {
+      if (clickDelayTimerRef.current) clearTimeout(clickDelayTimerRef.current);
+      clickPendingRef.current = null;
+      mergedOptions.onDoubleClick?.(event);
+      return;
+    }
+
+    if (pending) {
+      if (clickDelayTimerRef.current) clearTimeout(clickDelayTimerRef.current);
+      mergedOptions.onClick?.(pending.event);
+      if (mergedOptions.editable && pending.event.column?.editable) {
+        handleCellClick(pending.event.row, pending.event.column, pending.event.rowIndex, pending.event.colIndex);
+      }
+    }
+
+    const timerId = setTimeout(() => {
+      clickPendingRef.current = null;
+      mergedOptions.onClick?.(event);
+      if (mergedOptions.editable && column?.editable) {
+        handleCellClick(row, column, rowIndex, colIndex);
+      }
+    }, CLICK_DELAY_MS);
+
+    clickDelayTimerRef.current = timerId;
+    clickPendingRef.current = { cellKey, time: now, event };
+  }, [mergedOptions.onClick, mergedOptions.onDoubleClick, mergedOptions.editable, handleCellClick]);
 
   const handleCellCommit = useCallback((row, colKey, newValue) => {
     const rowKey = getRowKey(row);
@@ -1889,32 +1939,34 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                 className={styles.tabela__selection__headerCell}
                 rowSpan={headerStructure.headerRows.length}
               >
-                <button
-                  type="button"
-                  className={`${styles.tabela__selection__headerBtn} ${
-                    selectionState.allTableSelected
-                      ? styles.tabela__selection__headerBtn__allSelected
-                      : selectionState.someSelected
-                        ? styles.tabela__selection__headerBtn__partial
-                        : ''
-                  }`}
-                  onClick={handleHeaderCheckboxClick}
-                  aria-label={
-                    selectionState.allTableSelected
-                      ? 'Remover todas as seleções'
-                      : selectionState.allPageSelected
-                        ? 'Selecionar todas as linhas da tabela'
-                        : 'Selecionar todas as linhas da página'
-                  }
-                >
-                  <i className={`far ${
-                    selectionState.allTableSelected
-                      ? 'fa-square-check'
-                      : selectionState.someSelected
-                        ? 'fa-square-minus'
-                        : 'fa-square'
-                  }`} />
-                </button>
+                {selectionMode !== 'single' && (
+                  <button
+                    type="button"
+                    className={`${styles.tabela__selection__headerBtn} ${
+                      selectionState.allTableSelected
+                        ? styles.tabela__selection__headerBtn__allSelected
+                        : selectionState.someSelected
+                          ? styles.tabela__selection__headerBtn__partial
+                          : ''
+                    }`}
+                    onClick={handleHeaderCheckboxClick}
+                    aria-label={
+                      selectionState.allTableSelected
+                        ? 'Remover todas as seleções'
+                        : selectionState.allPageSelected
+                          ? 'Selecionar todas as linhas da tabela'
+                          : 'Selecionar todas as linhas da página'
+                    }
+                  >
+                    <i className={`far ${
+                      selectionState.allTableSelected
+                        ? 'fa-square-check'
+                        : selectionState.someSelected
+                          ? 'fa-square-minus'
+                          : 'fa-square'
+                    }`} />
+                  </button>
+                )}
               </th>
             )}
             {headerRow.columns.map((column) => {
@@ -2034,6 +2086,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             handleGroupItemsPerPageChange={handleGroupItemsPerPageChange}
             openCalculationSubmenu={openCalculationSubmenu}
             selectable={mergedOptions.selectable}
+            selectionMode={selectionMode}
             selectedKeys={selectedKeys}
             getRowKey={getRowKey}
             toggleRowSelection={toggleRowSelection}
@@ -2041,6 +2094,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             editingCell={editingCell}
             editedData={editedData}
             rowStatuses={rowStatuses}
+            onCellClickWithDbl={(mergedOptions.onClick || mergedOptions.onDoubleClick || mergedOptions.editable) ? handleCellClickWithDbl : undefined}
             onCellClick={handleCellClick}
             onCellCommit={handleCellCommit}
             onCellCancel={handleCellCancel}
@@ -2056,7 +2110,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       default:
         return null;
     }
-  }, [currentTableView, visibleColumns, displayData, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, fullDataForGrouping, openCalculationSubmenu, hasScroll, visibleFooter, renderTableHead, handleGroupItemsPerPageChange, mergedOptions.selectable, selectedKeys, getRowKey, toggleRowSelection, mergedOptions.editable, editingCell, editedData, rowStatuses, handleCellClick, handleCellCommit, handleCellCancel, handleEditNavigate]);
+  }, [currentTableView, visibleColumns, displayData, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, fullDataForGrouping, openCalculationSubmenu, hasScroll, visibleFooter, renderTableHead, handleGroupItemsPerPageChange, mergedOptions.selectable, selectionMode, selectedKeys, getRowKey, toggleRowSelection, mergedOptions.editable, editingCell, editedData, rowStatuses, handleCellClickWithDbl, handleCellClick, handleCellCommit, handleCellCancel, handleEditNavigate]);
 
   const footerRowRef = useRef(null);
   const [footerCellMeta, setFooterCellMeta] = useState({});
@@ -2603,6 +2657,25 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               dataForCalculation={fullDataForGrouping}
               showSettingsOptions={mergedOptions.showSettingsOptions}
               additionalSettingsOptions={mergedOptions.additionalSettingsOptions}
+              importConfig={mergedOptions.importConfig}
+              onImportClick={(sessionId) => {
+                closeMenu(sessionId);
+                setImportModalOpen(true);
+              }}
+              onExport={(format) => {
+                const exportColumns = headerStructure.leafColumns.filter((c) => columnVisibility[c.key] !== false);
+                const prepared = prepareExportData(
+                  fullDataForGrouping,
+                  exportColumns,
+                  editedData,
+                  getRowKey
+                );
+                const tableName = mergedOptions.tableName ?? 'Tabela';
+                if (format === 'csv') {
+                  const csv = toCSV(prepared, exportColumns);
+                  downloadFile(csv, getExportFilename(tableName, 'csv'));
+                }
+              }}
             />
           )}
           </>
@@ -2700,6 +2773,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           portalContainer
         );
       })()}
+
+      {importModalOpen && mergedOptions.importConfig?.columns?.length && (
+        <ImportModal
+          isOpen={importModalOpen}
+          onClose={() => setImportModalOpen(false)}
+          importConfig={mergedOptions.importConfig}
+          onImportComplete={mergedOptions.onImportComplete}
+          portalContainer={portalContainer}
+        />
+      )}
     </div>
   );
 };

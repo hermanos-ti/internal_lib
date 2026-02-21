@@ -21,6 +21,9 @@ export const SettingsMenu = memo(forwardRef(({
   dataForCalculation,
   showSettingsOptions,
   additionalSettingsOptions = [],
+  importConfig,
+  onImportClick,
+  onExport,
 }, ref) => {
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -112,6 +115,10 @@ export const SettingsMenu = memo(forwardRef(({
       setCurrentView('agrupar');
     } else if (optionKey === 'calcular') {
       setCurrentView('calcular');
+    } else if (optionKey === 'importar' && importConfig?.columns?.length && onImportClick) {
+      onImportClick(currentSessionRef.current);
+    } else if (optionKey === 'exportar' && onExport) {
+      setCurrentView('exportar');
     } else {
       // Check if it's an additional option with its own onClick
       const additionalOption = additionalSettingsOptions.find(opt => opt.key === optionKey);
@@ -121,7 +128,7 @@ export const SettingsMenu = memo(forwardRef(({
       } else if (onAction) {
         onAction(optionKey);
       }
-    } 
+    }
   };
 
   const handleBack = () => {
@@ -196,7 +203,8 @@ export const SettingsMenu = memo(forwardRef(({
               {currentView === 'colunasVisiveis' && 'Colunas visíveis'}
               {currentView === 'agrupar' && 'Agrupar'}
               {currentView === 'calcular' && 'Calcular'}
-              {currentView !== 'colunasVisiveis' && currentView !== 'agrupar' && currentView !== 'calcular' && 'Configurações'}
+              {currentView === 'exportar' && 'Exportar'}
+              {currentView !== 'colunasVisiveis' && currentView !== 'agrupar' && currentView !== 'calcular' && currentView !== 'exportar' && 'Configurações'}
             </span>
           </div>
 
@@ -264,6 +272,22 @@ export const SettingsMenu = memo(forwardRef(({
                 dataForCalculation={dataForCalculation}
                 embedded={true}
               />
+            )}
+            {currentView === 'exportar' && onExport && (
+              <div className={styles.visibleColumnsModal__body}>
+                <div className={styles.visibleColumnsModal__section}>
+                  <div className={styles.visibleColumnsModal__list}>
+                    <button
+                      type="button"
+                      className={styles.columnSelectionMenu__item}
+                      onClick={() => onExport('csv')}
+                    >
+                      <i className={`far fa-file-csv ${styles.columnSelectionMenu__item__icon}`} />
+                      <span className={styles.columnSelectionMenu__item__label}>CSV</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </>
