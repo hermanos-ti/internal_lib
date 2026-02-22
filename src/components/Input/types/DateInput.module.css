@@ -1,0 +1,341 @@
+/* DateInput dropdown - uses Input design tokens */
+.dateInput__dropdown {
+  position: absolute;
+  background: var(--input-bg, #ffffff);
+  border: 1px solid var(--input-border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--input-radius, 8px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.06);
+  z-index: 10000;
+  overflow: hidden;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  font-family: "Montserrat", sans-serif;
+}
+
+.dateInput__trigger {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--input-height, 40px);
+  height: var(--input-height, 40px);
+  padding: 0 var(--input-padding-x, 12px);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--input-text, #0f172a);
+  background: var(--input-bg, #ffffff);
+  background-image: none;
+  border: 1px solid var(--input-border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--input-radius, 8px);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--input-transition, 150ms ease), box-shadow var(--input-transition, 150ms ease);
+  box-sizing: border-box;
+  font-family: inherit;
+  text-align: left;
+}
+
+.dateInput__trigger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--input-border) 80%, var(--input-text));
+}
+
+.dateInput__trigger:focus {
+  border-color: var(--input-focus, #4f46e5);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus, #4f46e5) 12%, transparent);
+}
+
+.dateInput__trigger:disabled {
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--input-muted) 5%, var(--input-bg));
+  opacity: 0.6;
+}
+
+.dateInput__triggerValue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dateInput__triggerValue.placeholder {
+  color: var(--input-muted, #64748b);
+  font-weight: 400;
+}
+
+.dateInput__triggerIcon {
+  font-size: 12px;
+  color: var(--input-muted, #64748b);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.dateInput__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.dateInput__navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--input-text, #0f172a);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--input-transition, 150ms ease), color var(--input-transition, 150ms ease);
+}
+
+.dateInput__navBtn:hover {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 8%, transparent);
+  color: var(--input-focus, #4f46e5);
+}
+
+.dateInput__headerLabel {
+  flex: 1;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--input-text, #0f172a);
+  cursor: pointer;
+  transition: background var(--input-transition, 150ms ease), color var(--input-transition, 150ms ease);
+  font-family: inherit;
+}
+
+.dateInput__headerLabel:hover {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 8%, transparent);
+  color: var(--input-focus, #4f46e5);
+}
+
+.dateInput__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dateInput__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 2.25rem);
+  gap: 2px;
+}
+
+.dateInput__weekday {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--input-muted, #64748b);
+  text-align: center;
+  padding: 4px 0;
+}
+
+.dateInput__days {
+  display: grid;
+  grid-template-columns: repeat(7, 2.25rem);
+  gap: 2px;
+}
+
+.dateInput__day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--input-text, #0f172a);
+  cursor: pointer;
+  transition: background var(--input-transition, 150ms ease), color var(--input-transition, 150ms ease);
+  font-family: inherit;
+}
+
+.dateInput__day:hover:not(:disabled):not(.dateInput__dayDisabled) {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 8%, transparent);
+  color: var(--input-focus, #4f46e5);
+}
+
+.dateInput__dayOther {
+  color: var(--input-muted, #64748b);
+  opacity: 0.6;
+}
+
+.dateInput__daySelected {
+  background: var(--input-focus, #4f46e5);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dateInput__daySelected:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 90%, #000);
+  color: #ffffff;
+}
+
+.dateInput__dayInRange:not(.dateInput__daySelected) {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 12%, transparent);
+}
+
+.dateInput__dayInHoverRange:not(.dateInput__daySelected):not(.dateInput__dayInRange) {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 8%, transparent);
+}
+
+.dateInput__dayInHoverRange:hover:not(:disabled):not(.dateInput__dayDisabled) {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 14%, transparent);
+}
+
+.dateInput__dayDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dateInput__months {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.dateInput__month {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--input-text, #0f172a);
+  cursor: pointer;
+  transition: background var(--input-transition, 150ms ease), color var(--input-transition, 150ms ease);
+  font-family: inherit;
+}
+
+.dateInput__month:hover:not(:disabled):not(.dateInput__dayDisabled) {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 8%, transparent);
+  color: var(--input-focus, #4f46e5);
+}
+
+.dateInput__years {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.dateInput__year {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--input-text, #0f172a);
+  cursor: pointer;
+  transition: background var(--input-transition, 150ms ease), color var(--input-transition, 150ms ease);
+  font-family: inherit;
+}
+
+.dateInput__year:hover:not(:disabled):not(.dateInput__dayDisabled) {
+  background: color-mix(in srgb, var(--input-focus, #4f46e5) 8%, transparent);
+  color: var(--input-focus, #4f46e5);
+}
+
+/* Time picker (for data-hora formats) */
+.dateInput__timeSection {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--input-border, rgba(0, 0, 0, 0.08));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Hora only - no border when time picker is the sole content */
+.dateInput__timeSectionStandalone {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.dateInput__timeLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--input-muted, #64748b);
+}
+
+.dateInput__timeInput {
+  width: 60px;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--input-text, #0f172a);
+  background: var(--input-bg, #ffffff);
+  border: 1px solid var(--input-border, rgba(0, 0, 0, 0.08));
+  border-radius: 6px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.dateInput__timeInput:focus {
+  border-color: var(--input-focus, #4f46e5);
+}
+
+/* Theme: dark */
+[data-theme="dark"] .dateInput__dropdown,
+[data-theme="dark"] .dateInput__trigger {
+  --input-bg: var(--modal-background);
+  --input-text: var(--modal-text-main);
+  --input-muted: var(--modal-text-muted);
+  --input-border: var(--modal-border);
+  --input-focus: var(--premium-primary);
+}
+
+[data-theme="dark"] .dateInput__dropdown {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Theme: tokyoNight */
+[data-theme="tokyoNight"] .dateInput__dropdown,
+[data-theme="tokyoNight"] .dateInput__trigger {
+  --input-bg: var(--modal-background);
+  --input-text: var(--modal-text-main);
+  --input-muted: var(--modal-text-muted);
+  --input-border: var(--modal-border);
+  --input-focus: var(--premium-primary);
+}
+
+[data-theme="tokyoNight"] .dateInput__dropdown {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Theme: light - explicit for consistency when in portal */
+[data-theme="light"] .dateInput__dropdown,
+[data-theme="light"] .dateInput__trigger {
+  --input-bg: var(--modal-background);
+  --input-text: var(--modal-text-main);
+  --input-muted: var(--modal-text-muted);
+  --input-border: var(--modal-border);
+  --input-focus: var(--premium-primary);
+}

@@ -1,0 +1,848 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
+/* Design tokens */
+.input {
+  --input-bg: var(--table-menu-surface, #ffffff);
+  --input-text: var(--modal-text-main, #0f172a);
+  --input-muted: var(--modal-text-muted, #64748b);
+  --input-border: var(--modal-border, rgba(0, 0, 0, 0.08));
+  --input-focus: var(--premium-primary, #4f46e5);
+  --input-radius: 8px;
+  --input-height: 40px;
+  --input-padding-x: 12px;
+  --input-transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Container */
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.inputDisabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.inputError .input__control,
+.inputError .input__file,
+.inputError .input__select,
+.inputError .input__passwordWrapper input {
+  border-color: var(--table-error, #dc2626);
+}
+
+.inputError .input__control:focus,
+.inputError .input__select:focus,
+.inputError .input__passwordWrapper input:focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--table-error, #dc2626) 15%, transparent);
+}
+
+/* Status (success, warning, error) - light background like Tabela */
+.inputStatusSuccess .input__control,
+.inputStatusSuccess .input__select,
+.inputStatusSuccess .input__file,
+.inputStatusSuccess .input__colorWrapper,
+.inputStatusSuccess .input__controlWrapper,
+.inputStatusSuccess .input__passwordWrapper input,
+.inputStatusSuccess .input__sliderWrapper,
+.inputStatusSuccess .input__numberWrapper {
+  background: color-mix(in srgb, var(--table-success, #10b981) 10%, var(--input-bg));
+  border-color: color-mix(in srgb, var(--table-success, #10b981) 30%, var(--input-border));
+}
+
+.inputStatusWarning .input__control,
+.inputStatusWarning .input__select,
+.inputStatusWarning .input__file,
+.inputStatusWarning .input__colorWrapper,
+.inputStatusWarning .input__controlWrapper,
+.inputStatusWarning .input__passwordWrapper input,
+.inputStatusWarning .input__sliderWrapper,
+.inputStatusWarning .input__numberWrapper {
+  background: color-mix(in srgb, var(--table-warning, #f59e0b) 10%, var(--input-bg));
+  border-color: color-mix(in srgb, var(--table-warning, #f59e0b) 30%, var(--input-border));
+}
+
+.inputStatusError .input__control,
+.inputStatusError .input__select,
+.inputStatusError .input__file,
+.inputStatusError .input__colorWrapper,
+.inputStatusError .input__controlWrapper,
+.inputStatusError .input__passwordWrapper input,
+.inputStatusError .input__sliderWrapper,
+.inputStatusError .input__numberWrapper {
+  background: color-mix(in srgb, var(--table-error, #dc2626) 8%, var(--input-bg));
+  border-color: color-mix(in srgb, var(--table-error, #dc2626) 35%, var(--input-border));
+}
+
+/* Label */
+.input__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--input-muted);
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+
+/* Field wrapper (buttons + input) */
+.input__field {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+
+.input__fieldConnected {
+  gap: 0;
+}
+
+/* Control wrapper (icon inside input) */
+.input__controlWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.input__icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--input-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input__iconLeft {
+  left: 12px;
+}
+
+.input__iconRight {
+  right: 12px;
+  left: auto;
+}
+
+/* Buttons left/right - connected to input */
+.input__buttonsLeft,
+.input__buttonsRight {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.input__buttonsRight {
+  margin-left: auto;
+}
+
+.input__button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--input-muted);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: all var(--input-transition);
+  white-space: nowrap;
+  min-height: var(--input-height);
+  margin-left: -1px;
+}
+
+.input__button:first-child {
+  margin-left: 0;
+}
+
+.input__button:hover:not(:disabled) {
+  color: var(--input-focus);
+  border-color: var(--input-focus);
+  background: color-mix(in srgb, var(--input-focus) 6%, var(--input-bg));
+  z-index: 1;
+}
+
+.input__button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.input__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.input__buttonIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.input__buttonLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Connected button border-radius: first left, last right only */
+.input__buttonFirstLeft {
+  border-radius: var(--input-radius) 0 0 var(--input-radius);
+  margin-left: 0;
+}
+
+.input__buttonLastLeft,
+.input__buttonMiddleLeft {
+  border-radius: 0;
+}
+
+.input__buttonFirstRight,
+.input__buttonMiddleRight {
+  border-radius: 0;
+}
+
+.input__buttonLastRight {
+  border-radius: 0 var(--input-radius) var(--input-radius) 0;
+}
+
+/* Input connected to buttons - remove outer border-radius */
+.input__controlConnectedLeft,
+.input__select.input__controlConnectedLeft {
+  border-radius: 0 var(--input-radius) var(--input-radius) 0;
+  margin-left: -1px;
+}
+
+.input__controlConnectedRight,
+.input__select.input__controlConnectedRight {
+  border-radius: var(--input-radius) 0 0 var(--input-radius);
+}
+
+.input__controlConnectedLeft.input__controlConnectedRight,
+.input__select.input__controlConnectedLeft.input__controlConnectedRight {
+  border-radius: 0;
+}
+
+/* Responsive: separate buttons with gap and full border-radius */
+@media (max-width: 480px) {
+  .input__field {
+    flex-wrap: wrap;
+  }
+
+  .input__buttonsLeft,
+  .input__buttonsRight {
+    gap: 6px;
+  }
+
+  .input__button,
+  .input__buttonFirstLeft,
+  .input__buttonLastLeft,
+  .input__buttonMiddleLeft,
+  .input__buttonFirstRight,
+  .input__buttonMiddleRight,
+  .input__buttonLastRight {
+    border-radius: var(--input-radius);
+    margin-left: 0;
+  }
+
+  .input__controlConnectedLeft,
+  .input__controlConnectedRight,
+  .input__select.input__controlConnectedLeft,
+  .input__select.input__controlConnectedRight {
+    border-radius: var(--input-radius);
+    margin-left: 0;
+  }
+
+  .input__controlConnectedLeft.input__controlConnectedRight,
+  .input__select.input__controlConnectedLeft.input__controlConnectedRight {
+    border-radius: var(--input-radius);
+  }
+
+  .input__buttonLabel {
+    display: none;
+  }
+
+  .input__button {
+    padding: 6px 8px;
+    min-width: 32px;
+    justify-content: center;
+  }
+}
+
+/* Base control (text, number, date, select, textarea, password) */
+.input__control {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: var(--input-height);
+  padding: 0 var(--input-padding-x);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--input-text);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  outline: none;
+  font-family: inherit;
+  transition: border-color var(--input-transition), box-shadow var(--input-transition);
+  box-sizing: border-box;
+}
+
+.input__control.input__controlWithIconLeft,
+.input__select.input__controlWithIconLeft {
+  padding-left: 40px;
+}
+
+.input__control.input__controlWithIconRight,
+.input__select.input__controlWithIconRight {
+  padding-right: 40px;
+}
+
+.input__control.input__controlWithPasswordToggle {
+  padding-right: 40px;
+}
+
+.input__control::placeholder {
+  color: var(--input-muted);
+  font-weight: 400;
+}
+
+.input__control:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--input-border) 80%, var(--input-text));
+}
+
+.input__control:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus) 12%, transparent);
+}
+
+.input__control:disabled {
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--input-muted) 5%, var(--input-bg));
+}
+
+/* Textarea */
+.input__controlTextarea {
+  height: auto;
+  min-height: 80px;
+  padding: 10px var(--input-padding-x);
+  resize: vertical;
+}
+
+.input__controlTextarea.input__controlWithIconLeft {
+  padding-left: 40px;
+}
+
+.input__controlTextarea.input__controlWithIconRight {
+  padding-right: 40px;
+}
+
+.input__controlTextareaNoResize {
+  resize: none;
+}
+
+.input__controlTextareaAutoExpand {
+  overflow-y: hidden;
+}
+
+/* Number with custom buttons */
+.input__numberWrapper {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  height: var(--input-height);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  overflow: hidden;
+}
+
+.input__numberWrapper:hover .input__numberInput:not(:disabled) {
+  border-color: transparent;
+}
+
+.input__numberWrapper:focus-within {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus) 12%, transparent);
+}
+
+.input__numberInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  padding: 0 var(--input-padding-x);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--input-text);
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  -moz-appearance: textfield;
+}
+
+.input__numberInput::-webkit-outer-spin-button,
+.input__numberInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input__numberButtons {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-left: 1px solid var(--input-border);
+}
+
+.input__numberBtn {
+  flex: 1;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border: none;
+  background: color-mix(in srgb, var(--input-muted) 5%, var(--input-bg));
+  color: var(--input-muted);
+  cursor: pointer;
+  transition: color var(--input-transition), background var(--input-transition);
+}
+
+.input__numberBtn i {
+  font-size: 0.75rem;
+}
+
+.input__numberBtn:hover:not(:disabled) {
+  color: var(--input-focus);
+  background: color-mix(in srgb, var(--input-focus) 8%, transparent);
+}
+
+.input__numberBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.input__numberBtn:first-child {
+  border-bottom: 1px solid var(--input-border);
+}
+
+/* Password */
+.input__passwordWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.input__passwordWrapper input {
+  width: 100%;
+}
+
+.input__passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--input-muted);
+  cursor: pointer;
+  transition: color var(--input-transition), background var(--input-transition);
+}
+
+.input__passwordToggle:hover:not(:disabled) {
+  color: var(--input-focus);
+  background: color-mix(in srgb, var(--input-focus) 8%, transparent);
+}
+
+.input__passwordToggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Select */
+.input__select {
+  flex: 1;
+  min-width: 0;
+  height: var(--input-height);
+  padding: 0 var(--input-padding-x);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--input-text);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color var(--input-transition), box-shadow var(--input-transition);
+  box-sizing: border-box;
+}
+
+.input__select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--input-border) 80%, var(--input-text));
+}
+
+.input__select:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus) 12%, transparent);
+}
+
+.input__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Switch */
+.input__switch {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.input__switchInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.input__switchTrack {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--input-border);
+  border-radius: 12px;
+  transition: background var(--input-transition);
+}
+
+.input__switchThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform var(--input-transition);
+}
+
+.input__switchActive .input__switchTrack {
+  background: var(--input-focus);
+}
+
+.input__switchActive .input__switchThumb {
+  transform: translateX(20px);
+}
+
+.input__switchDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Checkbox - Tabela selection style */
+.input__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.input__checkboxInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.input__checkboxCheckmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--input-muted);
+  transition: color var(--input-transition);
+}
+
+.input__checkboxInput:focus-visible + .input__checkboxCheckmark {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus) 25%, transparent);
+  border-radius: 4px;
+}
+
+.input__checkboxChecked .input__checkboxCheckmark {
+  color: var(--input-focus);
+}
+
+.input__checkbox:hover:not(.input__checkboxDisabled) .input__checkboxCheckmark {
+  color: var(--input-focus);
+}
+
+.input__checkboxDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Radio group */
+.input__radioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.input__radioGroupVertical {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.input__radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.input__radioInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.input__radioCircle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--input-border);
+  border-radius: 50%;
+  background: var(--input-bg);
+  transition: all var(--input-transition);
+  position: relative;
+}
+
+.input__radioInput:focus-visible + .input__radioCircle {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus) 20%, transparent);
+}
+
+.input__radioChecked .input__radioCircle {
+  border-color: var(--input-focus);
+  background: var(--input-focus);
+}
+
+.input__radioChecked .input__radioCircle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.input__radioLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--input-text);
+}
+
+.input__radioDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* File */
+.input__file {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--input-height);
+  padding: 12px var(--input-padding-x);
+  border: 2px dashed var(--input-border);
+  border-radius: var(--input-radius);
+  background: color-mix(in srgb, var(--input-muted) 5%, transparent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--input-transition), background var(--input-transition);
+}
+
+.input__file:hover:not(.input__fileDisabled) {
+  border-color: var(--input-focus);
+  background: color-mix(in srgb, var(--input-focus) 5%, transparent);
+}
+
+.input__fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.input__fileText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--input-muted);
+  text-align: center;
+}
+
+.input__fileDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Slider */
+.input__sliderWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.input__slider {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(
+    to right,
+    var(--input-focus) 0%,
+    var(--input-focus) var(--slider-progress, 0%),
+    var(--input-border) var(--slider-progress, 0%),
+    var(--input-border) 100%
+  );
+  border-radius: 2px;
+  outline: none;
+}
+
+.input__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--input-focus);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform var(--input-transition);
+}
+
+.input__slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.input__slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--input-focus);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.input__sliderValue {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--input-muted);
+  min-width: 2ch;
+}
+
+/* Color */
+.input__colorWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--input-height);
+  padding: 0 var(--input-padding-x);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  cursor: pointer;
+  transition: border-color var(--input-transition), box-shadow var(--input-transition);
+}
+
+.input__colorWrapper:hover:not(.input__colorDisabled) {
+  border-color: color-mix(in srgb, var(--input-border) 80%, var(--input-text));
+}
+
+.input__colorWrapper:focus-within {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus) 12%, transparent);
+}
+
+.input__colorDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.input__colorInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.input__colorPreview {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.input__colorValue {
+  font-size: 14px;
+  font-weight: 500;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+  color: var(--input-text);
+  letter-spacing: 0.02em;
+}
+
+/* Hint & Error */
+.input__hint {
+  font-size: 12px;
+  color: var(--input-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.input__error {
+  font-size: 12px;
+  color: var(--table-error, #dc2626);
+  margin-top: 2px;
+  line-height: 1.4;
+}

@@ -8,7 +8,7 @@ import { Details } from './components/Details/Details';
 import { Drawer } from './components/Drawer/Drawer';
 import { Frame } from './components/Frame/Frame';
 import { Header } from './components/Header/Header';
-import { Input } from './components/Input/Input';
+import { Input, useInput } from './components/Input';
 import { Loader } from './components/Loader/Loader';
 import { Menu } from './components/Menu/Menu';
 import { Modal } from './components/Modal/Modal';
@@ -21,6 +21,7 @@ import { Tag } from './components/Tag/Tag';
 import { Tooltip } from './components/Tooltip/Tooltip';
 
 import { Dialog } from './functions/Dialog/Dialog';
+import { validate } from './functions/Formatter';
 import { LoaderManagerInstance, LoaderGlobal } from './functions/Loader/Loader';
 import { Toast } from './functions/Toast/Toast';
 
@@ -36,6 +37,7 @@ export {
   Frame,
   Header,
   Input,
+  useInput,
   Loader,
   Menu,
   Modal,
@@ -47,6 +49,7 @@ export {
   Tag,
   Tooltip,
   Dialog,
+  validate,
   LoaderManagerInstance as LoaderManager,
   LoaderGlobal,
   Toast
