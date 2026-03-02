@@ -1,14 +1,12 @@
 import '../../styles/themes.css';
 import styles from './Tabela.module.css';
 import { useEffect, useState, useMemo, useCallback, useRef, useContext } from 'react';
-import { Loader } from '../Loader/Loader';
 import { Pagination } from '../Pagination/Pagination';
 import { createPortal } from 'react-dom';
 
 import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, TABLE_VIEWS, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
-import { computeCalculation, CALCULATION_OPTIONS } from './calculationUtils';
 import { prepareExportData, toCSV, downloadFile, getExportFilename } from './exportUtils';
-import { TableCell, ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal, ImportModal } from './components';
+import { ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal, ImportModal } from './components';
 import { PortalTargetContext } from './PortalTargetContext';
 import { GridView, ListView, KanbanView, CalendarView } from './components/views';
 
@@ -2515,8 +2513,13 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     >
       {mergedOptions.showTableTitle && (
         <div className={styles.tabela__title}>
-          <i className={`${mergedOptions.tableIcon} ${styles.tabela__title__icon}`} />
-          <span className={styles.tabela__title__label}>{mergedOptions.tableName}</span>
+          <div className={styles.tabela__title__icon}>
+            <i className={mergedOptions.tableIcon} />
+          </div>
+          <div className={styles.tabela__title__content}>
+            <h1 className={styles.tabela__title__content__title}>{mergedOptions.tableName}</h1>
+            <span className={styles.tabela__title__content__subtitle}>{mergedOptions.tableSubtitle}</span>
+          </div>
         </div>
       )}
       {mergedOptions.showToolbar && toolbarContent}

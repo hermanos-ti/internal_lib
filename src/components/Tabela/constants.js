@@ -8,6 +8,7 @@ export const DEFAULT_OPTIONS = {
   showTableTitle: true,
   tableIcon: 'fas fa-table',
   tableName: 'Tabela',
+  tableSubtitle: null, // string
   columnMinWidth: 'auto',
   showSearch: true,
   showSorts: true,

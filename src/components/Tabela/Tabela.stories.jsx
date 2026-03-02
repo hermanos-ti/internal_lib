@@ -139,7 +139,11 @@ const footer = [
 ];
 
 export const Default = {
-  render: () => <TabelaWithPortal id="tabela-1" columns={columns} data={data} footer={footer} />,
+  render: () => <TabelaWithPortal id="tabela-1" columns={columns} data={data} footer={footer} options={{
+    tableName: 'Tabela de Exemplo',
+    tableSubtitle: 'Esta é uma tabela de exemplo para demonstrar o componente Tabela.',
+    tableIcon: 'fa-solid fa-table',
+  }} />,
 };
 
 // Exemplo 1: Valor puro (sem render)
