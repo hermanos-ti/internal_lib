@@ -279,7 +279,7 @@ export const Select = memo(forwardRef(({
             role="listbox"
           >
             {filteredOptions.length === 0 ? (
-              <div className={styles.select__option} style={{ color: 'var(--modal-text-muted)', cursor: 'default' }}>
+              <div className={styles.select__option} style={{ color: 'var(--text-muted)', cursor: 'default' }}>
                 Nenhuma opção encontrada
               </div>
             ) : (

@@ -2508,7 +2508,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const detectedTheme = portalTargetIsBody ? (containerRef.current?.closest?.('[data-theme]')?.getAttribute?.('data-theme') ?? 'light') : null;
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={styles.tabela__container}
       style={maxWidth !== null ? { maxWidth: `${maxWidth}px` } : undefined}
