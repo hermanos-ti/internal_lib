@@ -5,7 +5,12 @@
   "type": "module",
   "main": "./dist/internal_lib.umd.js",
   "module": "./dist/internal_lib.es.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hermanos-ti/internal_lib.git"
+  },
   "publishConfig": {
+    "access": "public",
     "registry": "https://npm.pkg.github.com/"
   },
   "exports": {

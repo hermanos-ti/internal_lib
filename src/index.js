@@ -8,6 +8,7 @@ import { Details } from './components/Details/Details';
 import { Drawer } from './components/Drawer/Drawer';
 import { Frame } from './components/Frame/Frame';
 import { Header } from './components/Header/Header';
+import { IconPicker } from './components/IconPicker';
 import { Input, useInput } from './components/Input';
 import { Loader } from './components/Loader/Loader';
 import { Menu } from './components/Menu/Menu';
@@ -36,6 +37,7 @@ export {
   Drawer,
   Frame,
   Header,
+  IconPicker,
   Input,
   useInput,
   Loader,

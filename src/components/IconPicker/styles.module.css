@@ -1,0 +1,196 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
+/* Design tokens - align with Input/Tabela */
+.popover {
+  --iconpicker-bg: var(--surface-content, var(--surface-toolbar, #ffffff));
+  --iconpicker-text: var(--text-primary, #0f172a);
+  --iconpicker-muted: var(--text-muted, #64748b);
+  --iconpicker-border: var(--border-color, rgba(0, 0, 0, 0.08));
+  --iconpicker-focus: var(--color-primary, #4f46e5);
+  --iconpicker-radius: var(--input-radius, 8px);
+  --iconpicker-transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Popover */
+.popover {
+  background: var(--iconpicker-bg);
+  border: 1px solid var(--iconpicker-border);
+  border-radius: var(--iconpicker-radius);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 10000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Filter */
+.filter {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--iconpicker-border);
+}
+
+.filterInput {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--iconpicker-text);
+  background: var(--input-bg, var(--iconpicker-bg));
+  border: 1px solid var(--input-border, var(--iconpicker-border));
+  border-radius: 6px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color var(--iconpicker-transition), box-shadow var(--iconpicker-transition);
+}
+
+.filterInput::placeholder {
+  color: var(--input-muted, var(--iconpicker-muted));
+}
+
+.filterInput:hover {
+  border-color: var(--input-border, var(--iconpicker-border));
+}
+
+.filterInput:focus {
+  border-color: var(--input-focus, var(--iconpicker-focus));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus, var(--iconpicker-focus)) 12%, transparent);
+}
+
+/* Grid */
+.grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  padding: 10px 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  min-height: 280px;
+}
+
+.grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.grid::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--iconpicker-focus) 30%, transparent);
+  border-radius: 3px;
+}
+
+.gridItem {
+  --wave-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px;
+  font-size: 18px;
+  color: var(--iconpicker-text);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background var(--iconpicker-transition), color var(--iconpicker-transition);
+  box-sizing: border-box;
+  opacity: 0;
+  animation: iconPickerWaveIn 0.35s ease-out forwards;
+  animation-delay: calc(var(--wave-index) * 30ms);
+}
+
+@keyframes iconPickerWaveIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gridItem:hover {
+  background: var(--hover-bg-content, color-mix(in srgb, var(--iconpicker-focus) 10%, transparent));
+  color: var(--iconpicker-focus);
+}
+
+.gridItemSelected,
+.gridItemSelected:hover {
+  background: var(--active-bg, color-mix(in srgb, var(--iconpicker-focus) 14%, transparent));
+  color: var(--iconpicker-focus);
+}
+
+.empty {
+  grid-column: 1 / -1;
+  padding: 28px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--iconpicker-muted);
+  text-align: center;
+}
+
+/* Footer with pagination */
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--iconpicker-border);
+  background: var(--surface-header, color-mix(in srgb, var(--iconpicker-border) 40%, var(--iconpicker-bg)));
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pageBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  font-size: 15px;
+  color: var(--iconpicker-text);
+  background: var(--input-bg, var(--iconpicker-bg));
+  border: 1px solid var(--input-border, var(--iconpicker-border));
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background var(--iconpicker-transition), border-color var(--iconpicker-transition), color var(--iconpicker-transition), transform 0.15s ease;
+}
+
+.pageBtn:hover {
+  background: var(--hover-bg-content, color-mix(in srgb, var(--iconpicker-focus) 10%, transparent));
+  border-color: var(--iconpicker-focus);
+  color: var(--iconpicker-focus);
+  transform: scale(1.05);
+}
+
+.pageBtn:active {
+  transform: scale(0.98);
+}
+
+.pageInfo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--iconpicker-muted);
+  white-space: nowrap;
+  min-width: 4ch;
+  text-align: center;
+}
