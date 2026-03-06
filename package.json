@@ -1,7 +1,7 @@
 {
   "name": "@hermanos-ti/internal_lib",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "main": "./dist/internal_lib.umd.js",
   "module": "./dist/internal_lib.es.js",
