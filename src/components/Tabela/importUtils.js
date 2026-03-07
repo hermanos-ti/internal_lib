@@ -22,7 +22,8 @@ export function parseCSVFile(file, columns) {
         const data = parseCSVText(text, columns);
         resolve({ data });
       } catch (err) {
-        resolve({ data: [], error: err?.message ?? 'Erro ao ler o arquivo CSV' });
+        console.error('[Tabela importCSV]', err);
+        resolve({ data: [], error: 'Erro ao ler o arquivo CSV' });
       }
     };
     reader.onerror = () => {
@@ -78,7 +79,7 @@ function parseCSVLine(line) {
       inQuotes = !inQuotes;
     } else if (inQuotes) {
       current += c;
-    } else if (c === '|') {
+    } else if (c === ',') {
       result.push(current.trim());
       current = '';
     } else {

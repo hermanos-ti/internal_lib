@@ -16,6 +16,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
           
       - run: npm install
+      - run: npm audit --audit-level=high
+      - run: npm test
       - run: npm run build
       
       - run: npm publish --access public 

@@ -1220,6 +1220,10 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           setIsSorting(false);
         }
       });
+
+    return () => {
+      sortAbortController.current?.abort();
+    };
   }, [sorts, tempSorts, isEditingToolbar, originalData, filteredData, sortDataMultiColumnAsync]);
 
   const headerStructure = useMemo(() => {
@@ -1906,14 +1910,15 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
 
     const scrollHandler = () => checkScroll();
-    if (tableWrapperRef.current) {
-      tableWrapperRef.current.addEventListener('scroll', scrollHandler);
+    const wrapperEl = tableWrapperRef.current;
+    if (wrapperEl) {
+      wrapperEl.addEventListener('scroll', scrollHandler);
     }
 
     return () => {
       resizeObserver.disconnect();
-      if (tableWrapperRef.current) {
-        tableWrapperRef.current.removeEventListener('scroll', scrollHandler);
+      if (wrapperEl) {
+        wrapperEl.removeEventListener('scroll', scrollHandler);
       }
     };
   }, [sortedData, originalData, filters, tempFilters, visibleColumns, groupedBodyItems, groupCurrentPage, collapsedGroupKeys]);

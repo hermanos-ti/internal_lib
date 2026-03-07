@@ -162,6 +162,23 @@ export function parse(value, format = 'data') {
  * @param {string} format - subtype
  * @returns {string}
  */
+const FORMAT_BUILDERS = {
+  data:                       (dd, mm, yyyy, _yy, _mes, _mesS, _t) => `${dd}/${mm}/${yyyy}`,
+  'data-curto':               (dd, mm, _yyyy, yy) => `${dd}/${mm}/${yy}`,
+  'data-extenso':             (dd, _mm, yyyy, _yy, mes) => `${dd}/${mes}/${yyyy}`,
+  'data-extenso-curto':       (dd, _mm, _yyyy, yy, _mes, mesS) => `${dd}/${mesS}/${yy}`,
+  'dia-mes':                  (dd, mm) => `${dd}/${mm}`,
+  'dia-mes-extenso':          (dd, _mm, _yyyy, _yy, mes) => `${dd}/${mes}`,
+  'dia-mes-extenso-curto':    (dd, _mm, _yyyy, _yy, _mes, mesS) => `${dd}/${mesS}`,
+  'mes-ano':                  (_dd, mm, yyyy) => `${mm}/${yyyy}`,
+  'mes-ano-extenso':          (_dd, _mm, yyyy, _yy, mes) => `${mes}/${yyyy}`,
+  'mes-ano-extenso-curto':    (_dd, _mm, _yyyy, yy, _mes, mesS) => `${mesS}/${yy}`,
+  'data-hora':                (dd, mm, yyyy, _yy, _mes, _mesS, t) => `${dd}/${mm}/${yyyy} ${t}`,
+  'data-hora-extenso':        (dd, _mm, yyyy, _yy, mes, _mesS, t) => `${dd}/${mes}/${yyyy} ${t}`,
+  'data-hora-extenso-curto':  (dd, _mm, _yyyy, yy, _mes, mesS, t) => `${dd}/${mesS}/${yy} ${t}`,
+  hora:                       (_dd, _mm, _yyyy, _yy, _mes, _mesS, t) => t,
+};
+
 export function format(date, formatType = 'data') {
   if (!date || !(date instanceof Date) || Number.isNaN(date.getTime())) return '';
 
@@ -171,39 +188,11 @@ export function format(date, formatType = 'data') {
   const yy = String(yyyy).slice(-2);
   const mes = getMonthName(date.getMonth(), false);
   const mesShort = getMonthName(date.getMonth(), true);
-  const hh = pad(date.getHours());
-  const min = pad(date.getMinutes());
+  const timeStr = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
-  const timeStr = `${hh}:${min}`;
-  const dateStr = `${dd}/${mm}/${yyyy}`;
-  const dateStrCurto = `${dd}/${mm}/${yy}`;
-  const dateExtenso = `${dd}/${mes}/${yyyy}`;
-  const dateExtensoCurto = `${dd}/${mesShort}/${yy}`;
-  const diaMes = `${dd}/${mm}`;
-  const diaMesExtenso = `${dd}/${mes}`;
-  const diaMesExtensoCurto = `${dd}/${mesShort}`;
-  const mesAno = `${mm}/${yyyy}`;
-  const mesAnoExtenso = `${mes}/${yyyy}`;
-  const mesAnoExtensoCurto = `${mesShort}/${yy}`;
-
-  const map = {
-    data: dateStr,
-    'data-curto': dateStrCurto,
-    'data-extenso': dateExtenso,
-    'data-extenso-curto': dateExtensoCurto,
-    'dia-mes': diaMes,
-    'dia-mes-extenso': diaMesExtenso,
-    'dia-mes-extenso-curto': diaMesExtensoCurto,
-    'mes-ano': mesAno,
-    'mes-ano-extenso': mesAnoExtenso,
-    'mes-ano-extenso-curto': mesAnoExtensoCurto,
-    'data-hora': `${dateStr} ${timeStr}`,
-    'data-hora-extenso': `${dateExtenso} ${timeStr}`,
-    'data-hora-extenso-curto': `${dateExtensoCurto} ${timeStr}`,
-    hora: timeStr,
-  };
-
-  return map[formatType] ?? dateStr;
+  const builder = FORMAT_BUILDERS[formatType];
+  if (builder) return builder(dd, mm, yyyy, yy, mes, mesShort, timeStr);
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 /**

@@ -121,53 +121,41 @@ export function computeCalculation(data, column, calculationId, options = {}) {
     return formatDisplayValue(value, 'date');
   };
 
-  // --- Common: count helpers ---
-  const countEmpty = () => {
-    return data.filter((row) => isEmpty(row[key])).length;
-  };
-  const countNonEmpty = () => {
-    return data.filter((row) => !isEmpty(row[key])).length;
-  };
-  const allValues = () => {
-    return data.flatMap((row) => getCellValues(row[key]));
-  };
-  const uniqueValues = () => {
-    return [...new Set(allValues().map(String))];
-  };
+  // --- Pre-computed common values (avoids re-iterating data per calculation) ---
+  const _emptyCount = data.filter((row) => isEmpty(row[key])).length;
+  const _nonEmptyCount = totalRows - _emptyCount;
+  const _allValues = data.flatMap((row) => getCellValues(row[key]));
+  const _uniqueValues = [...new Set(_allValues.map(String))];
 
   switch (calculationId) {
     case 'countAll':
       return { value: totalRows, formatted: fmtCount(totalRows) };
 
     case 'countValues': {
-      const n = allValues().length;
+      const n = _allValues.length;
       return { value: n, formatted: fmtCount(n) };
     }
 
     case 'countUnique': {
-      const n = uniqueValues().length;
+      const n = _uniqueValues.length;
       return { value: n, formatted: fmtCount(n) };
     }
 
     case 'countEmpty': {
-      const n = countEmpty();
-      return { value: n, formatted: fmtCount(n) };
+      return { value: _emptyCount, formatted: fmtCount(_emptyCount) };
     }
 
     case 'countNonEmpty': {
-      const n = countNonEmpty();
-      return { value: n, formatted: fmtCount(n) };
+      return { value: _nonEmptyCount, formatted: fmtCount(_nonEmptyCount) };
     }
 
     case 'pctEmpty': {
-      const n = countEmpty();
-      const pct = totalRows === 0 ? 0 : (n / totalRows) * 100;
+      const pct = totalRows === 0 ? 0 : (_emptyCount / totalRows) * 100;
       return { value: pct, formatted: fmtPct(pct) };
     }
 
     case 'pctNonEmpty': {
-      const n = countNonEmpty();
-      const pct = totalRows === 0 ? 0 : (n / totalRows) * 100;
+      const pct = totalRows === 0 ? 0 : (_nonEmptyCount / totalRows) * 100;
       return { value: pct, formatted: fmtPct(pct) };
     }
 

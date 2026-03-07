@@ -14,4 +14,4 @@ updates:
     schedule:
       interval: "daily" # Pode ser "daily" ou "monthly"
     registries:
-      - npm-registry # Diz ao Dependabot para usar a configuração acima
+      - github-packages # Usa a configuração de registro definida acima
