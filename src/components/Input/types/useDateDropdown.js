@@ -54,10 +54,6 @@ export function useDateDropdown({
         if (viewportTop < 0) viewportTop = 0;
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cc1a18'},body:JSON.stringify({sessionId:'cc1a18',location:'useDateDropdown.js:computePosition',message:'position calc',data:{triggerBottom:triggerRect.bottom,viewportHeight,spaceBelow,spaceAbove,contentHeight,direction,viewportTop,wouldOverflowBelow:triggerRect.bottom+contentHeight>viewportHeight},hypothesisId:'H1',runId:'post-fix',timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
       const dropdownWidth = Math.max(triggerRect.width, 280);
       let viewportLeft = triggerRect.left;
       if (viewportLeft + dropdownWidth > viewportWidth) {
@@ -116,9 +112,6 @@ export function useDateDropdown({
 
     const dropdownRect = dropdown.getBoundingClientRect();
     const contentHeight = dropdownRect.height + 8;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/6c3ae44d-694c-470a-8389-0c131f51518f',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cc1a18'},body:JSON.stringify({sessionId:'cc1a18',location:'useDateDropdown.js:recalcFromMeasured',message:'measured dropdown',data:{dropdownHeight:dropdownRect.height,contentHeight,finalTop:dropdownRect.top},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     const newPos = computePosition(contentHeight);
     if (newPos) setPosition((prev) => ({ ...prev, ...newPos }));
   }, [dropdownRef, triggerRef, computePosition]);

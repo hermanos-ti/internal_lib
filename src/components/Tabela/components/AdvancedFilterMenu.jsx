@@ -707,7 +707,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                 className={styles.advancedFilterMenu__logicToggle}
               />
             )}
-            <span style={{ flex: 1, fontSize: '0.75rem', color: 'var(--modal-text-muted)', fontWeight: 500 }}>
+            <span style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
               Grupo de regras ({group.logic === 'AND' ? 'Todas' : 'Qualquer'})
             </span>
             

@@ -107,10 +107,18 @@ function validateSingle(value, format) {
     errors.push({ code: 'maxLength', message: `Máximo ${maxLength} caracteres` });
   }
 
-  // Pattern (regex)
+  // Pattern (regex) — with ReDoS protection
   if (pattern != null) {
-    const re = pattern instanceof RegExp ? pattern : new RegExp(pattern);
-    if (!re.test(str)) {
+    try {
+      if (typeof pattern === 'string' && pattern.length > 500) {
+        errors.push({ code: 'pattern', message: opts.patternMessage || 'Formato inválido' });
+      } else {
+        const re = pattern instanceof RegExp ? pattern : new RegExp(pattern);
+        if (!re.test(str)) {
+          errors.push({ code: 'pattern', message: opts.patternMessage || 'Formato inválido' });
+        }
+      }
+    } catch {
       errors.push({ code: 'pattern', message: opts.patternMessage || 'Formato inválido' });
     }
   }

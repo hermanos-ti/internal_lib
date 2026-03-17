@@ -8,6 +8,7 @@ export const DEFAULT_OPTIONS = {
   showTableTitle: true,
   tableIcon: 'fas fa-table',
   tableName: 'Tabela',
+  tableSubtitle: null, // string
   columnMinWidth: 'auto',
   showSearch: true,
   showSorts: true,
@@ -160,28 +161,28 @@ export const TABLE_VIEWS = {
 // ============================================
 
 export const CONDITION_TO_SQL = {
-  // Text conditions
+  // Text conditions (LIKE wildcards escaped)
   is: (column, value) => `${column} = '${escapeSqlString(value)}'`,
   isNot: (column, value) => `${column} <> '${escapeSqlString(value)}'`,
-  contains: (column, value) => `${column} LIKE ('%${escapeSqlString(value)}%')`,
-  notContains: (column, value) => `${column} NOT LIKE ('%${escapeSqlString(value)}%')`,
-  startsWith: (column, value) => `${column} LIKE ('${escapeSqlString(value)}%')`,
-  endsWith: (column, value) => `${column} LIKE ('%${escapeSqlString(value)}')`,
+  contains: (column, value) => `${column} LIKE ('%${escapeLikeWildcards(value)}%')`,
+  notContains: (column, value) => `${column} NOT LIKE ('%${escapeLikeWildcards(value)}%')`,
+  startsWith: (column, value) => `${column} LIKE ('${escapeLikeWildcards(value)}%')`,
+  endsWith: (column, value) => `${column} LIKE ('%${escapeLikeWildcards(value)}')`,
   
-  // Number conditions
-  equals: (column, value) => `${column} = ${value}`,
-  notEquals: (column, value) => `${column} <> ${value}`,
-  greaterThan: (column, value) => `${column} > ${value}`,
-  lessThan: (column, value) => `${column} < ${value}`,
-  greaterOrEqual: (column, value) => `${column} >= ${value}`,
-  lessOrEqual: (column, value) => `${column} <= ${value}`,
+  // Number conditions (sanitized to prevent injection)
+  equals: (column, value) => `${column} = ${sanitizeNumericValue(value)}`,
+  notEquals: (column, value) => `${column} <> ${sanitizeNumericValue(value)}`,
+  greaterThan: (column, value) => `${column} > ${sanitizeNumericValue(value)}`,
+  lessThan: (column, value) => `${column} < ${sanitizeNumericValue(value)}`,
+  greaterOrEqual: (column, value) => `${column} >= ${sanitizeNumericValue(value)}`,
+  lessOrEqual: (column, value) => `${column} <= ${sanitizeNumericValue(value)}`,
   
-  // Date conditions
-  isBefore: (column, value) => `${column} < '${value}'`,
-  isAfter: (column, value) => `${column} > '${value}'`,
-  isOnOrBefore: (column, value) => `${column} <= '${value}'`,
-  isOnOrAfter: (column, value) => `${column} >= '${value}'`,
-  isBetween: (column, value, valueTo) => `${column} BETWEEN '${value}' AND '${valueTo}'`,
+  // Date conditions (escaped via escapeSqlString)
+  isBefore: (column, value) => `${column} < '${escapeSqlString(value)}'`,
+  isAfter: (column, value) => `${column} > '${escapeSqlString(value)}'`,
+  isOnOrBefore: (column, value) => `${column} <= '${escapeSqlString(value)}'`,
+  isOnOrAfter: (column, value) => `${column} >= '${escapeSqlString(value)}'`,
+  isBetween: (column, value, valueTo) => `${column} BETWEEN '${escapeSqlString(value)}' AND '${escapeSqlString(valueTo)}'`,
   
   // Empty conditions
   isEmpty: (column) => `(${column} IS NULL OR ${column} = '')`,
@@ -285,13 +286,37 @@ function escapeSqlString(str) {
 }
 
 /**
+ * Escapa wildcards LIKE (% e _) para uso seguro em expressões SQL LIKE.
+ */
+function escapeLikeWildcards(str) {
+  return escapeSqlString(str).replace(/%/g, '[%]').replace(/_/g, '[_]');
+}
+
+/**
+ * Valida e sanitiza um valor numérico para interpolação segura em SQL.
+ * Retorna '0' se o valor não for um número finito válido.
+ */
+function sanitizeNumericValue(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? String(n) : '0';
+}
+
+/**
+ * Escapa um identificador SQL (nome de coluna) usando bracket notation.
+ */
+function escapeColumnIdentifier(column) {
+  if (column === null || column === undefined) return '[]';
+  return `[${String(column).replace(/\]/g, ']]')}]`;
+}
+
+/**
  * Converte uma regra individual para SQL
  */
 function ruleToSQL(rule, columns) {
   if (!rule || rule.type === 'group') return null;
   
   const column = columns?.find(c => c.key === rule.key);
-  const columnName = column?.sqlColumn || rule.key;
+  const columnName = escapeColumnIdentifier(column?.sqlColumn || rule.key);
   const condition = rule.condition;
   const value = rule.value;
   const valueTo = rule.valueTo;

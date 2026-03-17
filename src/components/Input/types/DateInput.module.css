@@ -305,11 +305,11 @@
 /* Theme: dark */
 [data-theme="dark"] .dateInput__dropdown,
 [data-theme="dark"] .dateInput__trigger {
-  --input-bg: var(--modal-background);
-  --input-text: var(--modal-text-main);
-  --input-muted: var(--modal-text-muted);
-  --input-border: var(--modal-border);
-  --input-focus: var(--premium-primary);
+  --input-bg: var(--surface-panel);
+  --input-text: var(--text-primary);
+  --input-muted: var(--text-muted);
+  --input-border: var(--border-color);
+  --input-focus: var(--color-primary);
 }
 
 [data-theme="dark"] .dateInput__dropdown {
@@ -319,11 +319,11 @@
 /* Theme: tokyoNight */
 [data-theme="tokyoNight"] .dateInput__dropdown,
 [data-theme="tokyoNight"] .dateInput__trigger {
-  --input-bg: var(--modal-background);
-  --input-text: var(--modal-text-main);
-  --input-muted: var(--modal-text-muted);
-  --input-border: var(--modal-border);
-  --input-focus: var(--premium-primary);
+  --input-bg: var(--surface-panel);
+  --input-text: var(--text-primary);
+  --input-muted: var(--text-muted);
+  --input-border: var(--border-color);
+  --input-focus: var(--color-primary);
 }
 
 [data-theme="tokyoNight"] .dateInput__dropdown {
@@ -333,9 +333,9 @@
 /* Theme: light - explicit for consistency when in portal */
 [data-theme="light"] .dateInput__dropdown,
 [data-theme="light"] .dateInput__trigger {
-  --input-bg: var(--modal-background);
-  --input-text: var(--modal-text-main);
-  --input-muted: var(--modal-text-muted);
-  --input-border: var(--modal-border);
-  --input-focus: var(--premium-primary);
+  --input-bg: var(--surface-panel);
+  --input-text: var(--text-primary);
+  --input-muted: var(--text-muted);
+  --input-border: var(--border-color);
+  --input-focus: var(--color-primary);
 }

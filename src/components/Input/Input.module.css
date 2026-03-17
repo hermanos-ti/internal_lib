@@ -2,11 +2,11 @@
 
 /* Design tokens */
 .input {
-  --input-bg: var(--table-menu-surface, #ffffff);
-  --input-text: var(--modal-text-main, #0f172a);
-  --input-muted: var(--modal-text-muted, #64748b);
-  --input-border: var(--modal-border, rgba(0, 0, 0, 0.08));
-  --input-focus: var(--premium-primary, #4f46e5);
+  --input-bg: var(--surface-toolbar, #ffffff);
+  --input-text: var(--text-primary, #0f172a);
+  --input-muted: var(--text-muted, #64748b);
+  --input-border: var(--border-color, rgba(0, 0, 0, 0.08));
+  --input-focus: var(--color-primary, #4f46e5);
   --input-radius: 8px;
   --input-height: 40px;
   --input-padding-x: 12px;
@@ -32,13 +32,13 @@
 .inputError .input__file,
 .inputError .input__select,
 .inputError .input__passwordWrapper input {
-  border-color: var(--table-error, #dc2626);
+  border-color: var(--color-error, #dc2626);
 }
 
 .inputError .input__control:focus,
 .inputError .input__select:focus,
 .inputError .input__passwordWrapper input:focus {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--table-error, #dc2626) 15%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error, #dc2626) 15%, transparent);
 }
 
 /* Status (success, warning, error) - light background like Tabela */
@@ -50,8 +50,8 @@
 .inputStatusSuccess .input__passwordWrapper input,
 .inputStatusSuccess .input__sliderWrapper,
 .inputStatusSuccess .input__numberWrapper {
-  background: color-mix(in srgb, var(--table-success, #10b981) 10%, var(--input-bg));
-  border-color: color-mix(in srgb, var(--table-success, #10b981) 30%, var(--input-border));
+  background: color-mix(in srgb, var(--color-success, #10b981) 10%, var(--input-bg));
+  border-color: color-mix(in srgb, var(--color-success, #10b981) 30%, var(--input-border));
 }
 
 .inputStatusWarning .input__control,
@@ -62,8 +62,8 @@
 .inputStatusWarning .input__passwordWrapper input,
 .inputStatusWarning .input__sliderWrapper,
 .inputStatusWarning .input__numberWrapper {
-  background: color-mix(in srgb, var(--table-warning, #f59e0b) 10%, var(--input-bg));
-  border-color: color-mix(in srgb, var(--table-warning, #f59e0b) 30%, var(--input-border));
+  background: color-mix(in srgb, var(--color-warning, #f59e0b) 10%, var(--input-bg));
+  border-color: color-mix(in srgb, var(--color-warning, #f59e0b) 30%, var(--input-border));
 }
 
 .inputStatusError .input__control,
@@ -74,8 +74,8 @@
 .inputStatusError .input__passwordWrapper input,
 .inputStatusError .input__sliderWrapper,
 .inputStatusError .input__numberWrapper {
-  background: color-mix(in srgb, var(--table-error, #dc2626) 8%, var(--input-bg));
-  border-color: color-mix(in srgb, var(--table-error, #dc2626) 35%, var(--input-border));
+  background: color-mix(in srgb, var(--color-error, #dc2626) 8%, var(--input-bg));
+  border-color: color-mix(in srgb, var(--color-error, #dc2626) 35%, var(--input-border));
 }
 
 /* Label */
@@ -842,7 +842,7 @@
 
 .input__error {
   font-size: 12px;
-  color: var(--table-error, #dc2626);
+  color: var(--color-error, #dc2626);
   margin-top: 2px;
   line-height: 1.4;
 }

@@ -3,6 +3,8 @@
 * {
   box-sizing: border-box;
   font-family: "Montserrat", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color-rendering: optimizeQuality;
 }
 
 .tabela__loader {
@@ -14,7 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--modal-overlay);
+  background-color: var(--surface-overlay);
   z-index: 10;
 }
 
@@ -47,8 +49,7 @@
   border-spacing: 0;
   width: 100%;
   min-width: 100%;
-  color: var(--modal-text-main);
-  background-color: var(--table-surface);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -56,24 +57,52 @@
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 0.5rem;
-  padding: 0.6rem 0px;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .tabela__title__icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: var(--active-bg);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.25rem;
-  color: var(--modal-text-main);
+  flex-shrink: 0;
+}
+
+.tabela__title__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.tabela__title__content__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+}
+
+.tabela__title__content__subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .tabela__title__label {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .tabela__header {
   border: none;
-  background: var(--table-header-surface);
+  background: var(--surface-header);
 }
 
 .tabela__header__row {
@@ -82,13 +111,13 @@
 }
 
 .tabela__header__cell {
-  border-top: 1px solid var(--modal-border);
-  border-bottom: 1px solid var(--modal-border);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   padding: 0.75rem;
   text-align: left;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   letter-spacing: 0.035em;
   overflow: hidden;
   margin: 0 auto;
@@ -96,12 +125,12 @@
 
   &:first-child {
     border-top-left-radius: 0.5rem;
-    border-left: 1px solid var(--modal-border);
+    border-left: 1px solid var(--border-color);
   }
 
   &:last-child {
     border-top-right-radius: 0.5rem;
-    border-right: 1px solid var(--modal-border);
+    border-right: 1px solid var(--border-color);
   }
 
   &.tabela__header__cell__sortable{
@@ -117,9 +146,9 @@
 }
 
 .isNastedHeader .tabela__header__row .tabela__header__cell {
-  border-top: 1px solid var(--modal-border);
-  border-bottom: 1px solid var(--modal-border);
-  border-right: 1px solid var(--modal-border);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
     
   &:first-child {
     border-top-left-radius: 0.5rem;
@@ -146,7 +175,7 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   line-height: 1.2 !important;
 }
 
@@ -165,9 +194,10 @@
   display: table-row;
   position: relative;
   border: none;
+  background-color: var(--surface-content);
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg-content);
   }
 
   &:last-child .tabela__body__cell {
@@ -184,7 +214,7 @@
 .tabela__body__groupHeader {
   display: table-row;
   border: none;
-  background: var(--sidebar-hover-bg, rgba(0, 0, 0, 0.04));
+  background: var(--hover-bg-content);
 }
 
 .tabela__body__groupHeader .tabela__body__cell {
@@ -212,8 +242,8 @@
   gap: 0.75rem;
   padding: 0.625rem 0.875rem;
   margin-bottom: 0;
-  background: var(--table-header-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-header);
+  border: 1px solid var(--border-color);
   border-bottom: none;
   border-radius: 0.5rem 0.5rem 0 0;
   min-height: 2.5rem;
@@ -225,7 +255,7 @@
 }
 
 .tabela__group .tabela .tabela__header__row{
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
 }
 
 .tabela__group .tabela .tabela__header__row:first-child .tabela__header__cell:first-child,
@@ -252,7 +282,7 @@
   font-weight: 600;
   font-size: 0.9375rem;
   letter-spacing: 0.01em;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .tabela__group__toggleBtn {
@@ -262,7 +292,7 @@
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--premium-primary, #0066cc);
+  color: var(--color-primary, #0066cc);
   background: transparent;
   border: 1px solid transparent;
   border-radius: 0.375rem;
@@ -270,19 +300,19 @@
 }
 
 .tabela__group__toggleBtn:hover {
-  background: color-mix(in srgb, var(--premium-primary, #0066cc) 12%, transparent);
+  background: var(--hover-bg-header);
 }
 
 .tabela__group__toggleBtn:focus-visible {
-  outline: 2px solid var(--premium-primary, #0066cc);
+  outline: 2px solid var(--color-primary, #0066cc);
   outline-offset: 2px;
 }
 
 .tabela__group__pagination {
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 0.5rem 0.5rem;
-  background: var(--table-footer-surface);
+  background: var(--surface-footer);
 }
 
 .tabela__wrapper.hasScroll .tabela.hasFooter .tabela__body__row:last-child .tabela__body__cell {
@@ -312,7 +342,7 @@
 }
 
 .tabela__calculationRow {
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
 
   &:not(.tabela__calculationRowGrouped) .tabela__calculationCell:first-child {
     border-bottom-left-radius: 0.5rem;
@@ -328,24 +358,24 @@
   text-align: left;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   letter-spacing: 0.035em;
-  border-bottom: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
 }
 
 .tabela__calculationCell:first-child {
-  border-left: 1px solid var(--modal-border);
+  border-left: 1px solid var(--border-color);
 }
 
 .tabela__calculationCell:last-child {
-  border-right: 1px solid var(--modal-border);
+  border-right: 1px solid var(--border-color);
 }
 
 .tabela__calculationCell__label {
   font-size: 0.7rem;
   font-weight: 500;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   margin-right: 0.35rem;
   white-space: nowrap;
 }
@@ -356,7 +386,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .tabela__calculationCell__editBtn {
@@ -368,14 +398,14 @@
   border: none;
   border-radius: 0.25rem;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .tabela__calculationCell__editBtn:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--modal-text-main);
+  background: var(--hover-bg-toolbar);
+  color: var(--text-primary);
 }
 
 .tabela__calculationCell__addBtn {
@@ -385,10 +415,10 @@
   padding: 0.35rem 0.5rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  border: 1px dashed var(--modal-border);
+  border: 1px dashed var(--border-color);
   border-radius: 0.25rem;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
   opacity: 0;
@@ -399,9 +429,9 @@
 }
 
 .tabela__calculationCell__addBtn:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--modal-text-main);
-  border-color: var(--modal-text-muted);
+  background: var(--hover-bg-toolbar);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 .tabela__body__cell {
@@ -409,23 +439,23 @@
   text-align: left;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   letter-spacing: 0.035em;
   overflow: hidden;
   margin: 0 auto;
   white-space: nowrap;
-  border-bottom: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--border-color);
 
   &:not(:first-child) {
     border-left: none;
   }
 
   &:first-child {
-    border-left: 1px solid var(--modal-border);
+    border-left: 1px solid var(--border-color);
   }
 
   &:last-child {
-    border-right: 1px solid var(--modal-border);
+    border-right: 1px solid var(--border-color);
   }
 
   &.tabela__body__cell__editable {
@@ -433,7 +463,7 @@
   }
 
   &.tabela__body__cell__editable:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg-content);
   }
 }
 
@@ -454,17 +484,17 @@
 .tabela__footer__cell {
   display: flex;
   flex: 1 1 200px;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 0;
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
   font-size: 0.875rem;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   letter-spacing: 0.035em;
   margin: 0 auto;
   white-space: nowrap;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
 }
 
 .footerCell__topLeft {
@@ -498,17 +528,17 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 0.5rem 0.5rem;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   flex-shrink: 0;
 }
 
 .tabela__calculationFooter__label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   letter-spacing: 0.035em;
   white-space: nowrap;
   overflow: hidden;
@@ -518,7 +548,7 @@
 .tabela__calculationFooter__value {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   letter-spacing: 0.035em;
   flex-shrink: 0;
 }
@@ -527,8 +557,8 @@
   margin-top: 0.75rem;
   display: flex;
   border-radius: 0.5rem;
-  border: 1px solid var(--modal-border);
-  background: var(--table-footer-surface);
+  border: 1px solid var(--border-color);
+  background: var(--surface-footer);
   flex-shrink: 0;
 }
 
@@ -560,7 +590,7 @@
 }
 
 .tabela__toolbar__top_with_buttons{
-  border-bottom: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .tabela__toolbar__top__left {
@@ -578,7 +608,6 @@
   align-items: center;
   position: relative;
   gap: 0;
-  /* border-bottom: 2px solid var(--modal-border); */
   padding-bottom: 0;
 }
 
@@ -589,7 +618,7 @@
   height: 2px;
   width: 0;
   opacity: 0;
-  background: var(--premium-primary);
+  background: var(--color-primary);
   border-radius: 2px 2px 0 0;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
   pointer-events: none;
@@ -604,7 +633,7 @@
   padding: 0.35rem 0.65rem;
   border: none;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 0.75rem;
   cursor: pointer;
   transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
@@ -613,15 +642,14 @@
   font-family: inherit;
   position: relative;
   white-space: nowrap;
-  /* border-radius: 0.375rem 0.375rem 0 0; */
   
   height: 1.85rem;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 1px 2px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 var(--modal-border);
-  border: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+    inset 0 1px 0 var(--border-color);
+  border: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 
   &:first-child {
     border-top-left-radius: 0.5rem;
@@ -634,43 +662,23 @@
   }
   
   &:hover {
-    background: var(--sidebar-hover-bg);
-    border-color: var(--modal-border);
+    background: var(--hover-bg-toolbar);
+    border-color: var(--border-color);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.06),
       0 2px 3px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 var(--modal-border);
+      inset 0 1px 0 var(--border-color);
   }
 
   &.tabela__toolbar__tableViews__button__active {
-    background: var(--sidebar-hover-bg);
-    border-color: var(--modal-border);
+    background: var(--hover-bg-toolbar);
+    border-color: var(--border-color);
     box-shadow: 
       inset 0 1px 2px rgba(0, 0, 0, 0.08),
       inset 0 1px 3px rgba(0, 0, 0, 0.04);
     transform: translateY(0.5px);
   }
 }
-
-/* .tabela__toolbar__tableViews__button:hover {
-  color: var(--modal-text-main);
-  background: color-mix(in srgb, var(--sidebar-hover-bg) 60%, transparent);
-}
-
-.tabela__toolbar__tableViews__button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 12%, transparent);
-}
-
-.tabela__toolbar__tableViews__button__active {
-  color: var(--premium-primary);
-  background: color-mix(in srgb, var(--premium-primary) 6%, transparent);
-}
-
-.tabela__toolbar__tableViews__button__active:hover {
-  color: var(--premium-primary);
-  background: color-mix(in srgb, var(--premium-primary) 10%, transparent);
-} */
 
 .tabela__toolbar__tableViews__button__label {
   font-size: 0.7rem;
@@ -689,9 +697,9 @@
   justify-content: center;
   min-height: 220px;
   padding: 2rem 1rem;
-  border: 1px dashed var(--modal-border);
+  border: 1px dashed var(--border-color);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--sidebar-hover-bg) 30%, transparent);
+  background: var(--hover-bg-toolbar);
 }
 
 .tabela__view__placeholder__inner {
@@ -704,25 +712,25 @@
 
 .tabela__view__placeholder__icon {
   font-size: 2rem;
-  color: color-mix(in srgb, var(--modal-text-muted) 50%, transparent);
+  color: color-mix(in srgb, var(--text-muted) 50%, transparent);
   margin-bottom: 0.25rem;
 }
 
 .tabela__view__placeholder__title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .tabela__view__placeholder__subtitle {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   padding: 0.15rem 0.6rem;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-  color: var(--premium-primary);
+  background: var(--selected-bg-toolbar);
+  color: var(--color-primary);
 }
 
 .tabela__toolbar__bottom__left {
@@ -735,7 +743,7 @@
 }
 
 .tabela__toolbar__bottom__left__first_item {
-  border-right: 2px solid var(--modal-border);
+  border-right: 2px solid var(--border-color);
   padding-right: 0.6rem;
   flex-shrink: 0;
 
@@ -770,10 +778,10 @@
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 1px 2px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 var(--modal-border);
-  border: 1px solid var(--modal-border);
+    inset 0 1px 0 var(--border-color);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   padding: 0;
   margin: 0;
   transition: all 0.12s ease;
@@ -782,17 +790,17 @@
   position: relative;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
-    border-color: var(--modal-border);
+    background: var(--hover-bg-toolbar);
+    border-color: var(--border-color);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.06),
       0 2px 3px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 var(--modal-border);
+      inset 0 1px 0 var(--border-color);
   }
 
   &:active {
-    background: var(--sidebar-hover-bg);
-    border-color: var(--modal-border);
+    background: var(--active-bg-toolbar);
+    border-color: var(--border-color);
     box-shadow: 
       inset 0 1px 2px rgba(0, 0, 0, 0.08),
       inset 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -805,10 +813,10 @@
 
   &:focus-visible {
     outline: none;
-    border-color: var(--premium-primary);
+    border-color: var(--color-primary);
     box-shadow: 
-      0 0 0 3px color-mix(in srgb, var(--premium-primary) 12%, transparent),
-      inset 0 1px 0 var(--modal-border);
+      0 0 0 3px var(--focus-ring),
+      inset 0 1px 0 var(--border-color);
   }
 
   &.without_border {
@@ -818,8 +826,8 @@
   }
 
   &.without_border:hover {
-    background: var(--sidebar-hover-bg);
-    border: 1px solid var(--modal-border);
+    background: var(--hover-bg-toolbar);
+    border: 1px solid var(--border-color);
   }
 }
 
@@ -832,18 +840,18 @@
 
 .tabela__toolbar__button__icon {
   font-size: 13px;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   transition: color 0.15s ease;
   line-height: 1.2 !important;
   flex-shrink: 0;
 }
 
 .tabela__toolbar__button:hover .tabela__toolbar__button__icon {
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .tabela__toolbar__button__label {
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -859,7 +867,7 @@
 }
 
 .tabela__toolbar__search__icon{
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 13px;
   transition: color 0.15s ease;
   line-height: 1.2 !important;
@@ -882,7 +890,7 @@
   outline: none;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   background: transparent;
 
   transition: width 0.2s ease;
@@ -910,7 +918,7 @@
   position: absolute;
   width: 300px;
   max-height: 420px;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -953,14 +961,14 @@
 
 .columnSelectionMenu__header {
   padding: 0.5rem;
-  border-bottom: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .columnSelectionMenu__header__title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   padding: 0.35rem 0.65rem;
 }
 
@@ -979,7 +987,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -987,12 +995,12 @@
 }
 
 .settingsMenu__backBtn:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--modal-text-main);
+  background: var(--hover-bg-toolbar);
+  color: var(--text-primary);
 }
 
 .settingsMenu__backBtn:active {
-  background: var(--modal-border);
+  background: var(--active-bg-toolbar);
 }
 
 .columnSelectionMenu__searchWrapper {
@@ -1002,31 +1010,31 @@
 .columnSelectionMenu__search {
   width: 100%;
   padding: 0.35rem 0.65rem;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.875rem;
   font-family: inherit;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
   transition: all 0.2s ease;
   outline: none;
 
   &::placeholder {
-    color: var(--modal-text-muted);
+    color: var(--text-muted);
   }
 
   &:hover {
-    border-color: var(--modal-border);
+    border-color: var(--border-color);
   }
 
   &:focus {
-    border-color: var(--premium-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--premium-primary) 12%, transparent);
-    background: var(--table-menu-surface);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+    background: var(--surface-toolbar);
   }
 
   &:focus + .columnSelectionMenu__searchIcon {
-    color: var(--premium-primary);
+    color: var(--color-primary);
   }
 }
 
@@ -1035,7 +1043,7 @@
   overflow-y: auto;
   padding: 0.5rem;
   scrollbar-width: thin;
-  scrollbar-color: var(--premium-primary) var(--premium-border);
+  scrollbar-color: var(--color-primary) var(--border-color);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -1046,12 +1054,12 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--premium-primary);
+    background: var(--color-primary);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: var(--premium-secondary);
+    background: var(--color-secondary);
   }
 }
 
@@ -1068,23 +1076,23 @@
 }
 
 .columnSelectionMenu__item:hover {
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg-toolbar);
 }
 
 .columnSelectionMenu__item:active {
-  background: var(--modal-border);
+  background: var(--active-bg-toolbar);
   transform: scale(0.99);
 }
 
 .columnSelectionMenu__item.selected {
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-  color: var(--premium-primary);
+  background: var(--selected-bg-toolbar);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
 .columnSelectionMenu__item.selected .columnSelectionMenu__item__icon,
 .columnSelectionMenu__item.selected .columnSelectionMenu__item__label {
-  color: var(--premium-primary);
+  color: var(--color-primary);
 }
 
 button.columnSelectionMenu__item {
@@ -1097,7 +1105,7 @@ button.columnSelectionMenu__item {
 }
 
 .columnSelectionMenu__item__icon {
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   font-size: 0.875rem;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -1108,11 +1116,11 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .columnSelectionMenu__item__check {
-  color: var(--premium-primary);
+  color: var(--color-primary);
   font-size: 0.875rem;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -1128,7 +1136,7 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: center;
   padding: 32px 16px;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
 }
 
 .columnSelectionMenu__empty__icon {
@@ -1145,7 +1153,7 @@ button.columnSelectionMenu__item {
 .visibleColumnsModal__sectionTitle {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.5rem 0.75rem 0.25rem;
@@ -1163,8 +1171,8 @@ button.columnSelectionMenu__item {
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-top: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 .visibleColumnsModal__footer__actions .columnSelectionMenu__footer__button {
   flex: 1;
@@ -1177,7 +1185,7 @@ button.columnSelectionMenu__item {
   min-width: 280px;
   max-width: 320px;
   max-height: 420px;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   border-radius: 12px;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1198,14 +1206,14 @@ button.columnSelectionMenu__item {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-bottom: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .visibleColumnsModal__header__title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   padding: 0.35rem 0.65rem;
 }
 
@@ -1219,18 +1227,18 @@ button.columnSelectionMenu__item {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .visibleColumnsModal__closeBtn:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--modal-text-main);
+  background: var(--hover-bg-toolbar);
+  color: var(--text-primary);
 }
 
 .visibleColumnsModal__closeBtn:active {
-  background: var(--modal-border);
+  background: var(--active-bg-toolbar);
 }
 
 .visibleColumnsModal__body {
@@ -1240,7 +1248,7 @@ button.columnSelectionMenu__item {
   gap: 0.5rem;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--premium-primary) var(--premium-border);
+  scrollbar-color: var(--color-primary) var(--border-color);
 }
 
 .visibleColumnsModal__body::-webkit-scrollbar {
@@ -1248,7 +1256,7 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__body::-webkit-scrollbar-thumb {
-  background: var(--premium-primary);
+  background: var(--color-primary);
   border-radius: 3px;
 }
 
@@ -1269,7 +1277,7 @@ button.columnSelectionMenu__item {
 .visibleColumnsModal__sectionLabel {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1281,22 +1289,22 @@ button.columnSelectionMenu__item {
   padding: 0.35rem 0.65rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .visibleColumnsModal__sectionToggle:hover {
-  background: var(--sidebar-hover-bg);
-  border-color: var(--modal-border);
-  color: var(--modal-text-main);
+  background: var(--hover-bg-toolbar);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 .visibleColumnsModal__sectionToggle:active {
-  background: var(--modal-border);
+  background: var(--active-bg-toolbar);
 }
 
 .visibleColumnsModal__list {
@@ -1318,11 +1326,11 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__item:hover {
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg-toolbar);
 }
 
 .visibleColumnsModal__item:active {
-  background: var(--modal-border);
+  background: var(--active-bg-toolbar);
 }
 
 .visibleColumnsModal__checkboxWrap {
@@ -1333,9 +1341,9 @@ button.columnSelectionMenu__item {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   transition: all 0.15s ease;
 }
 
@@ -1350,13 +1358,13 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__item input:checked + .visibleColumnsModal__checkboxWrap {
-  background: var(--premium-primary);
-  border-color: var(--premium-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
 }
 
 .visibleColumnsModal__item input:focus-visible + .visibleColumnsModal__checkboxWrap {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 25%, transparent);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .visibleColumnsModal__checkboxWrap__check {
@@ -1374,7 +1382,7 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__itemIcon {
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   font-size: 0.875rem;
   flex-shrink: 0;
   line-height: 0.9;
@@ -1384,7 +1392,7 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1395,7 +1403,7 @@ button.columnSelectionMenu__item {
 
 .visibleColumnsModal__itemLabelBadge {
   font-size: 0.65rem;
-  color: var(--premium-primary, #0066cc);
+  color: var(--color-primary, #0066cc);
   flex-shrink: 0;
 }
 
@@ -1417,19 +1425,19 @@ button.columnSelectionMenu__item {
 }
 
 .calculationModal__item:hover {
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg-toolbar);
 }
 
 .calculationModal__item:active {
-  background: var(--modal-border);
+  background: var(--active-bg-toolbar);
 }
 
 .calculationModal__itemSelected {
-  background: var(--sidebar-hover-bg);
+  background: var(--selected-bg-toolbar);
 }
 
 .calculationModal__itemCheck {
-  color: var(--premium-primary);
+  color: var(--color-primary);
   font-size: 0.875rem;
   flex-shrink: 0;
   margin-left: auto;
@@ -1439,8 +1447,8 @@ button.columnSelectionMenu__item {
   display: flex;
   justify-content: flex-end;
   padding: 0.5rem;
-  border-top: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .visibleColumnsModal__footerBtn {
@@ -1451,7 +1459,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   background: transparent;
   border: none;
   border-radius: 0.5rem;
@@ -1460,26 +1468,26 @@ button.columnSelectionMenu__item {
 }
 
 .visibleColumnsModal__footerBtn:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--modal-text-main);
+  background: var(--hover-bg-toolbar);
+  color: var(--text-primary);
 }
 
 .visibleColumnsModal__footerBtn:active {
-  background: var(--modal-border);
+  background: var(--active-bg-toolbar);
 }
 
 .visibleColumnsModal__empty {
   padding: 1rem 0.5rem;
   text-align: center;
   font-size: 0.8125rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .columnSelectionMenu__footer {
   padding: 0.5rem;
-  border-top: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .columnSelectionMenu__footer__button {
@@ -1494,17 +1502,17 @@ button.columnSelectionMenu__item {
   user-select: none;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 
   &:active {
-    background: var(--modal-border);
+    background: var(--border-color);
     transform: scale(0.99);
   }
 }
 
 .columnSelectionMenu__footer__button__icon {
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 0.875rem;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -1515,7 +1523,7 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1542,7 +1550,7 @@ button.columnSelectionMenu__item {
   position: absolute;
   inset: 0;
   border-radius: 8px;
-  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), color-mix(in srgb, var(--premium-primary) 15%, transparent) 0%, transparent 70%);
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), color-mix(in srgb, var(--color-primary) 15%, transparent) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -1556,7 +1564,7 @@ button.columnSelectionMenu__item {
   position: absolute;
   width: 320px;
   max-height: 420px;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1580,7 +1588,7 @@ button.columnSelectionMenu__item {
   overflow-y: auto;
   padding: 0.5rem;
   scrollbar-width: thin;
-  scrollbar-color: var(--premium-primary) var(--premium-border);
+  scrollbar-color: var(--color-primary) var(--border-color);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -1591,12 +1599,12 @@ button.columnSelectionMenu__item {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--premium-primary);
+    background: var(--color-primary);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: var(--premium-secondary);
+    background: var(--color-secondary);
   }
 }
 
@@ -1619,14 +1627,14 @@ button.columnSelectionMenu__item {
 
   &.dragging {
     opacity: 0.5;
-    background: var(--modal-border);
-    border-color: var(--modal-border);
+    background: var(--border-color);
+    border-color: var(--border-color);
     cursor: grabbing;
   }
 
   &.dragOver {
-    border-color: var(--premium-primary);
-    background: color-mix(in srgb, var(--premium-primary) 4%, transparent);
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 4%, transparent);
   }
 }
 
@@ -1647,7 +1655,7 @@ button.columnSelectionMenu__item {
   justify-content: center;
   min-width: 1.35rem;
   height: 1.85rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: grab;
   border-radius: 4px;
   transition: all 0.15s ease;
@@ -1671,27 +1679,27 @@ button.columnSelectionMenu__item {
   min-width: 0;
   padding: 0.3rem 0.5rem;
   height: 1.85rem;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
 
   &:hover {
-    border-color: var(--modal-border);
-    background: var(--table-menu-surface);
+    border-color: var(--border-color);
+    background: var(--surface-toolbar);
   }
 
   &:focus {
     outline: none;
-    border-color: var(--premium-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 }
 
 .sortMenu__item__columnSelect__icon {
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 12px;
   flex-shrink: 0;
   line-height: 1 !important;
@@ -1700,7 +1708,7 @@ button.columnSelectionMenu__item {
 .sortMenu__item__columnSelect__label {
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1708,7 +1716,7 @@ button.columnSelectionMenu__item {
 }
 
 .sortMenu__item__columnSelect__chevron {
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 10px;
   flex-shrink: 0;
   line-height: 1 !important;
@@ -1720,45 +1728,45 @@ button.columnSelectionMenu__item {
   justify-content: center;
   min-width: 1.85rem;
   height: 1.85rem;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
-  border-bottom-color: var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
+  border-bottom-color: var(--border-color);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.12s ease;
   flex-shrink: 0;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 var(--modal-border);
+    inset 0 1px 0 var(--border-color);
 
   &:hover {
-    background: var(--table-menu-surface);
-    border-color: var(--modal-border);
+    background: var(--surface-toolbar);
+    border-color: var(--border-color);
   }
 
   &:active {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     transform: translateY(0.5px);
   }
 
   &.asc {
-    color: var(--table-success);
-    border-color: var(--table-success);
-    background: var(--table-success-bg);
+    color: var(--color-success);
+    border-color: var(--color-success);
+    background: var(--color-success-bg);
 
     &:hover {
-      background: var(--table-success-bg);
+      background: var(--color-success-bg);
     }
   }
 
   &.desc {
-    color: var(--table-warning);
-    border-color: var(--table-warning);
-    background: var(--table-warning-bg);
+    color: var(--color-warning);
+    border-color: var(--color-warning);
+    background: var(--color-warning-bg);
 
     &:hover {
-      background: var(--table-warning-bg);
+      background: var(--color-warning-bg);
     }
   }
 }
@@ -1774,7 +1782,7 @@ button.columnSelectionMenu__item {
   justify-content: center;
   min-width: 1.85rem;
   height: 1.85rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   background: transparent;
   border: none;
   border-radius: 4px;
@@ -1783,12 +1791,12 @@ button.columnSelectionMenu__item {
   flex-shrink: 0;
 
   &:hover {
-    color: var(--table-error);
-    background: var(--table-error-bg);
+    color: var(--color-error);
+    background: var(--color-error-bg);
   }
 
   &:active {
-    background: var(--table-error-bg);
+    background: var(--color-error-bg);
     transform: scale(0.95);
   }
 }
@@ -1804,7 +1812,7 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
 }
 
 .sortMenu__empty__icon {
@@ -1820,8 +1828,8 @@ button.columnSelectionMenu__item {
 
 .sortMenu__footer {
   padding: 0.5rem;
-  border-top: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -1840,45 +1848,45 @@ button.columnSelectionMenu__item {
   border: 1px solid transparent;
   background: transparent;
   width: 100%;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 
   &:active {
-    background: var(--modal-border);
+    background: var(--border-color);
     transform: scale(0.99);
   }
 
   &.primary {
-    background: var(--table-menu-surface);
-    border: 1px solid var(--modal-border);
-    border-bottom-color: var(--modal-border);
+    background: var(--surface-toolbar);
+    border: 1px solid var(--border-color);
+    border-bottom-color: var(--border-color);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 var(--modal-border);
+      inset 0 1px 0 var(--border-color);
 
     &:hover {
-      background: var(--table-menu-surface);
-      border-color: var(--modal-border);
+      background: var(--surface-toolbar);
+      border-color: var(--border-color);
     }
 
     &:active {
-      background: var(--sidebar-hover-bg);
+      background: var(--hover-bg);
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     }
   }
 
   &.danger {
-    color: var(--table-error);
+    color: var(--color-error);
     
     &:hover {
-      background: var(--table-error-bg);
+      background: var(--color-error-bg);
     }
 
     &:active {
-      background: var(--table-error-bg);
+      background: var(--color-error-bg);
     }
   }
 }
@@ -1911,7 +1919,7 @@ button.columnSelectionMenu__item {
 .filterMenu {
   position: absolute;
   width: 280px;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1935,8 +1943,8 @@ button.columnSelectionMenu__item {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 0.75rem;
-  border-bottom: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .filterMenu__header__icon {
@@ -1946,7 +1954,7 @@ button.columnSelectionMenu__item {
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 6px;
-  background: linear-gradient(135deg, var(--premium-primary) 0%, var(--premium-accent) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
   color: #fff;
   font-size: 0.7rem;
 }
@@ -1955,7 +1963,7 @@ button.columnSelectionMenu__item {
   flex: 1;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1976,14 +1984,14 @@ button.columnSelectionMenu__item {
   border-radius: 4px;
   border: none;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   font-size: 0.7rem;
   transition: all 0.15s ease;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
-    color: var(--modal-text-main);
+    background: var(--hover-bg);
+    color: var(--text-primary);
   }
 }
 
@@ -1993,8 +2001,8 @@ button.columnSelectionMenu__item {
   right: 0;
   margin-top: 0.25rem;
   min-width: 200px;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2012,7 +2020,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2020,14 +2028,14 @@ button.columnSelectionMenu__item {
   text-align: left;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 
   &.danger {
-    color: var(--table-error);
+    color: var(--color-error);
 
     &:hover {
-      background: var(--table-error-bg);
+      background: var(--color-error-bg);
     }
   }
 }
@@ -2054,7 +2062,7 @@ button.columnSelectionMenu__item {
 .filterMenu__field__label {
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -2064,10 +2072,10 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
-  border-bottom-color: var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
+  border-bottom-color: var(--border-color);
   border-radius: 6px;
   outline: none;
   cursor: pointer;
@@ -2077,18 +2085,18 @@ button.columnSelectionMenu__item {
   background-position: right 0.5rem center;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 var(--modal-border);
+    inset 0 1px 0 var(--border-color);
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: var(--table-menu-surface);
-    border-color: var(--modal-border);
+    background-color: var(--surface-toolbar);
+    border-color: var(--border-color);
   }
 
   &:focus {
-    border-color: var(--premium-primary);
+    border-color: var(--color-primary);
     box-shadow: 
-      0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent),
       0 1px 2px rgba(0, 0, 0, 0.04);
   }
 }
@@ -2099,26 +2107,26 @@ button.columnSelectionMenu__item {
   padding: 0 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   outline: none;
 
   &::placeholder {
-    color: var(--modal-text-muted);
+    color: var(--text-muted);
     font-weight: 400;
   }
 
   &:hover {
-    background-color: var(--table-menu-surface);
-    border-color: var(--modal-border);
+    background-color: var(--surface-toolbar);
+    border-color: var(--border-color);
   }
 
   &:focus {
-    border-color: var(--premium-primary);
+    border-color: var(--color-primary);
     box-shadow: 
-      0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent),
       0 1px 2px rgba(0, 0, 0, 0.04);
   }
 }
@@ -2131,7 +2139,7 @@ button.columnSelectionMenu__item {
 
 .filterMenu__field__range__separator {
   font-size: 0.7rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -2140,8 +2148,8 @@ button.columnSelectionMenu__item {
   flex-direction: column;
   gap: 0.375rem;
   padding: 0.5rem 0.75rem 0.625rem;
-  border-top: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .filterMenu__footer__button {
@@ -2152,7 +2160,7 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.625rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -2162,61 +2170,61 @@ button.columnSelectionMenu__item {
   user-select: none;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 
   &:active {
-    background: var(--modal-border);
+    background: var(--border-color);
     transform: scale(0.99);
   }
 
   &.primary {
-    background: var(--table-menu-surface);
-    border: 1px solid var(--modal-border);
-    border-bottom-color: var(--modal-border);
+    background: var(--surface-toolbar);
+    border: 1px solid var(--border-color);
+    border-bottom-color: var(--border-color);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 var(--modal-border);
+      inset 0 1px 0 var(--border-color);
 
     &:hover {
-      background: var(--table-menu-surface);
-      border-color: var(--modal-border);
+      background: var(--surface-toolbar);
+      border-color: var(--border-color);
     }
 
     &:active {
-      background: var(--sidebar-hover-bg);
+      background: var(--hover-bg);
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     }
   }
 
   &.secondary {
-    background: var(--table-menu-surface);
-    border: 1px solid var(--modal-border);
-    border-bottom-color: var(--modal-border);
+    background: var(--surface-toolbar);
+    border: 1px solid var(--border-color);
+    border-bottom-color: var(--border-color);
     box-shadow: 
       0 1px 2px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 var(--modal-border);
+      inset 0 1px 0 var(--border-color);
 
     &:hover {
-      background: var(--table-menu-surface);
-      border-color: var(--modal-border);
+      background: var(--surface-toolbar);
+      border-color: var(--border-color);
     }
 
     &:active {
-      background: var(--sidebar-hover-bg);
+      background: var(--hover-bg);
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
     }
   }
 
   &.danger {
-    color: var(--table-error);
+    color: var(--color-error);
     
     &:hover {
-      background: var(--table-error-bg);
+      background: var(--color-error-bg);
     }
 
     &:active {
-      background: var(--table-error-bg);
+      background: var(--color-error-bg);
     }
   }
 }
@@ -2234,7 +2242,7 @@ button.columnSelectionMenu__item {
   position: absolute;
   width: 580px;
   max-height: 520px;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   border-radius: 12px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2258,14 +2266,14 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: space-between;
   padding: 0.625rem 0.75rem;
-  border-bottom: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .advancedFilterMenu__header__title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .advancedFilterMenu__header__close {
@@ -2277,13 +2285,13 @@ button.columnSelectionMenu__item {
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
-    color: var(--modal-text-main);
+    background: var(--hover-bg);
+    color: var(--text-primary);
   }
 }
 
@@ -2292,7 +2300,7 @@ button.columnSelectionMenu__item {
   overflow-y: auto;
   padding: 0.5rem;
   scrollbar-width: thin;
-  scrollbar-color: var(--premium-primary) var(--premium-border);
+  scrollbar-color: var(--color-primary) var(--border-color);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -2303,7 +2311,7 @@ button.columnSelectionMenu__item {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--premium-primary);
+    background: var(--color-primary);
     border-radius: 3px;
   }
 }
@@ -2315,7 +2323,7 @@ button.columnSelectionMenu__item {
   justify-content: center;
   gap: 0.5rem;
   padding: 1.5rem 1rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
 }
 
 .advancedFilterMenu__empty__icon {
@@ -2353,9 +2361,9 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--premium-primary);
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--premium-primary) 20%, transparent);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -2363,22 +2371,22 @@ button.columnSelectionMenu__item {
   appearance: none;
 
   &:hover {
-    background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
-    border-color: color-mix(in srgb, var(--premium-primary) 30%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 20%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
   }
 
   &.static {
     cursor: default;
-    background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 
     &:hover {
-      background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-      border-color: color-mix(in srgb, var(--premium-primary) 20%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
   }
 }
@@ -2394,22 +2402,22 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   transition: all 0.15s ease;
 }
 
 .advancedFilterMenu__ruleRow .select__trigger:hover {
-  border-color: var(--modal-border);
-  background: var(--table-menu-surface);
+  border-color: var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .advancedFilterMenu__ruleRow .select__trigger:focus {
   outline: none;
-  border-color: var(--premium-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 /* Estilo específico para select de coluna */
@@ -2432,14 +2440,14 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--premium-primary);
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--premium-primary) 20%, transparent);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 .advancedFilterMenu__ruleRow .select.advancedFilterMenu__logicSelect .select__trigger:hover {
-  background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
-  border-color: color-mix(in srgb, var(--premium-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 /* Value input */
@@ -2450,25 +2458,25 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   transition: all 0.15s ease;
 
   &::placeholder {
-    color: var(--modal-text-muted);
+    color: var(--text-muted);
     font-weight: 400;
   }
 
   &:hover {
-    border-color: var(--modal-border);
+    border-color: var(--border-color);
   }
 
   &:focus {
     outline: none;
-    border-color: var(--premium-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
   &.hidden {
@@ -2484,31 +2492,31 @@ button.columnSelectionMenu__item {
   padding: 0.3rem 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   transition: all 0.15s ease;
 
   &::placeholder {
-    color: var(--modal-text-muted);
+    color: var(--text-muted);
     font-weight: 400;
   }
 
   &:hover {
-    border-color: var(--modal-border);
+    border-color: var(--border-color);
   }
 
   &:focus {
     outline: none;
-    border-color: var(--premium-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 }
 
 .advancedFilterMenu__rangeSeparator {
   font-size: 0.7rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -2522,7 +2530,7 @@ button.columnSelectionMenu__item {
   border-radius: 4px;
   border: none;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   margin-left: auto;
   flex-shrink: 0;
@@ -2531,8 +2539,8 @@ button.columnSelectionMenu__item {
   position: relative;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
-    color: var(--modal-text-muted);
+    background: var(--hover-bg);
+    color: var(--text-muted);
   }
 }
 
@@ -2540,8 +2548,8 @@ button.columnSelectionMenu__item {
 .advancedFilterMenu__actionDropdown {
   position: absolute;
   min-width: 140px;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2559,7 +2567,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2567,14 +2575,14 @@ button.columnSelectionMenu__item {
   text-align: left;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 
   &.danger {
-    color: var(--table-error);
+    color: var(--color-error);
 
     &:hover {
-      background: var(--table-error-bg);
+      background: var(--color-error-bg);
     }
   }
 }
@@ -2589,9 +2597,9 @@ button.columnSelectionMenu__item {
 .advancedFilterMenu__group {
   margin: 0.375rem 0;
   padding: 0.5rem;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
-  border-left: 3px solid var(--premium-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--color-primary);
   border-radius: 6px;
 }
 
@@ -2612,9 +2620,9 @@ button.columnSelectionMenu__item {
   padding: 0.375rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--premium-primary);
+  color: var(--color-primary);
   background: transparent;
-  border: 1px dashed var(--modal-border);
+  border: 1px dashed var(--border-color);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -2622,8 +2630,8 @@ button.columnSelectionMenu__item {
   margin-top: 0.375rem;
 
   &:hover {
-    background: color-mix(in srgb, var(--premium-primary) 4%, transparent);
-    border-color: var(--premium-primary);
+    background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+    border-color: var(--color-primary);
   }
 }
 
@@ -2638,8 +2646,8 @@ button.columnSelectionMenu__item {
   left: 0;
   margin-top: 0.25rem;
   min-width: 160px;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2657,7 +2665,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2665,7 +2673,7 @@ button.columnSelectionMenu__item {
   text-align: left;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 }
 
@@ -2673,7 +2681,7 @@ button.columnSelectionMenu__item {
   font-size: 0.7rem;
   width: 1rem;
   text-align: center;
-  color: var(--premium-primary);
+  color: var(--color-primary);
 }
 
 /* Footer */
@@ -2683,8 +2691,8 @@ button.columnSelectionMenu__item {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
 }
 
 .advancedFilterMenu__footer__left {
@@ -2705,46 +2713,46 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
-  border-bottom-color: var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
+  border-bottom-color: var(--border-color);
   border-radius: 6px;
   cursor: pointer;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 var(--modal-border);
+    inset 0 1px 0 var(--border-color);
   transition: all 0.15s ease;
 
   &:hover {
-    background: var(--table-menu-surface);
-    border-color: var(--modal-border);
+    background: var(--surface-toolbar);
+    border-color: var(--border-color);
   }
 
   &:active {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   &.primary {
-    background: linear-gradient(to bottom, var(--premium-primary) 0%, var(--premium-primary) 100%);
+    background: linear-gradient(to bottom, var(--color-primary) 0%, var(--color-primary) 100%);
     color: #fff;
-    border-color: var(--premium-primary);
+    border-color: var(--color-primary);
     box-shadow: 
-      0 1px 2px color-mix(in srgb, var(--premium-primary) 30%, transparent),
-      inset 0 1px 0 var(--modal-border);
+      0 1px 2px color-mix(in srgb, var(--color-primary) 30%, transparent),
+      inset 0 1px 0 var(--border-color);
 
     &:hover {
-      background: var(--premium-primary);
+      background: var(--color-primary);
     }
   }
 
   &.danger {
-    color: var(--table-error);
+    color: var(--color-error);
 
     &:hover {
-      background: var(--table-error-bg);
-      border-color: var(--table-error);
+      background: var(--color-error-bg);
+      border-color: var(--color-error);
     }
   }
 }
@@ -2771,9 +2779,9 @@ button.columnSelectionMenu__item {
   padding: 0 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -2782,18 +2790,18 @@ button.columnSelectionMenu__item {
   outline: none;
 
   &:hover:not(:disabled) {
-    border-color: var(--modal-border);
-    background: var(--table-menu-surface);
+    border-color: var(--border-color);
+    background: var(--surface-toolbar);
   }
 
   &:focus:not(:disabled) {
-    border-color: var(--premium-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
   &.open {
-    border-color: var(--premium-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--premium-primary) 10%, transparent);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
   &:disabled {
@@ -2807,17 +2815,17 @@ button.columnSelectionMenu__item {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 
   &:empty::before {
     content: attr(placeholder);
-    color: var(--modal-text-muted);
+    color: var(--text-muted);
   }
 }
 
 .select__trigger__icon {
   font-size: 0.65rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   transition: transform 0.2s ease;
   margin-left: 0.5rem;
   flex-shrink: 0;
@@ -2835,8 +2843,8 @@ button.columnSelectionMenu__item {
   margin-top: 0.25rem;
   max-height: 200px;
   overflow-y: auto;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -2844,7 +2852,7 @@ button.columnSelectionMenu__item {
   z-index: 1000;
   animation: menuSlideIn 0.15s ease-out forwards;
   scrollbar-width: thin;
-  scrollbar-color: var(--premium-primary) var(--premium-border);
+  scrollbar-color: var(--color-primary) var(--border-color);
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -2855,7 +2863,7 @@ button.columnSelectionMenu__item {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--premium-primary);
+    background: var(--color-primary);
     border-radius: 3px;
   }
 }
@@ -2867,31 +2875,31 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 
   &:hover,
   &.highlighted {
-    background: var(--sidebar-hover-bg);
-    color: var(--modal-text-main);
+    background: var(--hover-bg);
+    color: var(--text-primary);
   }
 
   &.selected {
-    background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-    color: var(--premium-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    color: var(--color-primary);
     font-weight: 600;
   }
 
   &.selected.highlighted {
-    background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 }
 
 .select__option__check {
   font-size: 0.7rem;
-  color: var(--premium-primary);
+  color: var(--color-primary);
   margin-left: 0.5rem;
 }
 
@@ -2904,15 +2912,15 @@ button.columnSelectionMenu__item {
   padding: 0.5rem;
   text-align: center;
   vertical-align: middle;
-  border-top: 1px solid var(--modal-border);
-  border-bottom: 1px solid var(--modal-border);
-  border-left: 1px solid var(--modal-border);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
   border-top-left-radius: 0.5rem;
   user-select: none;
 }
 
 .isNastedHeader .tabela__header__row .tabela__selection__headerCell {
-  border-right: 1px solid var(--modal-border);
+  border-right: 1px solid var(--border-color);
 }
 
 .tabela__selection__headerBtn {
@@ -2924,27 +2932,27 @@ button.columnSelectionMenu__item {
   padding: 0.25rem;
   cursor: pointer;
   font-size: 1rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   border-radius: 0.25rem;
   transition: color 0.15s ease, background 0.15s ease;
 
   &:hover {
-    color: var(--premium-primary);
-    background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--premium-primary);
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
 }
 
 .tabela__selection__headerBtn__partial {
-  color: var(--premium-primary);
+  color: var(--color-primary);
 }
 
 .tabela__selection__headerBtn__allSelected {
-  color: var(--premium-primary);
+  color: var(--color-primary);
 }
 
 .tabela__selection__cell {
@@ -2954,8 +2962,8 @@ button.columnSelectionMenu__item {
   padding: 0.5rem;
   text-align: center;
   vertical-align: middle;
-  border-bottom: 1px solid var(--modal-border);
-  border-left: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
   user-select: none;
 }
 
@@ -2980,29 +2988,29 @@ button.columnSelectionMenu__item {
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   transition: color 0.15s ease;
 }
 
 .tabela__selection__checkbox:checked + .tabela__selection__checkmark {
-  color: var(--premium-primary);
+  color: var(--color-primary);
 }
 
 .tabela__selection__label:hover .tabela__selection__checkmark {
-  color: var(--premium-primary);
+  color: var(--color-primary);
 }
 
 .tabela__body__row__selected {
-  background: color-mix(in srgb, var(--premium-primary) 6%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
 
   &:hover {
-    background: color-mix(in srgb, var(--premium-primary) 10%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 }
 
 .tabela__body__row__selected .tabela__body__cell,
 .tabela__body__row__selected .tabela__selection__cell {
-  border-bottom-color: color-mix(in srgb, var(--premium-primary) 18%, var(--modal-border));
+  border-bottom-color: color-mix(in srgb, var(--color-primary) 18%, var(--border-color));
 }
 
 .tabela__group .tabela .tabela__header__row:first-child .tabela__selection__headerCell {
@@ -3058,17 +3066,17 @@ button.columnSelectionMenu__item {
 
 .tabela__body__row__success .tabela__body__cell,
 .tabela__body__row__success .tabela__selection__cell {
-  border-bottom-color: color-mix(in srgb, var(--status-success, #22c55e) 20%, var(--modal-border));
+  border-bottom-color: color-mix(in srgb, var(--status-success, #22c55e) 20%, var(--border-color));
 }
 
 .tabela__body__row__warning .tabela__body__cell,
 .tabela__body__row__warning .tabela__selection__cell {
-  border-bottom-color: color-mix(in srgb, var(--status-warning, #eab308) 20%, var(--modal-border));
+  border-bottom-color: color-mix(in srgb, var(--status-warning, #eab308) 20%, var(--border-color));
 }
 
 .tabela__body__row__error .tabela__body__cell,
 .tabela__body__row__error .tabela__selection__cell {
-  border-bottom-color: color-mix(in srgb, var(--status-error, #ef4444) 20%, var(--modal-border));
+  border-bottom-color: color-mix(in srgb, var(--status-error, #ef4444) 20%, var(--border-color));
 }
 
 /* ── Cell-specific status highlights ── */
@@ -3090,8 +3098,8 @@ button.columnSelectionMenu__item {
 .tabela__body__cell__editing {
   padding: 0;
   overflow: visible;
-  background: var(--modal-background, #fff);
-  border-bottom-color: var(--modal-border);
+  background: var(--surface-panel, #fff);
+  border-bottom-color: var(--border-color);
 }
 
 /* ── Text edit input ── */
@@ -3101,10 +3109,10 @@ button.columnSelectionMenu__item {
   height: 100%;
   min-height: 2.5rem;
   padding: 0.5rem 0.75rem;
-  border: 2px solid var(--premium-primary);
+  border: 2px solid var(--color-primary);
   border-radius: 0;
-  background: var(--modal-background, #fff);
-  color: var(--modal-text-main);
+  background: var(--surface-panel, #fff);
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 500;
   font-family: inherit;
@@ -3128,10 +3136,10 @@ button.columnSelectionMenu__item {
   width: 100%;
   min-height: 2.5rem;
   padding: 0.5rem 0.75rem;
-  border: 2px solid var(--premium-primary);
+  border: 2px solid var(--color-primary);
   border-radius: 0;
-  background: var(--modal-background, #fff);
-  color: var(--modal-text-main);
+  background: var(--surface-panel, #fff);
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 500;
   font-family: inherit;
@@ -3150,7 +3158,7 @@ button.columnSelectionMenu__item {
 
 .tabela__editSelect__icon {
   font-size: 0.75rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -3160,8 +3168,8 @@ button.columnSelectionMenu__item {
   left: 0;
   right: 0;
   z-index: 100;
-  background: var(--modal-background, #fff);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-panel, #fff);
+  border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 0.375rem 0.375rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -3176,7 +3184,7 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   border: none;
   background: none;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   font-size: 0.8125rem;
   font-family: inherit;
   cursor: pointer;
@@ -3185,24 +3193,24 @@ button.columnSelectionMenu__item {
   transition: background 0.12s ease;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 }
 
 .tabela__editSelect__optionSelected {
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   font-weight: 600;
 }
 
 .tabela__editSelect__checkbox {
   font-size: 0.875rem;
-  color: var(--premium-primary);
+  color: var(--color-primary);
 }
 
 .tabela__editSelect__empty {
   padding: 0.75rem;
   text-align: center;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 0.8125rem;
 }
 
@@ -3211,9 +3219,9 @@ button.columnSelectionMenu__item {
   width: 100%;
   padding: 0.5rem 0.75rem;
   border: none;
-  border-top: 1px solid var(--modal-border);
-  background: color-mix(in srgb, var(--premium-primary) 6%, transparent);
-  color: var(--premium-primary);
+  border-top: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  color: var(--color-primary);
   font-size: 0.8125rem;
   font-weight: 600;
   font-family: inherit;
@@ -3222,7 +3230,7 @@ button.columnSelectionMenu__item {
   transition: background 0.12s ease;
 
   &:hover {
-    background: color-mix(in srgb, var(--premium-primary) 12%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 }
 
@@ -3235,7 +3243,7 @@ button.columnSelectionMenu__item {
   gap: 0.5rem;
   width: 100%;
   padding: 0.5rem 0;
-  border-top: 1px solid var(--modal-border);
+  border-top: 1px solid var(--border-color);
 }
 
 .tabela__toolbar__editRow__left {
@@ -3258,11 +3266,11 @@ button.columnSelectionMenu__item {
   gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--premium-primary);
+  color: var(--color-primary);
   white-space: nowrap;
   padding: 0.25rem 0.5rem;
   border-radius: 0.375rem;
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .tabela__toolbar__editRow__counter__icon {
@@ -3276,7 +3284,7 @@ button.columnSelectionMenu__item {
 .tabela__toolbar__editRow__chevron {
   font-size: 0.625rem;
   margin-left: 0.125rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
 }
 
 .tabela__toolbar__editRow__dropdown {
@@ -3285,8 +3293,8 @@ button.columnSelectionMenu__item {
   left: 0;
   z-index: 100;
   min-width: 140px;
-  background: var(--modal-background, #fff);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-panel, #fff);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   padding: 0.25rem;
@@ -3302,7 +3310,7 @@ button.columnSelectionMenu__item {
   border: none;
   border-radius: 0.375rem;
   background: none;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   font-size: 0.8125rem;
   font-family: inherit;
   cursor: pointer;
@@ -3310,13 +3318,13 @@ button.columnSelectionMenu__item {
   transition: background 0.12s ease;
 
   &:hover {
-    background: var(--sidebar-hover-bg);
+    background: var(--hover-bg);
   }
 }
 
 .tabela__toolbar__editRow__dropdown__optionActive {
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-  color: var(--premium-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -3343,11 +3351,11 @@ button.columnSelectionMenu__item {
 }
 
 .tabela__toolbar__editRow__saveBtn {
-  background: color-mix(in srgb, var(--premium-primary) 8%, transparent);
-  color: var(--premium-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
 
   &:hover {
-    background: color-mix(in srgb, var(--premium-primary) 14%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
   }
 }
 
@@ -3359,7 +3367,7 @@ button.columnSelectionMenu__item {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--modal-overlay);
+  background-color: var(--surface-overlay);
   z-index: 10000;
   animation: importModalFadeIn 0.2s ease-out forwards;
 }
@@ -3392,7 +3400,7 @@ button.columnSelectionMenu__item {
   min-width: 400px;
   max-width: 90vw;
   max-height: 85vh;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   border-radius: 12px;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -3435,15 +3443,15 @@ button.columnSelectionMenu__item {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--modal-border);
-  background: var(--table-menu-surface);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-toolbar);
   flex-shrink: 0;
 }
 
 .importModal__title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .importModal__closeBtn {
@@ -3456,14 +3464,14 @@ button.columnSelectionMenu__item {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .importModal__closeBtn:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--modal-text-main);
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .importModal__body {
@@ -3479,15 +3487,15 @@ button.columnSelectionMenu__item {
 .importModal__description {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
 .importModal__configSection {
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg);
 }
 
 .importModal__configSection__title {
@@ -3497,21 +3505,21 @@ button.columnSelectionMenu__item {
   padding: 0.6rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
 }
 
 .importModal__configSection__desc {
   margin: 0;
   padding: 0 0.75rem 0.5rem;
   font-size: 0.8125rem;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
 .importModal__configSection__desc code {
   font-family: ui-monospace, monospace;
   font-size: 0.85em;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   padding: 0.1em 0.35em;
   border-radius: 4px;
 }
@@ -3523,7 +3531,7 @@ button.columnSelectionMenu__item {
 .importModal__configDetails summary {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--premium-primary);
+  color: var(--color-primary);
   cursor: pointer;
   user-select: none;
 }
@@ -3533,8 +3541,8 @@ button.columnSelectionMenu__item {
   padding: 0.75rem;
   font-size: 0.75rem;
   font-family: ui-monospace, monospace;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   overflow-x: auto;
   white-space: pre-wrap;
@@ -3546,7 +3554,7 @@ button.columnSelectionMenu__item {
 }
 
 .importModal__layoutSection {
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -3555,9 +3563,9 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--modal-text-muted);
-  background: var(--sidebar-hover-bg);
-  border-bottom: 1px solid var(--modal-border);
+  color: var(--text-muted);
+  background: var(--hover-bg);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .importModal__layoutList {
@@ -3571,8 +3579,8 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--modal-text-muted);
-  border-bottom: 1px solid var(--modal-border);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .importModal__layoutListRow {
@@ -3581,7 +3589,7 @@ button.columnSelectionMenu__item {
   gap: 0.75rem;
   padding: 0.5rem 0;
   font-size: 0.8125rem;
-  border-bottom: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .importModal__layoutListRow:last-child {
@@ -3591,7 +3599,7 @@ button.columnSelectionMenu__item {
 .importModal__layoutListRow code {
   font-family: ui-monospace, monospace;
   font-size: 0.9em;
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg);
   padding: 0.2em 0.45em;
   border-radius: 4px;
 }
@@ -3608,7 +3616,7 @@ button.columnSelectionMenu__item {
 }
 
 .importModal__exampleSection {
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -3617,9 +3625,9 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--modal-text-muted);
-  background: var(--sidebar-hover-bg);
-  border-bottom: 1px solid var(--modal-border);
+  color: var(--text-muted);
+  background: var(--hover-bg);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .importModal__exampleCode {
@@ -3627,7 +3635,7 @@ button.columnSelectionMenu__item {
   padding: 0.75rem;
   font-size: 0.8rem;
   font-family: ui-monospace, monospace;
-  background: var(--table-menu-surface);
+  background: var(--surface-toolbar);
   overflow-x: auto;
   white-space: pre;
 }
@@ -3650,13 +3658,13 @@ button.columnSelectionMenu__item {
   flex: 1;
   min-width: 160px;
   padding: 0.4rem 0.65rem;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 .importModal__previewToolbar__search i {
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -3666,12 +3674,12 @@ button.columnSelectionMenu__item {
   border: none;
   background: transparent;
   font-size: 0.875rem;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   outline: none;
 }
 
 .importModal__previewToolbar__searchInput::placeholder {
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
 }
 
 .importModal__previewToolbar__filter {
@@ -3685,16 +3693,16 @@ button.columnSelectionMenu__item {
   padding: 0.4rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--modal-text-main);
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  color: var(--text-primary);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .importModal__previewToolbar__filterBtn:hover {
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg);
 }
 
 .importModal__previewToolbar__dropdown {
@@ -3704,8 +3712,8 @@ button.columnSelectionMenu__item {
   margin-top: 0.25rem;
   min-width: 140px;
   padding: 0.25rem;
-  background: var(--table-menu-surface);
-  border: 1px solid var(--modal-border);
+  background: var(--surface-toolbar);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 100;
@@ -3723,17 +3731,17 @@ button.columnSelectionMenu__item {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  color: var(--modal-text-main);
+  color: var(--text-primary);
   transition: background 0.15s ease;
 }
 
 .importModal__previewToolbar__dropdown button:hover {
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg);
 }
 
 .importModal__previewToolbar__dropdownActive {
-  background: color-mix(in srgb, var(--premium-primary) 12%, transparent) !important;
-  color: var(--premium-primary) !important;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent) !important;
+  color: var(--color-primary) !important;
 }
 
 .importModal__statusDot__success {
@@ -3766,7 +3774,7 @@ button.columnSelectionMenu__item {
 }
 
 .importModal__sortableHeader:hover {
-  background: var(--sidebar-hover-bg);
+  background: var(--hover-bg);
 }
 
 .importModal__sortableHeader i {
@@ -3796,16 +3804,16 @@ button.columnSelectionMenu__item {
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--premium-primary);
-  background: color-mix(in srgb, var(--premium-primary) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--premium-primary) 30%, transparent);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .importModal__fileLabel:hover {
-  background: color-mix(in srgb, var(--premium-primary) 16%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
 }
 
 .importModal__fileInput {
@@ -3820,7 +3828,7 @@ button.columnSelectionMenu__item {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
 }
 
@@ -3843,17 +3851,17 @@ button.columnSelectionMenu__item {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   background: transparent;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .importModal__backBtn:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--modal-text-main);
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .importModal__finalizeBtn {
@@ -3864,7 +3872,7 @@ button.columnSelectionMenu__item {
   font-size: 0.875rem;
   font-weight: 500;
   color: white;
-  background: var(--premium-primary);
+  background: var(--color-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;

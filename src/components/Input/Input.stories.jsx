@@ -59,12 +59,12 @@ function DataBlock({ data, title = 'Valores atuais' }) {
     <div
       style={{
         padding: 12,
-        background: 'var(--table-menu-surface, #f8fafc)',
+        background: 'var(--surface-toolbar, #f8fafc)',
         borderRadius: 6,
         fontSize: 12,
         fontFamily: 'ui-monospace, monospace',
-        color: 'var(--modal-text-muted, #475569)',
-        border: '1px solid var(--modal-border, rgba(0,0,0,0.08))',
+        color: 'var(--text-muted, #475569)',
+        border: '1px solid var(--border-color, rgba(0,0,0,0.08))',
       }}
     >
       <strong>{title}:</strong>
@@ -331,7 +331,7 @@ function DateAllFormatsStory() {
   };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420 }}>
-      <strong style={{ fontSize: 14, color: 'var(--modal-text-muted)' }}>Formatos de data</strong>
+      <strong style={{ fontSize: 14, color: 'var(--text-muted)' }}>Formatos de data</strong>
       {formats.map(({ type, label }) => (
         <Input
           key={type}

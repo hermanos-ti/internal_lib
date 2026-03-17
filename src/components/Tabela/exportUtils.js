@@ -43,8 +43,15 @@ export function prepareExportData(data, columns, editedData, getRowKey) {
  * @param {string} value
  * @returns {string}
  */
+const FORMULA_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
+
 function escapeCSVField(value) {
   const str = String(value ?? '');
+
+  if (FORMULA_PREFIXES.some((ch) => str.startsWith(ch))) {
+    return `"'${str.replace(/"/g, '""')}"`;
+  }
+
   if (str.includes(',') || str.includes('\n') || str.includes('\r') || str.includes('"')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
@@ -98,8 +105,10 @@ export function downloadFile(blobOrString, filename, mimeType = 'text/csv;charse
  * @returns {string}
  */
 export function getExportFilename(baseName, extension) {
+  const safeName = (baseName ?? 'Tabela').replace(/\.{2,}/g, '_').replace(/[/\\:*?"<>|\x00-\x1f]/g, '_');
+  const safeExt = (extension ?? 'csv').replace(/[/\\:*?"<>|\x00-\x1f]/g, '_');
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const ts = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-  return `${baseName ?? 'Tabela'}-${ts}.${extension}`;
+  return `${safeName}-${ts}.${safeExt}`;
 }

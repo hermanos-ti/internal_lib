@@ -8,6 +8,11 @@
 const EMPTY_DISPLAY = '—';
 const LOCALE_BR = 'pt-BR';
 
+const CURRENCY_FMT = new Intl.NumberFormat(LOCALE_BR, { style: 'currency', currency: 'BRL' });
+const PERCENT_FMT = new Intl.NumberFormat(LOCALE_BR, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const NUMBER_FMT = new Intl.NumberFormat(LOCALE_BR, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const INTEGER_FMT = new Intl.NumberFormat(LOCALE_BR, { maximumFractionDigits: 0 });
+
 /**
  * Format a single primitive value for display according to format type.
  * @param {*} value - Raw value (number, string, Date, etc.)
@@ -23,22 +28,22 @@ function formatSingleValue(value, format) {
     case 'money': {
       const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
-      return new Intl.NumberFormat(LOCALE_BR, { style: 'currency', currency: 'BRL' }).format(n);
+      return CURRENCY_FMT.format(n);
     }
     case 'percentage': {
       const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
-      return `${new Intl.NumberFormat(LOCALE_BR, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n)}%`;
+      return `${PERCENT_FMT.format(n)}%`;
     }
     case 'number': {
       const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
-      return new Intl.NumberFormat(LOCALE_BR, { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n);
+      return NUMBER_FMT.format(n);
     }
     case 'integer': {
       const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
-      return new Intl.NumberFormat(LOCALE_BR, { maximumFractionDigits: 0 }).format(Math.round(n));
+      return INTEGER_FMT.format(Math.round(n));
     }
     case 'date': {
       const ms = toTimestamp(value);
