@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, memo, useContext } from 'reac
 import { createPortal } from 'react-dom';
 import styles from '../Tabela.module.css';
 import { PortalTargetContext } from '../PortalTargetContext';
+import { Button } from '../../Button/Button';
 
 function normalizeEditConfig(editable) {
   if (editable === true) return { type: 'text' };
@@ -22,8 +23,8 @@ function TextEditor({ value, onCommit, onCancel, onNavigate }) {
   const committedRef = useRef(false);
 
   useEffect(() => {
-    inputRef.current?.focus();
-    inputRef.current?.select();
+    inputRef.current?.focus?.();
+    inputRef.current?.select?.();
   }, []);
 
   const commitOnce = useCallback((val, navigate) => {
@@ -62,8 +63,8 @@ function TextEditor({ value, onCommit, onCancel, onNavigate }) {
   return (
     <input
       ref={inputRef}
-      type="text"
       className={styles.tabela__editInput}
+      type="text"
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
       onKeyDown={handleKeyDown}
@@ -260,13 +261,14 @@ function SelectEditor({ value, options: rawOptions, multiple, onCommit, onCancel
         <div className={styles.tabela__editSelect__empty}>Sem opções</div>
       )}
       {multiple && (
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="sm"
           className={styles.tabela__editSelect__confirm}
           onClick={() => commitOnce(draft, null)}
         >
           Confirmar
-        </button>
+        </Button>
       )}
     </div>
   ) : null;

@@ -66,6 +66,7 @@ export const VisibleColumnsPanel = memo(({
               type="button"
               className={styles.visibleColumnsModal__sectionToggle}
               onClick={handleHeaderToggleAll}
+              title={allHeaderVisible ? 'Oculta todas as colunas do cabeçalho' : 'Exibe todas as colunas do cabeçalho'}
             >
               {allHeaderVisible ? 'Desmarcar todos' : 'Marcar todos'}
             </button>
@@ -96,6 +97,7 @@ export const VisibleColumnsPanel = memo(({
               type="button"
               className={styles.visibleColumnsModal__sectionToggle}
               onClick={handleFooterToggleAll}
+              title={allFooterVisible ? 'Oculta todos os itens do rodapé' : 'Exibe todos os itens do rodapé'}
             >
               {allFooterVisible ? 'Desmarcar todos' : 'Marcar todos'}
             </button>

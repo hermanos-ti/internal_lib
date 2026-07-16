@@ -46,6 +46,32 @@
   --nav-width-collapsed: 72px;
   --nav-width-expanded: 280px;
 
+  /* Controls (inputs/selects/dates/buttons) — dimensões compartilhadas */
+  --control-height-sm: 28px;
+  --control-height-md: 32px;
+  --control-height-lg: 40px;
+  --control-padding-x-sm: 8px;
+  --control-padding-x-md: 10px;
+  --control-padding-x-lg: 12px;
+  --control-font-sm: 12px;
+  --control-font-md: 13px;
+  --control-font-lg: 14px;
+  --control-radius: 8px;
+  --control-border: 1px solid var(--border-color);
+  --control-focus-shadow: 0 0 0 3px var(--focus-ring);
+  --control-transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Modais — espaçamento compartilhado */
+  --modal-padding-x: 20px;
+  --modal-padding-y: 16px;
+  --modal-gap: 12px;
+  --popover-padding: 12px;
+  --popover-gap: 8px;
+  --popover-shadow:
+    0 20px 50px var(--shadow-overlay),
+    0 4px 12px var(--shadow-md),
+    0 0 0 1px var(--border-color);
+
   /* Semantic */
   --color-success: #10b981;
   --color-success-bg: #ecfdf5;

@@ -35,6 +35,9 @@ export const Input = forwardRef(function Input(
     resize,
     autoExpand,
     radioDirection,
+    tooltip,
+    size = 'lg',
+    className: classNameProp,
     ...rest
   },
   ref
@@ -45,6 +48,11 @@ export const Input = forwardRef(function Input(
 
   useImperativeHandle(ref, () => ({
     setStatus: (s) => setStatusState(s),
+    focus: () => inputRef.current?.focus(),
+    select: () => inputRef.current?.select(),
+    get element() {
+      return inputRef.current;
+    },
   }));
 
   const InputComponent = getInputByType(type);
@@ -98,7 +106,7 @@ export const Input = forwardRef(function Input(
     id: controlId,
     disabled,
     placeholder,
-    className: controlClassName,
+    className: cn(controlClassName, classNameProp),
     ...rest,
   };
 
@@ -136,11 +144,12 @@ export const Input = forwardRef(function Input(
   const hasControlWrapper = isControlType || isSelectType || isDateInputType;
 
   const renderButton = (btn, index, side, total) => {
-    const { label: btnLabel, icon: btnIcon, action } = btn;
+    const { label: btnLabel, icon: btnIcon, action, iconOnly, disabled: btnDisabled } = btn;
     const isFirst = index === 0;
     const isLast = index === total - 1;
     const buttonClass = cn(
       styles.input__button,
+      iconOnly && styles.input__buttonIconOnly,
       side === 'left' && isFirst && styles.input__buttonFirstLeft,
       side === 'left' && isLast && total > 1 && styles.input__buttonLastLeft,
       side === 'left' && !isFirst && !isLast && styles.input__buttonMiddleLeft,
@@ -154,11 +163,11 @@ export const Input = forwardRef(function Input(
         type="button"
         className={buttonClass}
         onClick={action}
-        disabled={disabled}
+        disabled={disabled || btnDisabled}
         aria-label={btnLabel}
       >
         {btnIcon && <span className={styles.input__buttonIcon}>{btnIcon}</span>}
-        {btnLabel && <span className={styles.input__buttonLabel}>{btnLabel}</span>}
+        {btnLabel && !iconOnly && <span className={styles.input__buttonLabel}>{btnLabel}</span>}
       </button>
     );
     return btnLabel ? (
@@ -174,6 +183,7 @@ export const Input = forwardRef(function Input(
     <div
       className={cn(
         styles.input,
+        styles[`input_size_${size}`],
         error && styles.inputError,
         disabled && styles.inputDisabled,
         status === 'success' && styles.inputStatusSuccess,
@@ -182,9 +192,23 @@ export const Input = forwardRef(function Input(
       )}
     >
       {label && (
-        <label htmlFor={controlId} className={styles.input__label}>
-          {label}
-        </label>
+        <div className={styles.input__labelRow}>
+          <label htmlFor={controlId} className={styles.input__label}>
+            {label}
+          </label>
+          {tooltip && (
+            <Tooltip content={tooltip} placement="top">
+              <button
+                type="button"
+                className={styles.input__tooltipTrigger}
+                aria-label={`Informação sobre ${label}`}
+                tabIndex={-1}
+              >
+                <i className="far fa-circle-question" />
+              </button>
+            </Tooltip>
+          )}
+        </div>
       )}
       <div
         className={cn(
@@ -219,6 +243,7 @@ export const Input = forwardRef(function Input(
       {hint && !error && <span className={styles.input__hint}>{hint}</span>}
       {error && (
         <span className={styles.input__error} role="alert">
+          <i className={`far fa-circle-exclamation ${styles.input__errorIcon}`} aria-hidden="true" />
           {error}
         </span>
       )}

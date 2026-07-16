@@ -1,9 +1,10 @@
 import { memo, useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import styles from '../Tabela.module.css';
 import { TableCell } from './TableCell';
 import { EditableCell } from './EditableCell';
 import { Pagination } from '../../Pagination/Pagination';
+import { Modal } from '../../Modal/Modal';
+import { Button } from '../../Button/Button';
 import { parseCSVFile, runValidation, sortImportData } from '../importUtils';
 
 const FORMAT_LABELS = {
@@ -26,19 +27,6 @@ const EXAMPLE_BY_TYPE = {
   percentage: ['15.5', '100', '0.25'],
 };
 
-const IMPORT_CONFIG_EXAMPLE = `options={{
-  importConfig: {
-    columns: [
-      { key: 'nome', label: 'Nome', format: 'text', obrigatorio: true,
-        validator: (v) => v?.trim() ? true : 'Obrigatório' },
-      { key: 'idade', label: 'Idade', format: 'integer', obrigatorio: false,
-        validator: (v) => (v === '' || v == null) ? true : 
-          (!Number.isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= 150) },
-    ]
-  },
-  onImportComplete: (data) => setData(data)
-}}`;
-
 export const ImportModal = memo(({
   isOpen,
   onClose,
@@ -46,11 +34,8 @@ export const ImportModal = memo(({
   onImportComplete,
   portalContainer = document.body,
 }) => {
-  const modalRef = useRef(null);
   const fileInputRef = useRef(null);
   const filterDropdownRef = useRef(null);
-  const [isClosing, setIsClosing] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
   const [step, setStep] = useState('instructions');
   const [csvData, setCsvData] = useState([]);
   const [rowStatuses, setRowStatuses] = useState(() => new Map());
@@ -68,8 +53,6 @@ export const ImportModal = memo(({
 
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true);
-      setIsClosing(false);
       setStep('instructions');
       setCsvData([]);
       setRowStatuses(new Map());
@@ -84,56 +67,41 @@ export const ImportModal = memo(({
   }, [isOpen]);
 
   const handleClose = useCallback(() => {
-    setIsClosing(true);
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      setIsClosing(false);
-      setStep('instructions');
-      setCsvData([]);
-      onClose?.();
-    }, 180);
-    return () => clearTimeout(timer);
+    setStep('instructions');
+    setCsvData([]);
+    onClose?.();
   }, [onClose]);
 
   useEffect(() => {
-    if (!isVisible || isClosing) return;
+    if (!isOpen) return;
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        if (editingCell) {
-          setEditingCell(null);
-        } else if (previewFilterOpen) {
-          setPreviewFilterOpen(false);
-        } else if (step === 'preview') {
-          setStep('instructions');
-          setCsvData([]);
-          setRowStatuses(new Map());
-        } else {
-          handleClose();
-        }
+      if (e.key !== 'Escape') return;
+      if (editingCell) {
+        setEditingCell(null);
+      } else if (previewFilterOpen) {
+        setPreviewFilterOpen(false);
+      } else if (step === 'preview') {
+        setStep('instructions');
+        setCsvData([]);
+        setRowStatuses(new Map());
+      } else {
+        handleClose();
       }
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isVisible, isClosing, handleClose, step, editingCell, previewFilterOpen]);
+  }, [isOpen, handleClose, step, editingCell, previewFilterOpen]);
 
   useEffect(() => {
-    if (!isVisible || isClosing) return;
+    if (!isOpen) return;
     const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        if (!editingCell) {
-          setPreviewFilterOpen(false);
-          handleClose();
-        }
-      } else if (previewFilterOpen && filterDropdownRef.current && !filterDropdownRef.current.contains(e.target)) {
+      if (previewFilterOpen && filterDropdownRef.current && !filterDropdownRef.current.contains(e.target)) {
         setPreviewFilterOpen(false);
       }
     };
-    const t = setTimeout(() => document.addEventListener('mousedown', handleClickOutside), 0);
-    return () => {
-      clearTimeout(t);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isVisible, isClosing, handleClose, editingCell, previewFilterOpen]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, previewFilterOpen]);
 
   const runAllValidations = useCallback((data) => {
     const next = new Map();
@@ -205,6 +173,10 @@ export const ImportModal = memo(({
     return status?.status === 'success';
   });
 
+  const errorRowCount = useMemo(() => {
+    return csvData.filter((_, idx) => rowStatuses.get(`__row_${idx}`)?.status !== 'success').length;
+  }, [csvData, rowStatuses]);
+
   const tableColumns = useMemo(() => columns.map((col) => ({
     ...col,
     editable: true,
@@ -212,7 +184,7 @@ export const ImportModal = memo(({
   })), [columns]);
 
   const exampleCsvLines = useMemo(() => {
-    const delimiter = '|';
+    const delimiter = ',';
     const headers = columns.map((c) => c.key).join(delimiter);
     const getSample = (col, rowIndex) => {
       const type = col.format ?? 'text';
@@ -286,33 +258,37 @@ export const ImportModal = memo(({
     error: [...rowStatuses.values()].some((s) => s.status === 'error'),
   };
 
-  if (!isVisible) return null;
+  const handleBackToInstructions = useCallback(() => {
+    setStep('instructions');
+    setCsvData([]);
+    setRowStatuses(new Map());
+    setEditedRowIndices(new Set());
+  }, []);
 
-  const modalContent = (
-    <div
-      ref={modalRef}
-      data-import-modal
-      className={`${styles.importModal} ${isClosing ? styles.importModal_closing : ''}`}
+  const finalizeTooltip = !allValid
+    ? `Corrija ${errorRowCount} linha(s) com erro ou aviso antes de finalizar.`
+    : undefined;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="xl"
+      closeOnEsc={false}
+      closeOnBackdrop={!editingCell}
+      portalContainer={portalContainer}
+      className={styles.importModalRoot}
     >
-      <div className={styles.importModal__header}>
-        <span className={styles.importModal__title}>
-          {step === 'instructions' ? 'Importar dados' : 'Pré-visualização da importação'}
-        </span>
-        <button
-          type="button"
-          className={styles.importModal__closeBtn}
-          onClick={handleClose}
-          aria-label="Fechar"
-        >
-          <i className="far fa-xmark" />
-        </button>
-      </div>
+      <Modal.Header
+        title={step === 'instructions' ? 'Importar dados' : 'Pré-visualização da importação'}
+        onClose={handleClose}
+      />
 
-      <div className={styles.importModal__body}>
+      <Modal.Body>
         {step === 'instructions' && (
           <>
             <p className={styles.importModal__description}>
-              O arquivo CSV deve conter as colunas na primeira linha, separadas por pipe (|).
+              O arquivo CSV deve conter as colunas na primeira linha, separadas por vírgula (,).
               Use aspas duplas para valores que contenham pipe.
             </p>
 
@@ -326,10 +302,7 @@ export const ImportModal = memo(({
                   <span>obrigatorio</span>
                 </div>
                 {columns.map((col) => (
-                  <div
-                    key={col.key}
-                    className={styles.importModal__layoutListRow}
-                  >
+                  <div key={col.key} className={styles.importModal__layoutListRow}>
                     <span>{col.label ?? col.key}</span>
                     <span><code>{col.key}</code></span>
                     <span>{FORMAT_LABELS[col.format] ?? col.format ?? 'text'}</span>
@@ -353,20 +326,29 @@ export const ImportModal = memo(({
             </div>
 
             {parseError && (
-              <div className={styles.importModal__error}>{parseError}</div>
+              <div className={styles.importModal__error} role="alert">
+                <i className="far fa-circle-exclamation" aria-hidden="true" />
+                {parseError}
+              </div>
             )}
 
-            <label className={styles.importModal__fileLabel}>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileSelect}
-                className={styles.importModal__fileInput}
-              />
-              <i className="far fa-file-csv" />
-              <span>Selecionar arquivo CSV</span>
-            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileSelect}
+              className={styles.importModal__fileInput}
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            <Button
+              variant="secondary"
+              iconLeft={<i className="far fa-file-csv" />}
+              onClick={() => fileInputRef.current?.click()}
+              tooltip="Selecione um arquivo .csv com as colunas definidas no layout esperado"
+            >
+              Selecionar arquivo CSV
+            </Button>
           </>
         )}
 
@@ -378,70 +360,51 @@ export const ImportModal = memo(({
             </p>
 
             <div className={styles.importModal__previewToolbar}>
-              <div className={styles.importModal__previewToolbar__search}>
-                <i className="far fa-magnifying-glass" />
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className={styles.importModal__previewToolbar__searchInput}
-                />
-              </div>
+              <input
+                type="text"
+                className={styles.importModal__previewToolbar__search}
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                title="Filtra linhas que contenham o termo em qualquer coluna"
+              />
               <div ref={filterDropdownRef} className={styles.importModal__previewToolbar__filter}>
-                <button
-                  type="button"
-                  className={styles.importModal__previewToolbar__filterBtn}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  iconLeft={<i className="far fa-eye" />}
+                  iconRight={<i className={`far fa-chevron-${previewFilterOpen ? 'up' : 'down'}`} />}
                   onClick={() => setPreviewFilterOpen((o) => !o)}
+                  tooltip="Filtrar linhas por status de validação"
                 >
-                  <i className="far fa-eye" />
-                  <span>{previewFilterLabel}</span>
-                  <i className={`far fa-chevron-${previewFilterOpen ? 'up' : 'down'}`} />
-                </button>
+                  {previewFilterLabel}
+                </Button>
                 {previewFilterOpen && (
                   <div className={styles.importModal__previewToolbar__dropdown}>
-                    <button
-                      className={previewViewFilter === 'all' ? styles.importModal__previewToolbar__dropdownActive : ''}
-                      onClick={() => { setPreviewViewFilter('all'); setPreviewFilterOpen(false); setCurrentPage(1); }}
-                    >
-                      Todas
-                    </button>
-                    <button
-                      className={previewViewFilter === 'edited' ? styles.importModal__previewToolbar__dropdownActive : ''}
-                      onClick={() => { setPreviewViewFilter('edited'); setPreviewFilterOpen(false); setCurrentPage(1); }}
-                    >
-                      Editadas
-                    </button>
-                    {hasStatus.success && (
+                    {[
+                      { key: 'all', label: 'Todas' },
+                      { key: 'edited', label: 'Editadas' },
+                      ...(hasStatus.success ? [{ key: 'success', label: 'Sucesso', dot: 'success' }] : []),
+                      ...(hasStatus.warning ? [{ key: 'warning', label: 'Alerta', dot: 'warning' }] : []),
+                      ...(hasStatus.error ? [{ key: 'error', label: 'Erro', dot: 'error' }] : []),
+                    ].map(({ key, label, dot }) => (
                       <button
-                        className={previewViewFilter === 'success' ? styles.importModal__previewToolbar__dropdownActive : ''}
-                        onClick={() => { setPreviewViewFilter('success'); setPreviewFilterOpen(false); setCurrentPage(1); }}
+                        key={key}
+                        type="button"
+                        className={`${styles.importModal__previewToolbar__dropdownItem} ${previewViewFilter === key ? styles.importModal__previewToolbar__dropdownActive : ''}`}
+                        onClick={() => {
+                          setPreviewViewFilter(key);
+                          setPreviewFilterOpen(false);
+                          setCurrentPage(1);
+                        }}
                       >
-                        <span className={styles.importModal__statusDot__success} />
-                        Sucesso
+                        {dot && <span className={styles[`importModal__statusDot__${dot}`]} />}
+                        {label}
                       </button>
-                    )}
-                    {hasStatus.warning && (
-                      <button
-                        className={previewViewFilter === 'warning' ? styles.importModal__previewToolbar__dropdownActive : ''}
-                        onClick={() => { setPreviewViewFilter('warning'); setPreviewFilterOpen(false); setCurrentPage(1); }}
-                      >
-                        <span className={styles.importModal__statusDot__warning} />
-                        Alerta
-                      </button>
-                    )}
-                    {hasStatus.error && (
-                      <button
-                        className={previewViewFilter === 'error' ? styles.importModal__previewToolbar__dropdownActive : ''}
-                        onClick={() => { setPreviewViewFilter('error'); setPreviewFilterOpen(false); setCurrentPage(1); }}
-                      >
-                        <span className={styles.importModal__statusDot__error} />
-                        Erro
-                      </button>
-                    )}
+                    ))}
                   </div>
                 )}
               </div>
@@ -535,54 +498,29 @@ export const ImportModal = memo(({
                 />
               </div>
             )}
-
-            <div className={styles.importModal__footer}>
-              <button
-                type="button"
-                className={styles.importModal__backBtn}
-                onClick={() => {
-                  setStep('instructions');
-                  setCsvData([]);
-                  setRowStatuses(new Map());
-                  setEditedRowIndices(new Set());
-                }}
-              >
-                <i className="far fa-arrow-left" />
-                Voltar
-              </button>
-              <button
-                type="button"
-                className={styles.importModal__finalizeBtn}
-                disabled={!allValid}
-                onClick={handleFinalize}
-              >
-                <i className="far fa-check" />
-                Finalizar importação
-              </button>
-            </div>
           </>
         )}
-      </div>
-    </div>
-  );
+      </Modal.Body>
 
-  const overlay = (
-    <div
-      className={`${styles.importModal__overlay} ${isClosing ? styles.importModal__overlay_closing : ''}`}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !editingCell) {
-          setPreviewFilterOpen(false);
-          handleClose();
-        }
-      }}
-      onKeyDown={() => {}}
-      role="presentation"
-    >
-      {modalContent}
-    </div>
+      {step === 'preview' && (
+        <Modal.Footer
+          secondary={{
+            label: 'Voltar',
+            variant: 'secondary',
+            iconLeft: <i className="far fa-arrow-left" />,
+            onClick: handleBackToInstructions,
+          }}
+          primary={{
+            label: 'Finalizar importação',
+            iconLeft: <i className="far fa-check" />,
+            disabled: !allValid,
+            tooltip: finalizeTooltip,
+            onClick: handleFinalize,
+          }}
+        />
+      )}
+    </Modal>
   );
-
-  return createPortal(overlay, portalContainer);
 });
 
 ImportModal.displayName = 'ImportModal';

@@ -97,6 +97,7 @@ export const VisibleColumnsModal = memo(({
           className={styles.visibleColumnsModal__closeBtn}
           onClick={() => handleClose()}
           aria-label="Fechar"
+          title="Fechar"
         >
           <i className="far fa-xmark" />
         </button>
@@ -111,7 +112,11 @@ export const VisibleColumnsModal = memo(({
       />
 
       <div className={styles.visibleColumnsModal__footer}>
-        <button type="button" className={styles.visibleColumnsModal__footerBtn} onClick={() => handleClose()}>
+        <button
+          type="button"
+          className={styles.visibleColumnsModal__footerBtn}
+          onClick={() => handleClose()}
+        >
           <i className="far fa-xmark" />
           Fechar
         </button>

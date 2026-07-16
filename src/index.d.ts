@@ -313,18 +313,58 @@ export declare const Tooltip: ComponentType<TooltipProps>;
 // Functions / Utilities
 // ============================================
 
+export interface DialogButtonsText {
+  confirm?: string;
+  cancel?: string;
+  close?: string;
+}
+
+export type DialogType =
+  | 'default'
+  | 'info'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'danger';
+
 export interface DialogOptions {
   title?: string;
   message?: string;
+  html?: string;
+  type?: DialogType | 'critical';
+  icon?: string;
+  buttonsText?: DialogButtonsText;
   confirmText?: string;
-  cancelText?: string;
-  variant?: string;
+  confirmHint?: string;
+  critical?: boolean;
+  criticalDelay?: number;
+  position?: 'center' | 'top' | 'bottom';
+  background?: boolean;
+  closeOnBackdrop?: boolean;
+  closeOnEsc?: boolean;
+  confirmButton?: boolean;
+  onResult?: (result: boolean | null) => void;
+  callback?: (result: boolean | null) => void;
   [key: string]: unknown;
 }
+
+export declare const DialogGlobal: ComponentType<Record<string, never>>;
+
+export declare const DialogManagerInstance: {
+  getState: () => { current: DialogOptions | null };
+  resolveCurrent: (result: boolean | null) => void;
+};
+
 export declare const Dialog: {
-  confirm: (options: DialogOptions) => Promise<boolean>;
-  alert: (options: DialogOptions) => Promise<void>;
-  [key: string]: unknown;
+  alert: (options?: DialogOptions) => Promise<void>;
+  confirm: (options?: DialogOptions) => Promise<boolean>;
+  show: (
+    message: string,
+    type?: DialogType | 'critical' | string,
+    options?: DialogOptions,
+    callback?: (result: boolean | null) => void
+  ) => Promise<boolean | null | void>;
 };
 
 export interface ValidationError {

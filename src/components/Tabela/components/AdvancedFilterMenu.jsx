@@ -4,6 +4,7 @@ import styles from '../Tabela.module.css';
 import { PortalTargetContext } from '../PortalTargetContext';
 import { COLUMN_ICONS, FILTER_CONDITIONS, EMPTY_CONDITIONS, RANGE_CONDITIONS } from '../constants';
 import { Select } from './Select';
+import { Button } from '../../Button/Button';
 
 export const AdvancedFilterMenu = memo(forwardRef(({ 
   menuState,
@@ -599,7 +600,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
               { value: 'AND', label: 'E' },
               { value: 'OR', label: 'Ou' }
             ]}
-            className={`${styles.advancedFilterMenu__logicSelect} ${styles.advancedFilterMenu__logicToggle}`}
+            className={styles.advancedFilterMenu__logicSelect}
           />
         )}
 
@@ -629,9 +630,9 @@ export const AdvancedFilterMenu = memo(forwardRef(({
               value={rule.value || ''}
               onChange={(e) => handleUpdateValue(path, e.target.value)}
               placeholder="Valor"
+              title="Valor de comparação da regra"
             />
-            
-            {/* Value To input (for between/range) */}
+
             {isRangeCondition && (
               <>
                 <span className={styles.advancedFilterMenu__rangeSeparator}>e</span>
@@ -641,13 +642,13 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                   value={rule.valueTo || ''}
                   onChange={(e) => handleUpdateValueTo(path, e.target.value)}
                   placeholder="Valor"
+                  title="Limite superior do intervalo"
                 />
               </>
             )}
           </>
         )}
 
-        {/* Action menu button */}
         <div style={{ position: 'relative', marginLeft: 'auto', flexShrink: 0 }}>
           <button
             ref={(el) => {
@@ -657,12 +658,14 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                 actionButtonRefs.current.delete(pathKey);
               }
             }}
+            type="button"
             className={styles.advancedFilterMenu__actionBtn}
             onClick={(e) => {
               e.stopPropagation();
               setOpenActionMenu(showActionMenu ? null : { path, isGroup: false });
             }}
-            title="Ações"
+            title="Ações da regra (duplicar, agrupar, remover)"
+            aria-label="Ações da regra"
           >
             <i className="fas fa-ellipsis-vertical" />
           </button>
@@ -704,7 +707,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                   { value: 'AND', label: 'E' },
                   { value: 'OR', label: 'Ou' }
                 ]}
-                className={styles.advancedFilterMenu__logicToggle}
+                className={styles.advancedFilterMenu__logicSelect}
               />
             )}
             <span style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
@@ -721,12 +724,14 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                     actionButtonRefs.current.delete(pathKey);
                   }
                 }}
+                type="button"
                 className={styles.advancedFilterMenu__actionBtn}
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpenActionMenu(showActionMenu ? null : { path, isGroup: true });
                 }}
-                title="Ações"
+                title="Ações do grupo de regras"
+                aria-label="Ações do grupo de regras"
               >
                 <i className="fas fa-ellipsis-vertical" />
               </button>
@@ -756,15 +761,17 @@ export const AdvancedFilterMenu = memo(forwardRef(({
                   addRuleButtonRefs.current.delete(pathKey);
                 }
               }}
+              type="button"
               className={styles.advancedFilterMenu__addRule}
               onClick={(e) => {
                 e.stopPropagation();
                 setOpenAddRuleMenu(showAddMenu ? null : { path });
               }}
+              title="Adicionar nova regra ou grupo de regras"
             >
               <i className={`far fa-plus ${styles.advancedFilterMenu__addRule__icon}`} />
               Adicionar regra
-              <i className="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: 'auto' }} />
+              <i className="fas fa-chevron-down" style={{ fontSize: '0.6rem' }} />
             </button>
           </div>
         </div>
@@ -807,12 +814,16 @@ export const AdvancedFilterMenu = memo(forwardRef(({
         <span className={styles.advancedFilterMenu__header__title}>
           Filtro Avançado
         </span>
-        <button 
+        <Button
+          variant="tertiary"
+          size="sm"
+          iconOnly
           className={styles.advancedFilterMenu__header__close}
           onClick={handleCancel}
+          tooltip="Fechar sem salvar"
         >
           <i className="far fa-xmark" />
-        </button>
+        </Button>
       </div>
 
       {/* Body */}
@@ -823,14 +834,17 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             <span className={styles.advancedFilterMenu__empty__text}>
               Nenhuma regra adicionada.
             </span>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               className={styles.advancedFilterMenu__addRule}
+              iconLeft={<i className={`far fa-plus ${styles.advancedFilterMenu__addRule__icon}`} />}
               onClick={() => handleAddRule([])}
+              tooltip="Cria a primeira regra do filtro avançado"
               style={{ marginTop: '0.5rem' }}
             >
-              <i className={`far fa-plus ${styles.advancedFilterMenu__addRule__icon}`} />
               Adicionar primeira regra
-            </button>
+            </Button>
           </div>
         ) : (
           renderRuleGroup(localGroup)
@@ -840,28 +854,35 @@ export const AdvancedFilterMenu = memo(forwardRef(({
       {/* Footer */}
       <div className={styles.advancedFilterMenu__footer}>
         <div className={styles.advancedFilterMenu__footer__left}>
-          <button 
-            className={`${styles.advancedFilterMenu__footer__button} ${styles.danger}`}
+          <Button
+            variant="danger"
+            size="sm"
+            className={styles.advancedFilterMenu__footer__button}
+            iconLeft={<i className={`far fa-trash ${styles.advancedFilterMenu__footer__button__icon}`} />}
             onClick={handleDelete}
+            tooltip="Remove permanentemente este filtro avançado"
           >
-            <i className={`far fa-trash ${styles.advancedFilterMenu__footer__button__icon}`} />
             Deletar
-          </button>
+          </Button>
         </div>
         <div className={styles.advancedFilterMenu__footer__right}>
-          <button 
+          <Button
+            variant="secondary"
+            size="sm"
             className={styles.advancedFilterMenu__footer__button}
             onClick={handleCancel}
           >
             Cancelar
-          </button>
-          <button 
-            className={`${styles.advancedFilterMenu__footer__button} ${styles.primary}`}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            className={styles.advancedFilterMenu__footer__button}
+            iconLeft={<i className={`far fa-check ${styles.advancedFilterMenu__footer__button__icon}`} />}
             onClick={handleSave}
           >
-            <i className={`far fa-check ${styles.advancedFilterMenu__footer__button__icon}`} />
             Salvar
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -882,23 +903,27 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             {isGroup ? (
               <>
                 <button
+                  type="button"
                   className={styles.advancedFilterMenu__actionDropdown__item}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDuplicateRule(openActionMenu.path);
                     setOpenActionMenu(null);
                   }}
+                  title="Duplica este grupo de regras"
                 >
                   <i className={`far fa-copy ${styles.advancedFilterMenu__actionDropdown__icon}`} />
                   Duplicar grupo
                 </button>
                 <button
+                  type="button"
                   className={`${styles.advancedFilterMenu__actionDropdown__item} ${styles.danger}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRemoveRule(openActionMenu.path);
                     setOpenActionMenu(null);
                   }}
+                  title="Remove este grupo de regras"
                 >
                   <i className={`far fa-trash ${styles.advancedFilterMenu__actionDropdown__icon}`} />
                   Remover grupo
@@ -907,34 +932,40 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             ) : (
               <>
                 <button
+                  type="button"
                   className={styles.advancedFilterMenu__actionDropdown__item}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDuplicateRule(openActionMenu.path);
                     setOpenActionMenu(null);
                   }}
+                  title="Duplica esta regra"
                 >
                   <i className={`far fa-copy ${styles.advancedFilterMenu__actionDropdown__icon}`} />
                   Duplicar regra
                 </button>
                 <button
+                  type="button"
                   className={styles.advancedFilterMenu__actionDropdown__item}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleTransformToGroup(openActionMenu.path);
                     setOpenActionMenu(null);
                   }}
+                  title="Agrupa esta regra com outras em um subgrupo"
                 >
                   <i className={`far fa-layer-group ${styles.advancedFilterMenu__actionDropdown__icon}`} />
                   Transformar em grupo
                 </button>
                 <button
+                  type="button"
                   className={`${styles.advancedFilterMenu__actionDropdown__item} ${styles.danger}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRemoveRule(openActionMenu.path);
                     setOpenActionMenu(null);
                   }}
+                  title="Remove esta regra"
                 >
                   <i className={`far fa-trash ${styles.advancedFilterMenu__actionDropdown__icon}`} />
                   Remover regra
@@ -964,6 +995,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
             }}
           >
           <button
+            type="button"
             className={styles.advancedFilterMenu__addRuleDropdown__item}
             onClick={(e) => {
               e.stopPropagation();
@@ -971,11 +1003,13 @@ export const AdvancedFilterMenu = memo(forwardRef(({
               handleAddRule(openAddRuleMenu.path);
               setOpenAddRuleMenu(null);
             }}
+            title="Adiciona uma regra simples ao grupo"
           >
             <i className={`far fa-filter ${styles.advancedFilterMenu__addRuleDropdown__icon}`} />
             Adicionar regra simples
           </button>
           <button
+            type="button"
             className={styles.advancedFilterMenu__addRuleDropdown__item}
             onClick={(e) => {
               e.stopPropagation();
@@ -983,6 +1017,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
               handleAddGroup(openAddRuleMenu.path);
               setOpenAddRuleMenu(null);
             }}
+            title="Adiciona um subgrupo com lógica E/OU"
           >
             <i className={`far fa-layer-group ${styles.advancedFilterMenu__addRuleDropdown__icon}`} />
             Adicionar grupo de regras

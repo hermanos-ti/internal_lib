@@ -245,10 +245,10 @@ export const CalculationModal = memo(({
                 type="button"
                 className={styles.settingsMenu__backBtn}
                 onClick={handleBack}
-                aria-label="Voltar"
+                title="Voltar à etapa anterior"
               >
                 <i className="far fa-arrow-left" />
-                <span>Voltar</span>
+                Voltar
               </button>
               <span className={styles.columnSelectionMenu__header__title}>{getHeaderTitle()}</span>
           </div>

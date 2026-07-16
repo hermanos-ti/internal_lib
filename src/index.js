@@ -21,7 +21,7 @@ import { TabGroup } from './components/TabGroup/TabGroup';
 import { Tag } from './components/Tag/Tag';
 import { Tooltip } from './components/Tooltip/Tooltip';
 
-import { Dialog } from './functions/Dialog/Dialog';
+import { Dialog, DialogGlobal, DialogManagerInstance } from './functions/Dialog/Dialog';
 import { validate } from './functions/Formatter';
 import { LoaderManagerInstance, LoaderGlobal } from './functions/Loader/Loader';
 import { Toast } from './functions/Toast/Toast';
@@ -51,6 +51,8 @@ export {
   Tag,
   Tooltip,
   Dialog,
+  DialogGlobal,
+  DialogManagerInstance,
   validate,
   LoaderManagerInstance as LoaderManager,
   LoaderGlobal,

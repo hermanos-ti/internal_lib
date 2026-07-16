@@ -1,5 +1,6 @@
 import { useState, useRef, createContext, useContext } from 'react';
 import { Tabela } from './Tabela';
+import { computeCalculation } from './calculationUtils';
 import '../../assets/icons/css/all.css'
 
 const THEME_OPTIONS = [
@@ -100,42 +101,27 @@ const columns = [
 ];
 
 const data = [
-  { name: 'John Doe', age: 30, salary: 1000, status: 'Ativo', date: '2024-01-01' },
-  { name: 'Jane Smith', age: 25, salary: 2000, status: 'Inativo', date: '2024-01-01' },
-  { name: 'Jim Beam', age: 35, salary: 3000, status: 'Ativo', date: '2024-01-01' },
-  { name: 'Jill Johnson', age: 40, salary: 4000, status: 'Inativo', date: '2024-01-01' },
-  { name: 'Jack Daniels', age: 45, salary: 5000, status: 'Ativo', date: '2024-01-01' },
-  { name: 'Jill Johnson', age: 40, salary: 4000, status: 'Inativo', date: '2024-01-01' },
+  { name: 'John Doe', age: 30, salary: 1000, status: 'Ativo', date: '01/01/2020' },
+  { name: 'Jane Smith', age: 25, salary: 2000, status: 'Inativo', date: '01/01/2021' },
+  { name: 'Jim Beam', age: 35, salary: 3000, status: 'Ativo', date: '01/01/2022' },
+  { name: 'Jill Johnson', age: 40, salary: 4000, status: 'Inativo', date: '01/01/2023' },
+  { name: 'Jack Daniels', age: 45, salary: 5000, status: 'Ativo', date: '01/01/2024' },
+  { name: 'Jill Johnson', age: 40, salary: 4000, status: 'Inativo', date: '01/01/2025' },
 ];
 
+const salaryColumn = { key: 'salary', type: 'number', format: 'money' };
+const dateColumn = { key: 'date', type: 'date', format: 'date' };
+
 const footer = [
-  { key: 'total', label: 'Total', render: (tableData) => {
-    return `Total: ${tableData.reduce((acc, row) => acc + row.salary, 0)}`;
-  } },
-  { key: 'average', label: 'Média', render: (tableData) => {
-    return `Média: ${tableData.reduce((acc, row) => acc + row.salary, 0) / tableData.length}`;
-  } },
-  { key: 'min', label: 'Mínimo', render: (tableData) => {
-    return `Mínimo: ${Math.min(...tableData.map(row => row.salary))}`;
-  } },
-  { key: 'max', label: 'Máximo', render: (tableData) => {
-    return `Máximo: ${Math.max(...tableData.map(row => row.salary))}`;
-  } },
-  { key: 'sum', label: 'Soma', render: (tableData) => {
-    return `Soma: ${tableData.reduce((acc, row) => acc + row.salary, 0)}`;
-  } },
-  { key: 'range', label: 'Faixa', render: (tableData) => {
-    return `Faixa: ${Math.max(...tableData.map(row => row.salary)) - Math.min(...tableData.map(row => row.salary))}`;
-  } },
-  { key: 'dateEarliest', label: 'Mais antiga', render: (tableData) => {
-    return `Mais antiga: ${Math.min(...tableData.map(row => row.date))}`;
-  } },
-  { key: 'dateLatest', label: 'Mais recente', render: (tableData) => {
-    return `Mais recente: ${Math.max(...tableData.map(row => row.date))}`;
-  } },
-  { key: 'dateRange', label: 'Faixa', render: (tableData) => {
-    return `Faixa: ${Math.max(...tableData.map(row => row.date)) - Math.min(...tableData.map(row => row.date))}`;
-  } },
+  { key: 'total', label: 'Total:', render: (tableData) => computeCalculation(tableData, salaryColumn, 'sum').formatted },
+  { key: 'average', label: 'Média:', render: (tableData) => computeCalculation(tableData, salaryColumn, 'average').formatted },
+  { key: 'min', label: 'Mínimo:', render: (tableData) => computeCalculation(tableData, salaryColumn, 'min').formatted },
+  { key: 'max', label: 'Máximo:', render: (tableData) => computeCalculation(tableData, salaryColumn, 'max').formatted },
+  { key: 'sum', label: 'Soma:', render: (tableData) => computeCalculation(tableData, salaryColumn, 'sum').formatted },
+  { key: 'range', label: 'Faixa:', render: (tableData) => computeCalculation(tableData, salaryColumn, 'range').formatted },
+  { key: 'dateEarliest', label: 'Mais antiga:', render: (tableData) => computeCalculation(tableData, dateColumn, 'dateEarliest').formatted },
+  { key: 'dateLatest', label: 'Mais recente:', render: (tableData) => computeCalculation(tableData, dateColumn, 'dateLatest').formatted },
+  { key: 'dateRange', label: 'Faixa:', render: (tableData) => computeCalculation(tableData, dateColumn, 'dateRange').formatted },
 ];
 
 export const Default = {

@@ -229,8 +229,9 @@ export const Select = memo(forwardRef(({
         top: relativePosition.top, 
         left: relativePosition.left, 
         position: 'absolute',
-        width: `${Math.max(triggerRect.width, 120)}px`,
-        minWidth: `${triggerRect.width}px`
+        width: 'max-content',
+        minWidth: `${Math.max(triggerRect.width, 120)}px`,
+        maxWidth: '320px'
       });
     };
 
@@ -274,6 +275,7 @@ export const Select = memo(forwardRef(({
               left: `${dropdownPosition.left}px`,
               width: dropdownPosition.width,
               minWidth: dropdownPosition.minWidth,
+              maxWidth: dropdownPosition.maxWidth,
               zIndex: 10000
             }}
             role="listbox"

@@ -264,24 +264,30 @@ export const FilterMenu = memo(forwardRef(({
         </div>
         <div className={styles.filterMenu__header__actions} ref={actionMenuRef}>
           <button
+            type="button"
             className={styles.filterMenu__header__actionBtn}
             onClick={() => setShowActionMenu(!showActionMenu)}
-            title="Ações"
+            title="Ações do filtro"
+            aria-label="Ações do filtro"
           >
             <i className="fas fa-ellipsis-vertical" />
           </button>
           {showActionMenu && (
             <div className={styles.filterMenu__header__actionDropdown}>
               <button
+                type="button"
                 className={styles.filterMenu__header__actionDropdown__item}
                 onClick={handleAddToAdvanced}
+                title="Move este filtro para o editor avançado"
               >
                 <i className={`far fa-layer-group ${styles.filterMenu__header__actionDropdown__icon}`} />
                 Adicionar ao Filtro Avançado
               </button>
               <button
+                type="button"
                 className={`${styles.filterMenu__header__actionDropdown__item} ${styles.danger}`}
                 onClick={handleRemoveFilter}
+                title="Remove este filtro da tabela"
               >
                 <i className={`far fa-trash ${styles.filterMenu__header__actionDropdown__icon}`} />
                 Remover Filtro
@@ -307,64 +313,35 @@ export const FilterMenu = memo(forwardRef(({
         {/* Campo de Valor (esconde para condições vazias) */}
         {!isEmptyCondition && (
           <div className={styles.filterMenu__field}>
-            <label className={styles.filterMenu__field__label}>
+            <label className={styles.filterMenu__field__label} htmlFor={`filter-value-${filterItem.key}`}>
               {isRangeCondition ? 'De' : 'Valor'}
             </label>
-            {filterItem.type === 'date' ? (
-              <input
-                type="date"
-                className={styles.filterMenu__field__input}
-                value={localValue}
-                onChange={(e) => setLocalValue(e.target.value)}
-              />
-            ) : filterItem.type === 'number' ? (
-              <input
-                type="number"
-                className={styles.filterMenu__field__input}
-                value={localValue}
-                onChange={(e) => setLocalValue(e.target.value)}
-                placeholder="Digite um valor..."
-              />
-            ) : (
-              <input
-                type="text"
-                className={styles.filterMenu__field__input}
-                value={localValue}
-                onChange={(e) => setLocalValue(e.target.value)}
-                placeholder="Digite um valor..."
-              />
-            )}
+            <input
+              id={`filter-value-${filterItem.key}`}
+              className={styles.filterMenu__field__input}
+              type={filterItem.type === 'date' ? 'date' : filterItem.type === 'number' ? 'number' : 'text'}
+              value={localValue}
+              onChange={(e) => setLocalValue(e.target.value)}
+              placeholder={filterItem.type === 'date' ? undefined : 'Digite um valor...'}
+              title="Valor usado para comparar com os dados da coluna"
+            />
           </div>
         )}
 
-        {/* Segundo campo de valor para condições range */}
         {!isEmptyCondition && isRangeCondition && (
           <div className={styles.filterMenu__field}>
-            <label className={styles.filterMenu__field__label}>Até</label>
-            {filterItem.type === 'date' ? (
-              <input
-                type="date"
-                className={styles.filterMenu__field__input}
-                value={localValueTo}
-                onChange={(e) => setLocalValueTo(e.target.value)}
-              />
-            ) : filterItem.type === 'number' ? (
-              <input
-                type="number"
-                className={styles.filterMenu__field__input}
-                value={localValueTo}
-                onChange={(e) => setLocalValueTo(e.target.value)}
-                placeholder="Digite um valor..."
-              />
-            ) : (
-              <input
-                type="text"
-                className={styles.filterMenu__field__input}
-                value={localValueTo}
-                onChange={(e) => setLocalValueTo(e.target.value)}
-                placeholder="Digite um valor..."
-              />
-            )}
+            <label className={styles.filterMenu__field__label} htmlFor={`filter-value-to-${filterItem.key}`}>
+              Até
+            </label>
+            <input
+              id={`filter-value-to-${filterItem.key}`}
+              className={styles.filterMenu__field__input}
+              type={filterItem.type === 'date' ? 'date' : filterItem.type === 'number' ? 'number' : 'text'}
+              value={localValueTo}
+              onChange={(e) => setLocalValueTo(e.target.value)}
+              placeholder={filterItem.type === 'date' ? undefined : 'Digite um valor...'}
+              title="Limite superior do intervalo de filtro"
+            />
           </div>
         )}
       </div>

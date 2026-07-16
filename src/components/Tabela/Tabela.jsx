@@ -2219,21 +2219,22 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   }, [totalPages, currentPage, mergedOptions.itensPerPageOptions, itensPerPage, setItensPerPage]);
 
   const handleSearchToggle = useCallback((e) => {
-    const clickedOnInput = e.target === searchInputRef.current || 
-                          searchInputRef.current?.contains(e.target);
-    
+    const searchEl = searchInputRef.current;
+    const clickedOnInput = e.target === searchEl ||
+                          searchEl?.contains?.(e.target);
+
     if (clickedOnInput) {
       return;
     }
-    
-    const isCurrentlyFocused = document.activeElement === searchInputRef.current;
+
+    const isCurrentlyFocused = document.activeElement === searchEl;
     const wasFocused = isCurrentlyFocused || wasSearchFocusedRef.current;
-    
+
     if (wasFocused) {
-      searchInputRef.current?.blur();
+      searchEl?.blur?.();
       wasSearchFocusedRef.current = false;
     } else {
-      searchInputRef.current?.focus();
+      searchInputRef.current?.focus?.();
       wasSearchFocusedRef.current = true;
     }
   }, []);
@@ -2249,11 +2250,13 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                 {Object.values(TABLE_VIEWS).filter(view => mergedOptions.tableViews.includes(view.key)).map((view) => (
                   <button
                     key={view.key}
+                    type="button"
                     className={`${styles.tabela__toolbar__tableViews__button} ${currentTableView === view.key ? styles.tabela__toolbar__tableViews__button__active : ''}`}
                     onClick={() => setCurrentTableView(view.key)}
                     aria-label={view.label}
                     aria-pressed={currentTableView === view.key}
                     data-view-active={currentTableView === view.key ? 'true' : 'false'}
+                    title={view.label}
                   >
                     <i className={view.icon} />
                     <span className={styles.tabela__toolbar__tableViews__button__label}>{view.label}</span>
@@ -2266,13 +2269,14 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             {mergedOptions.showSearch && (
               <div 
                 ref={searchContainerRef}
-                className={styles.tabela__toolbar__search} 
+                className={`${styles.tabela__toolbar__search} ${searchTerm ? styles.tabela__toolbar__search_expanded : ''}`}
                 onClick={handleSearchToggle}
               >
-                <input 
-                  ref={searchInputRef} 
-                  className={styles.tabela__toolbar__search__input} 
-                  type="text" 
+                <i className={`far fa-search ${styles.tabela__toolbar__search__icon}`} />
+                <input
+                  ref={searchInputRef}
+                  className={styles.tabela__toolbar__search__input}
+                  type="text"
                   placeholder="Pesquisar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -2281,42 +2285,59 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   }}
                   onBlur={() => {
                     setTimeout(() => {
-                      if (document.activeElement !== searchInputRef.current) {
+                      const searchEl = searchInputRef.current;
+                      if (document.activeElement !== searchEl) {
                         wasSearchFocusedRef.current = false;
                       }
                     }, 100);
                   }}
                   onClick={(e) => e.stopPropagation()}
+                  title="Pesquisar em todas as colunas visíveis"
                 />
-                <i className={`far fa-search ${styles.tabela__toolbar__search__icon}`} />
               </div>
             )}
-            {mergedOptions.showSorts && (
-              <button
-                ref={toolbarSortButtonRef}
-                className={styles.tabela__toolbar__button}
-                onClick={() => openMenu('sort-selection', toolbarSortButtonRef, { preferredPosition: 'bottom-end' })}
-              >
-                <i className={`far fa-arrow-down-arrow-up ${styles.tabela__toolbar__button__icon}`} />
-              </button>
+            {mergedOptions.showSearch && (mergedOptions.showSorts || mergedOptions.showFilters || mergedOptions.showSettings) && (
+              <span className={styles.tabela__toolbar__top__right__divider} aria-hidden="true" />
             )}
-            {mergedOptions.showFilters && (
-              <button
-                ref={toolbarFilterButtonRef}
-                className={styles.tabela__toolbar__button}
-                onClick={() => openMenu('filter-selection', toolbarFilterButtonRef, { preferredPosition: 'bottom-end' })}
-              >
-                <i className={`far fa-bars-filter ${styles.tabela__toolbar__button__icon}`} />
-              </button>
-            )}
-            {mergedOptions.showSettings && (
-              <button
-                ref={toolbarSettingsButtonRef}
-                className={styles.tabela__toolbar__button}
-                onClick={() => openMenu('settings-menu', toolbarSettingsButtonRef, { preferredPosition: 'bottom-end' })}
-              >
-                <i className={`far fa-sliders ${styles.tabela__toolbar__button__icon}`} />
-              </button>
+            {(mergedOptions.showSorts || mergedOptions.showFilters || mergedOptions.showSettings) && (
+              <div className={styles.tabela__toolbar__actionGroup}>
+                {mergedOptions.showSorts && (
+                  <button
+                    ref={toolbarSortButtonRef}
+                    type="button"
+                    className={styles.tabela__toolbar__button}
+                    onClick={() => openMenu('sort-selection', toolbarSortButtonRef, { preferredPosition: 'bottom-end' })}
+                    aria-label="Ordenar colunas"
+                    title="Ordenar colunas"
+                  >
+                    <i className={`far fa-arrow-down-arrow-up ${styles.tabela__toolbar__button__icon}`} />
+                  </button>
+                )}
+                {mergedOptions.showFilters && (
+                  <button
+                    ref={toolbarFilterButtonRef}
+                    type="button"
+                    className={styles.tabela__toolbar__button}
+                    onClick={() => openMenu('filter-selection', toolbarFilterButtonRef, { preferredPosition: 'bottom-end' })}
+                    aria-label="Filtrar dados"
+                    title="Filtrar dados"
+                  >
+                    <i className={`far fa-bars-filter ${styles.tabela__toolbar__button__icon}`} />
+                  </button>
+                )}
+                {mergedOptions.showSettings && (
+                  <button
+                    ref={toolbarSettingsButtonRef}
+                    type="button"
+                    className={styles.tabela__toolbar__button}
+                    onClick={() => openMenu('settings-menu', toolbarSettingsButtonRef, { preferredPosition: 'bottom-end' })}
+                    aria-label="Configurações da tabela"
+                    title="Configurações da tabela"
+                  >
+                    <i className={`far fa-sliders ${styles.tabela__toolbar__button__icon}`} />
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -2326,21 +2347,22 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               {(sorts.length > 0 || tempSorts.length > 0) && (
                 <div className={`${styles.tabela__toolbar__bottom__left__first_item} ${filters.length > 0 || tempFilters.length > 0 ? '' : styles.without_border}`}>
                   <button
-                    className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label}`}
                     ref={sortButtonRef}
+                    type="button"
+                    className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${styles.tabela__toolbar__button_active}`}
                     onClick={() => openMenu('sort-menu', sortButtonRef, { preferredPosition: 'bottom-start' })}
+                    title="Editar ordenação ativa"
                   >
                     <i className={`far fa-arrow-down-arrow-up ${styles.tabela__toolbar__button__icon}`} />
                     <span className={styles.tabela__toolbar__button__label}>
-                      {(() => {
-                        if (isEditingToolbar) {
-                          if (tempSorts.length === 0) return '';
-                          return tempSorts.length > 1 ? `${tempSorts.length} colunas` : (tempSorts[0]?.label ?? tempSorts[0]?.key ?? '');
-                        } else {
-                          if (sorts.length === 0) return '';
-                          return sorts.length > 1 ? `${sorts.length} colunas` : (sorts[0]?.label ?? sorts[0]?.key ?? '');
-                        }
-                      })()}
+                    {(() => {
+                      if (isEditingToolbar) {
+                        if (tempSorts.length === 0) return '';
+                        return tempSorts.length > 1 ? `${tempSorts.length} colunas` : (tempSorts[0]?.label ?? tempSorts[0]?.key ?? '');
+                      }
+                      if (sorts.length === 0) return '';
+                      return sorts.length > 1 ? `${sorts.length} colunas` : (sorts[0]?.label ?? sorts[0]?.key ?? '');
+                    })()}
                     </span>
                   </button>
                 </div>
@@ -2350,37 +2372,45 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   tempFilters.map((filter) => {
                     return (
                       <button
-                        className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${filter.isAdvanced ? styles.advanced : ''}`}
-                        onClick={() => {
-                          const buttonRef = { current: filterButtonRefs.current.get(filter.key) };
-                          handleOpenFilterMenu(filter, buttonRef);
-                        }}
                         key={filter.key}
                         ref={(el) => {
                           if (el) filterButtonRefs.current.set(filter.key, el);
                           else filterButtonRefs.current.delete(filter.key);
                         }}
+                        type="button"
+                        className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${styles.tabela__toolbar__button_active} ${filter.isAdvanced ? styles.advanced : ''}`}
+                        onClick={() => {
+                          const buttonRef = { current: filterButtonRefs.current.get(filter.key) };
+                          handleOpenFilterMenu(filter, buttonRef);
+                        }}
+                        title="Editar filtro"
                       >
                         <i className={`far ${filter.isAdvanced ? 'fa-layer-group' : 'fa-bars-filter'} ${styles.tabela__toolbar__button__icon}`} />
-                      <span className={styles.tabela__toolbar__button__label}>{getFilterDisplayText(filter, visibleColumns)}</span>
+                        <span className={styles.tabela__toolbar__button__label}>
+                          {getFilterDisplayText(filter, visibleColumns)}
+                        </span>
                       </button>
                     );
                   }) : filters.map((filter) => {
                     return (
                       <button
-                        className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${filter.isAdvanced ? styles.advanced : ''}`}
-                        onClick={() => {
-                          const buttonRef = { current: filterButtonRefs.current.get(filter.key) };
-                          handleOpenFilterMenu(filter, buttonRef);
-                        }}
                         key={filter.key}
                         ref={(el) => {
                           if (el) filterButtonRefs.current.set(filter.key, el);
                           else filterButtonRefs.current.delete(filter.key);
                         }}
+                        type="button"
+                        className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${styles.tabela__toolbar__button_active} ${filter.isAdvanced ? styles.advanced : ''}`}
+                        onClick={() => {
+                          const buttonRef = { current: filterButtonRefs.current.get(filter.key) };
+                          handleOpenFilterMenu(filter, buttonRef);
+                        }}
+                        title="Editar filtro"
                       >
                         <i className={`far ${filter.isAdvanced ? 'fa-layer-group' : 'fa-bars-filter'} ${styles.tabela__toolbar__button__icon}`} />
-                        <span className={styles.tabela__toolbar__button__label}>{getFilterDisplayText(filter, visibleColumns)}</span>
+                        <span className={styles.tabela__toolbar__button__label}>
+                          {getFilterDisplayText(filter, visibleColumns)}
+                        </span>
                       </button>
                     );
                   })
@@ -2390,17 +2420,20 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               {isEditingToolbar && (
                 <>
                   <button
+                    type="button"
                     className={`${styles.tabela__toolbar__button} ${styles.without_border} ${styles.tabela__toolbar__button_with_label}`}
                     onClick={() => {
                       setIsEditingToolbar(false);
                       setTempSorts([]);
                       setTempFilters([]);
                     }}
+                    title="Descartar alterações de ordenação e filtros"
                   >
                     <i className={`far fa-rotate-left ${styles.tabela__toolbar__button__icon}`} />
                     <span className={styles.tabela__toolbar__button__label}>Reverter</span>
                   </button>
                   <button
+                    type="button"
                     className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${styles.tabela__toolbar__editRow__saveBtn}`}
                     onClick={() => {
                       if (menuState.type === 'sort-menu' && menuState.isOpen) {
@@ -2430,8 +2463,10 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               </span>
               <div className={styles.tabela__toolbar__editRow__filterGroup}>
                 <button
+                  type="button"
                   className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label}`}
                   onClick={() => setEditViewDropdownOpen(prev => !prev)}
+                  title="Filtrar linhas por status de edição"
                 >
                   <i className={`far fa-eye ${styles.tabela__toolbar__button__icon}`} />
                   <span className={styles.tabela__toolbar__button__label}>
@@ -2442,12 +2477,14 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                 {editViewDropdownOpen && (
                   <div className={styles.tabela__toolbar__editRow__dropdown}>
                     <button
+                      type="button"
                       className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'all' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
                       onClick={() => { setEditViewFilter('all'); setEditViewDropdownOpen(false); }}
                     >
                       Todas
                     </button>
                     <button
+                      type="button"
                       className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'edited' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
                       onClick={() => { setEditViewFilter('edited'); setEditViewDropdownOpen(false); }}
                     >
@@ -2455,6 +2492,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                     </button>
                     {[...rowStatuses.values()].some(s => s.status === 'success') && (
                       <button
+                        type="button"
                         className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'success' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
                         onClick={() => { setEditViewFilter('success'); setEditViewDropdownOpen(false); }}
                       >
@@ -2464,6 +2502,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                     )}
                     {[...rowStatuses.values()].some(s => s.status === 'warning') && (
                       <button
+                        type="button"
                         className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'warning' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
                         onClick={() => { setEditViewFilter('warning'); setEditViewDropdownOpen(false); }}
                       >
@@ -2473,6 +2512,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                     )}
                     {[...rowStatuses.values()].some(s => s.status === 'error') && (
                       <button
+                        type="button"
                         className={`${styles.tabela__toolbar__editRow__dropdown__option} ${editViewFilter === 'error' ? styles.tabela__toolbar__editRow__dropdown__optionActive : ''}`}
                         onClick={() => { setEditViewFilter('error'); setEditViewDropdownOpen(false); }}
                       >
@@ -2486,15 +2526,19 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             </div>
             <div className={styles.tabela__toolbar__editRow__right}>
               <button
+                type="button"
                 className={`${styles.tabela__toolbar__button} ${styles.without_border} ${styles.tabela__toolbar__button_with_label}`}
                 onClick={handleRevertEdits}
+                title="Descartar todas as alterações nas células"
               >
                 <i className={`far fa-rotate-left ${styles.tabela__toolbar__button__icon}`} />
                 <span className={styles.tabela__toolbar__button__label}>Reverter</span>
               </button>
               <button
+                type="button"
                 className={`${styles.tabela__toolbar__button} ${styles.tabela__toolbar__button_with_label} ${styles.tabela__toolbar__editRow__saveBtn}`}
                 onClick={handleSaveEdits}
+                title="Salvar alterações nas células"
               >
                 <i className={`far fa-floppy-disk ${styles.tabela__toolbar__button__icon}`} />
                 <span className={styles.tabela__toolbar__button__label}>Salvar</span>

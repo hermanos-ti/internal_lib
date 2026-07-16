@@ -127,7 +127,16 @@ export const ColumnSelectionMenu = memo(forwardRef(({
       >
         <div className={styles.columnSelectionMenu__header}>
           <div className={styles.columnSelectionMenu__searchWrapper}>
-            <input type="text" className={styles.columnSelectionMenu__search} placeholder={getSearchPlaceholder()} value={searchValue} onChange={handleSearchChange} autoFocus />
+            <input
+              type="text"
+              className={styles.columnSelectionMenu__search}
+              placeholder={getSearchPlaceholder()}
+              value={searchValue}
+              onChange={handleSearchChange}
+              autoFocus
+              title="Busque colunas pelo nome"
+            />
+            <i className={`far fa-magnifying-glass ${styles.columnSelectionMenu__searchIcon}`} />
           </div>
         </div>
 
@@ -152,10 +161,15 @@ export const ColumnSelectionMenu = memo(forwardRef(({
         </div>
         {menuState.type === 'filter-selection' && (
           <div className={styles.columnSelectionMenu__footer}>
-            <div className={styles.columnSelectionMenu__footer__button} onClick={onAddAdvancedFilter}>
+            <button
+              type="button"
+              className={styles.columnSelectionMenu__footer__button}
+              onClick={onAddAdvancedFilter}
+              title="Abre o editor de filtros avançados com múltiplas regras"
+            >
               <i className={`far fa-plus ${styles.columnSelectionMenu__footer__button__icon}`} />
               <span className={styles.columnSelectionMenu__footer__button__label}>Adicionar Filtro Avançado</span>
-            </div>
+            </button>
           </div>
         )}
       </div>

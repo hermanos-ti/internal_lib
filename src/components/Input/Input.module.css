@@ -7,12 +7,31 @@
   --input-muted: var(--text-muted, #64748b);
   --input-border: var(--border-color, rgba(0, 0, 0, 0.08));
   --input-focus: var(--color-primary, #4f46e5);
-  --input-radius: 8px;
-  --input-height: 40px;
-  --input-padding-x: 12px;
-  --input-transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --input-radius: var(--control-radius, 8px);
+  --input-height: var(--control-height-lg, 40px);
+  --input-padding-x: var(--control-padding-x-lg, 12px);
+  --input-font-size: var(--control-font-lg, 14px);
+  --input-transition: var(--control-transition, 150ms cubic-bezier(0.16, 1, 0.3, 1));
   box-sizing: border-box;
   font-family: "Montserrat", sans-serif;
+}
+
+.input_size_sm {
+  --input-height: var(--control-height-sm, 28px);
+  --input-padding-x: var(--control-padding-x-sm, 8px);
+  --input-font-size: var(--control-font-sm, 12px);
+}
+
+.input_size_md {
+  --input-height: var(--control-height-md, 32px);
+  --input-padding-x: var(--control-padding-x-md, 10px);
+  --input-font-size: var(--control-font-md, 13px);
+}
+
+.input_size_lg {
+  --input-height: var(--control-height-lg, 40px);
+  --input-padding-x: var(--control-padding-x-lg, 12px);
+  --input-font-size: var(--control-font-lg, 14px);
 }
 
 /* Container */
@@ -38,7 +57,7 @@
 .inputError .input__control:focus,
 .inputError .input__select:focus,
 .inputError .input__passwordWrapper input:focus {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error, #dc2626) 15%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error, #dc2626) 15%, transparent);
 }
 
 /* Status (success, warning, error) - light background like Tabela */
@@ -76,6 +95,37 @@
 .inputStatusError .input__numberWrapper {
   background: color-mix(in srgb, var(--color-error, #dc2626) 8%, var(--input-bg));
   border-color: color-mix(in srgb, var(--color-error, #dc2626) 35%, var(--input-border));
+}
+
+/* Label row com tooltip de contexto */
+.input__labelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input__tooltipTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--input-muted);
+  cursor: help;
+  border-radius: 50%;
+  transition: color var(--input-transition);
+}
+
+.input__tooltipTrigger:hover {
+  color: var(--input-focus);
+}
+
+.input__tooltipTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring, color-mix(in srgb, var(--input-focus) 22%, transparent));
 }
 
 /* Label */
@@ -183,6 +233,12 @@
   opacity: 0.5;
 }
 
+.input__buttonIconOnly {
+  justify-content: center;
+  padding: 6px 8px;
+  min-width: var(--input-height);
+}
+
 .input__buttonIcon {
   display: flex;
   align-items: center;
@@ -285,7 +341,7 @@
   width: 100%;
   height: var(--input-height);
   padding: 0 var(--input-padding-x);
-  font-size: 14px;
+  font-size: var(--input-font-size, 14px);
   font-weight: 500;
   color: var(--input-text);
   background: var(--input-bg);
@@ -312,7 +368,7 @@
 }
 
 .input__control::placeholder {
-  color: var(--input-muted);
+  color: color-mix(in srgb, var(--input-muted) 70%, transparent);
   font-weight: 400;
 }
 
@@ -322,7 +378,7 @@
 
 .input__control:focus {
   border-color: var(--input-focus);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus) 12%, transparent);
+  box-shadow: 0 0 0 3px var(--focus-ring, color-mix(in srgb, var(--input-focus) 22%, transparent));
 }
 
 .input__control:disabled {
@@ -382,7 +438,7 @@
   border: none;
   border-radius: 0;
   padding: 0 var(--input-padding-x);
-  font-size: 14px;
+  font-size: var(--input-font-size, 14px);
   font-weight: 500;
   color: var(--input-text);
   background: transparent;
@@ -483,7 +539,7 @@
   min-width: 0;
   height: var(--input-height);
   padding: 0 var(--input-padding-x);
-  font-size: 14px;
+  font-size: var(--input-font-size, 14px);
   font-weight: 500;
   color: var(--input-text);
   background: var(--input-bg);
@@ -668,7 +724,7 @@
 }
 
 .input__radioLabel {
-  font-size: 14px;
+  font-size: var(--input-font-size, 14px);
   font-weight: 500;
   color: var(--input-text);
 }
@@ -825,7 +881,7 @@
 }
 
 .input__colorValue {
-  font-size: 14px;
+  font-size: var(--input-font-size, 14px);
   font-weight: 500;
   font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
   color: var(--input-text);
@@ -841,8 +897,17 @@
 }
 
 .input__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   font-size: 12px;
   color: var(--color-error, #dc2626);
   margin-top: 2px;
   line-height: 1.4;
+}
+
+.input__errorIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 12px;
 }

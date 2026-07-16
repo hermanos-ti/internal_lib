@@ -178,8 +178,8 @@ export const SettingsMenu = memo(forwardRef(({
                 key={option.key}
                 type="button"
                 className={styles.columnSelectionMenu__item}
+                title={option.tooltip || option.label}
                 onClick={() => handleAction(option.key)}
-                title={option.tooltip || undefined}
               >
                 <i className={`${option.icon} ${styles.columnSelectionMenu__item__icon}`} />
                 <span className={styles.columnSelectionMenu__item__label}>{option.label}</span>
@@ -194,10 +194,10 @@ export const SettingsMenu = memo(forwardRef(({
               type="button"
               className={styles.settingsMenu__backBtn}
               onClick={handleBack}
-              aria-label="Voltar"
+              title="Voltar ao menu de configurações"
             >
               <i className="far fa-arrow-left" />
-              <span>Voltar</span>
+              Voltar
             </button>
             <span className={styles.columnSelectionMenu__header__title}>
               {currentView === 'colunasVisiveis' && 'Colunas visíveis'}
@@ -281,6 +281,7 @@ export const SettingsMenu = memo(forwardRef(({
                       type="button"
                       className={styles.columnSelectionMenu__item}
                       onClick={() => onExport('csv')}
+                      title="Exportar dados visíveis para arquivo CSV"
                     >
                       <i className={`far fa-file-csv ${styles.columnSelectionMenu__item__icon}`} />
                       <span className={styles.columnSelectionMenu__item__label}>CSV</span>

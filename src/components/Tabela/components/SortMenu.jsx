@@ -238,7 +238,8 @@ export const SortMenu = memo(forwardRef(({
                   <i className={`fas fa-grip-dots-vertical ${styles.sortMenu__item__dragHandle__icon}`} />
                 </div>
                 
-                <button 
+                <button
+                  type="button"
                   className={styles.sortMenu__item__columnSelect}
                   onClick={(e) => onOpenColumnSelection(item, index, e.currentTarget)}
                 >
@@ -246,19 +247,23 @@ export const SortMenu = memo(forwardRef(({
                   <span className={styles.sortMenu__item__columnSelect__label}>{item.label}</span>
                   <i className={`far fa-chevron-down ${styles.sortMenu__item__columnSelect__chevron}`} />
                 </button>
-                
-                <button 
+
+                <button
+                  type="button"
                   className={`${styles.sortMenu__item__directionToggle} ${item.direction === 'asc' ? styles.asc : styles.desc}`}
                   onClick={() => handleToggleDirection(index)}
-                  title={item.direction === 'asc' ? 'Crescente' : 'Decrescente'}
+                  title={item.direction === 'asc' ? 'Ordenação crescente — clique para inverter' : 'Ordenação decrescente — clique para inverter'}
+                  aria-label={item.direction === 'asc' ? 'Ordenação crescente' : 'Ordenação decrescente'}
                 >
                   <i className={`far ${item.direction === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down'} ${styles.sortMenu__item__directionToggle__icon}`} />
                 </button>
-                
-                <button 
+
+                <button
+                  type="button"
                   className={styles.sortMenu__item__removeBtn}
                   onClick={() => handleRemoveItem(index)}
-                  title="Remover"
+                  title="Remover esta coluna da ordenação"
+                  aria-label="Remover esta coluna da ordenação"
                 >
                   <i className={`far fa-xmark ${styles.sortMenu__item__removeBtn__icon}`} />
                 </button>
@@ -269,18 +274,21 @@ export const SortMenu = memo(forwardRef(({
       </div>
 
       <div className={styles.sortMenu__footer}>
-        <button 
+        <button
+          type="button"
           className={`${styles.sortMenu__footer__button} ${styles.primary}`}
           onClick={(e) => onOpenColumnSelection(null, -1, e.currentTarget)}
         >
           <i className={`far fa-plus ${styles.sortMenu__footer__button__icon}`} />
           <span className={styles.sortMenu__footer__button__label}>Adicionar Coluna</span>
         </button>
-        
+
         {localSortItems.length > 0 && (
-          <button 
+          <button
+            type="button"
             className={`${styles.sortMenu__footer__button} ${styles.danger}`}
             onClick={handleClearAll}
+            title="Remove todas as colunas da ordenação"
           >
             <i className={`far fa-trash ${styles.sortMenu__footer__button__icon}`} />
             <span className={styles.sortMenu__footer__button__label}>Remover Ordenação</span>
