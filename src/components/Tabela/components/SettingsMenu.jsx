@@ -2,7 +2,15 @@ import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperati
 import styles from '../Tabela.module.css';
 import { COLUMN_ICONS } from '../constants';
 import { VisibleColumnsPanel } from './VisibleColumnsPanel';
+import { FreezeColumnsPanel } from './FreezeColumnsPanel';
 import { CalculationModal } from './CalculationModal';
+
+const SUBVIEW_TITLES = {
+  colunasVisiveis: 'Colunas visíveis',
+  agrupar: 'Agrupar',
+  congelar: 'Congelar',
+  exportar: 'Exportar',
+};
 
 export const SettingsMenu = memo(forwardRef(({
   menuState,
@@ -24,11 +32,20 @@ export const SettingsMenu = memo(forwardRef(({
   importConfig,
   onImportClick,
   onExport,
+  freezeLeafColumns,
+  frozenColumnKeys,
+  onApplyFrozenColumns,
+  freezeIsMobile = false,
+  freezeWidthByKey = {},
+  freezeContainerWidth = 0,
+  freezeSelectionWidth = 0,
+  freezeColumnMinWidth,
 }, ref) => {
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [currentView, setCurrentView] = useState('list');
+  const [calcNav, setCalcNav] = useState({ title: 'Calcular', onBack: null, canGoBack: false });
 
   const currentSessionRef = useRef(null);
   const menuStateSessionRef = useRef(null);
@@ -41,6 +58,7 @@ export const SettingsMenu = memo(forwardRef(({
       setIsVisible(true);
       setIsClosing(false);
       setCurrentView('list');
+      setCalcNav({ title: 'Calcular', onBack: null, canGoBack: false });
     }
   }, [menuState.isOpen, menuState.sessionId]);
 
@@ -59,6 +77,7 @@ export const SettingsMenu = memo(forwardRef(({
       setIsVisible(false);
       setIsClosing(false);
       setCurrentView('list');
+      setCalcNav({ title: 'Calcular', onBack: null, canGoBack: false });
       onClose(closingSessionId);
     }, 180);
 
@@ -91,13 +110,28 @@ export const SettingsMenu = memo(forwardRef(({
     };
   }, [isVisible, isClosing, handleClose, refList]);
 
+  const handleBackToList = useCallback(() => {
+    setCurrentView('list');
+    setCalcNav({ title: 'Calcular', onBack: null, canGoBack: false });
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (currentView === 'calcular' && calcNav.onBack) {
+      calcNav.onBack();
+      return;
+    }
+    handleBackToList();
+  }, [currentView, calcNav, handleBackToList]);
+
   useEffect(() => {
     if (!isVisible || isClosing) return;
 
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
-        if (currentView !== 'list') {
-          setCurrentView('list');
+        if (currentView === 'calcular' && calcNav.onBack && calcNav.canGoBack) {
+          calcNav.onBack();
+        } else if (currentView !== 'list') {
+          handleBackToList();
         } else {
           handleClose();
         }
@@ -106,7 +140,7 @@ export const SettingsMenu = memo(forwardRef(({
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isVisible, isClosing, handleClose, currentView]);
+  }, [isVisible, isClosing, handleClose, currentView, calcNav, handleBackToList]);
 
   const handleAction = (optionKey) => {
     if (optionKey === 'colunasVisiveis') {
@@ -115,12 +149,13 @@ export const SettingsMenu = memo(forwardRef(({
       setCurrentView('agrupar');
     } else if (optionKey === 'calcular') {
       setCurrentView('calcular');
+    } else if (optionKey === 'congelar') {
+      setCurrentView('congelar');
     } else if (optionKey === 'importar' && importConfig?.columns?.length && onImportClick) {
       onImportClick(currentSessionRef.current);
     } else if (optionKey === 'exportar' && onExport) {
       setCurrentView('exportar');
     } else {
-      // Check if it's an additional option with its own onClick
       const additionalOption = additionalSettingsOptions.find(opt => opt.key === optionKey);
       if (additionalOption?.onClick) {
         additionalOption.onClick();
@@ -131,9 +166,13 @@ export const SettingsMenu = memo(forwardRef(({
     }
   };
 
-  const handleBack = () => {
-    setCurrentView('list');
-  };
+  const handleCalcNavigationChange = useCallback((nav) => {
+    setCalcNav({
+      title: nav.title,
+      onBack: nav.onBack,
+      canGoBack: nav.canGoBack,
+    });
+  }, []);
 
   if (!isVisible) return null;
 
@@ -151,6 +190,7 @@ export const SettingsMenu = memo(forwardRef(({
     { key: 'colunasVisiveis', label: 'Colunas Visíveis', icon: 'far fa-eye' },
     { key: 'agrupar', label: 'Agrupar', icon: 'far fa-layer-group' },
     { key: 'calcular', label: 'Calcular', icon: 'far fa-calculator' },
+    { key: 'congelar', label: 'Congelar', icon: 'far fa-thumbtack' },
     { key: 'importar', label: 'Importar', icon: 'far fa-file-import' },
     { key: 'exportar', label: 'Exportar', icon: 'far fa-file-export' }
   ];
@@ -159,6 +199,10 @@ export const SettingsMenu = memo(forwardRef(({
     ...options.filter((option) => showSettingsOptions.includes(option.key)),
     ...additionalSettingsOptions,
   ];
+
+  const subViewTitle = currentView === 'calcular'
+    ? calcNav.title
+    : SUBVIEW_TITLES[currentView] ?? 'Configurações';
 
   return (
     <div
@@ -194,18 +238,12 @@ export const SettingsMenu = memo(forwardRef(({
               type="button"
               className={styles.settingsMenu__backBtn}
               onClick={handleBack}
-              title="Voltar ao menu de configurações"
+              title="Voltar"
             >
               <i className="far fa-arrow-left" />
               Voltar
             </button>
-            <span className={styles.columnSelectionMenu__header__title}>
-              {currentView === 'colunasVisiveis' && 'Colunas visíveis'}
-              {currentView === 'agrupar' && 'Agrupar'}
-              {currentView === 'calcular' && 'Calcular'}
-              {currentView === 'exportar' && 'Exportar'}
-              {currentView !== 'colunasVisiveis' && currentView !== 'agrupar' && currentView !== 'calcular' && currentView !== 'exportar' && 'Configurações'}
-            </span>
+            <span className={styles.columnSelectionMenu__header__title}>{subViewTitle}</span>
           </div>
 
           <div className={styles.columnSelectionMenu__body}>
@@ -216,52 +254,50 @@ export const SettingsMenu = memo(forwardRef(({
                 columnVisibility={columnVisibility}
                 footerVisibility={footerVisibility}
                 onApply={onApplyColumns}
+                embedded
               />
             )}
             {currentView === 'agrupar' && headerColumns && onApplyGroupBy && (
-              <div className={styles.visibleColumnsModal__body}>
-                <div className={styles.visibleColumnsModal__section}>
-                  <div className={styles.visibleColumnsModal__list}>
-                    <label className={styles.visibleColumnsModal__item}>
-                      <input
-                        type="radio"
-                        name="groupBy"
-                        checked={groupByColumnKey == null}
-                        onChange={() => onApplyGroupBy(null)}
-                      />
-                      <span className={styles.visibleColumnsModal__checkboxWrap}>
-                        <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
-                      </span>
-                      <i className={`far fa-layer-group ${styles.visibleColumnsModal__itemIcon}`} />
-                      <span className={styles.visibleColumnsModal__itemLabel}>Não agrupar</span>
-                    </label>
-                    {headerColumns
-                      .filter(col => col.groupable === true)
-                      .map((column) => {
-                        const icon = COLUMN_ICONS[column?.type ?? 'text'];
-                        return (
-                          <label key={column.key} className={styles.visibleColumnsModal__item}>
-                            <input
-                              type="radio"
-                              name="groupBy"
-                              checked={groupByColumnKey === column.key}
-                              onChange={() => onApplyGroupBy(column.key)}
-                            />
-                            <span className={styles.visibleColumnsModal__checkboxWrap}>
-                              <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
-                            </span>
-                            <i className={`${icon} ${styles.visibleColumnsModal__itemIcon}`} />
-                            <span className={styles.visibleColumnsModal__itemLabel}>{column.label ?? column.key}</span>
-                          </label>
-                        );
-                      })}
+              <div className={styles.visibleColumnsModal__list}>
+                <label className={styles.visibleColumnsModal__item}>
+                  <input
+                    type="radio"
+                    name="groupBy"
+                    checked={groupByColumnKey == null}
+                    onChange={() => onApplyGroupBy(null)}
+                  />
+                  <span className={styles.visibleColumnsModal__checkboxWrap}>
+                    <i className={`far ${groupByColumnKey == null ? 'fa-circle-dot' : 'fa-circle'}`} />
+                  </span>
+                  <i className={`far fa-layer-group ${styles.visibleColumnsModal__itemIcon}`} />
+                  <span className={styles.visibleColumnsModal__itemLabel}>Não agrupar</span>
+                </label>
+                {headerColumns
+                  .filter(col => col.groupable === true)
+                  .map((column) => {
+                    const icon = COLUMN_ICONS[column?.type ?? 'text'];
+                    const isSelected = groupByColumnKey === column.key;
+                    return (
+                      <label key={column.key} className={styles.visibleColumnsModal__item}>
+                        <input
+                          type="radio"
+                          name="groupBy"
+                          checked={isSelected}
+                          onChange={() => onApplyGroupBy(column.key)}
+                        />
+                        <span className={styles.visibleColumnsModal__checkboxWrap}>
+                          <i className={`far ${isSelected ? 'fa-circle-dot' : 'fa-circle'}`} />
+                        </span>
+                        <i className={`${icon} ${styles.visibleColumnsModal__itemIcon}`} />
+                        <span className={styles.visibleColumnsModal__itemLabel}>{column.label ?? column.key}</span>
+                      </label>
+                    );
+                  })}
+                {headerColumns.filter(col => col.groupable === true).length === 0 && (
+                  <div className={styles.visibleColumnsModal__empty}>
+                    Nenhuma coluna agrupável disponível.
                   </div>
-                  {headerColumns.filter(col => col.groupable === true).length === 0 && (
-                    <div className={styles.visibleColumnsModal__empty}>
-                      Nenhuma coluna agrupável disponível.
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             )}
             {currentView === 'calcular' && headerColumns && onApplyCalculation && (
@@ -271,23 +307,34 @@ export const SettingsMenu = memo(forwardRef(({
                 onApplyCalculation={onApplyCalculation}
                 dataForCalculation={dataForCalculation}
                 embedded={true}
+                onNavigationChange={handleCalcNavigationChange}
+                onRequestExit={handleBackToList}
+              />
+            )}
+            {currentView === 'congelar' && onApplyFrozenColumns && (
+              <FreezeColumnsPanel
+                leafColumns={freezeLeafColumns ?? []}
+                frozenColumnKeys={frozenColumnKeys ?? []}
+                onApply={onApplyFrozenColumns}
+                isMobile={freezeIsMobile}
+                widthByKey={freezeWidthByKey}
+                containerWidth={freezeContainerWidth}
+                selectionWidth={freezeSelectionWidth}
+                columnMinWidth={freezeColumnMinWidth}
+                embedded
               />
             )}
             {currentView === 'exportar' && onExport && (
-              <div className={styles.visibleColumnsModal__body}>
-                <div className={styles.visibleColumnsModal__section}>
-                  <div className={styles.visibleColumnsModal__list}>
-                    <button
-                      type="button"
-                      className={styles.columnSelectionMenu__item}
-                      onClick={() => onExport('csv')}
-                      title="Exportar dados visíveis para arquivo CSV"
-                    >
-                      <i className={`far fa-file-csv ${styles.columnSelectionMenu__item__icon}`} />
-                      <span className={styles.columnSelectionMenu__item__label}>CSV</span>
-                    </button>
-                  </div>
-                </div>
+              <div className={styles.visibleColumnsModal__list}>
+                <button
+                  type="button"
+                  className={styles.columnSelectionMenu__item}
+                  onClick={() => onExport('csv')}
+                  title="Exportar dados visíveis para arquivo CSV"
+                >
+                  <i className={`far fa-file-csv ${styles.columnSelectionMenu__item__icon}`} />
+                  <span className={styles.columnSelectionMenu__item__label}>CSV</span>
+                </button>
               </div>
             )}
           </div>

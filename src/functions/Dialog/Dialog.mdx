@@ -1,0 +1,219 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import * as DialogStories from './Dialog.stories';
+
+<Meta of={DialogStories} />
+
+# Dialog
+
+Função imperativa para exibir diálogos modais com fila, tipos semânticos, confirmação por digitação e corpo HTML customizável.
+
+## Configuração
+
+Monte o componente global **uma vez** no root da aplicação:
+
+```jsx
+import { DialogGlobal } from '@hermanos-ti/internal_lib';
+import '@hermanos-ti/internal_lib/dist/style.css';
+
+function App() {
+  return (
+    <>
+      <DialogGlobal />
+      {/* resto da app */}
+    </>
+  );
+}
+```
+
+## Métodos
+
+| Método | Descrição | Retorno |
+|--------|-----------|---------|
+| `Dialog.alert(options)` | Informativo — botão único (OK) | `Promise<void>` |
+| `Dialog.confirm(options)` | Confirmação — cancelar + confirmar | `Promise<boolean>` |
+| `Dialog.show(msg, type, options, callback)` | Compatibilidade ERP — aceita callback | `Promise` / callback |
+
+### `Dialog.alert(options)`
+
+Exibe um dialog apenas para ciência. O usuário fecha com o botão OK.
+
+```js
+await Dialog.alert({
+  title: 'Operação concluída',
+  message: 'Os dados foram salvos.',
+  type: 'success',
+  buttonsText: { close: 'Entendi' },
+});
+```
+
+### `Dialog.confirm(options)`
+
+Exibe um dialog com duas ações. Retorna `true` se confirmou, `false` se cancelou.
+
+```js
+const ok = await Dialog.confirm({
+  title: 'Confirmar exclusão',
+  message: 'Deseja continuar?',
+  type: 'warning',
+  buttonsText: { confirm: 'Sim', cancel: 'Não' },
+});
+```
+
+### `Dialog.show(message, type, options, callback)`
+
+Assinatura legada do ERP. Se `options.confirmButton === false`, abre como informativo; caso contrário, como confirmação.
+
+```js
+Dialog.show('Deseja continuar?', 'warning', { buttonsText: { confirm: 'Sim', cancel: 'Não' } }, (result) => {
+  if (result === true) { /* confirmou */ }
+});
+```
+
+---
+
+## `DialogOptions` — parâmetros
+
+### Conteúdo
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `title` | `string` | — | Título exibido no header do dialog |
+| `message` | `string` | — | Texto simples do corpo (usado se `html` não for informado) |
+| `html` | `string` | — | Corpo em HTML customizado. **Tem prioridade sobre `message`**. Sem sanitização — responsabilidade de quem chama |
+
+### Aparência
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `type` | `DialogType` \| `'critical'` | `'default'` | Define ícone e cores do dialog (ver tabela de tipos abaixo) |
+| `icon` | `string` | ícone do `type` | Classe FontAwesome completa que sobrescreve o ícone padrão. Ex: `'far fa-clock'` |
+
+#### Tipos (`type`)
+
+| Valor | Uso | Ícone padrão |
+|-------|-----|--------------|
+| `default` | Neutro | `far fa-comment-dots` |
+| `info` | Informativo | `far fa-info-circle` |
+| `primary` | Ação padrão | `far fa-circle-info` |
+| `success` | Sucesso | `far fa-check-circle` |
+| `warning` | Atenção | `far fa-exclamation-triangle` |
+| `error` | Erro | `far fa-times-circle` |
+| `danger` | Exclusão / destrutivo | `far fa-trash-can` |
+| `critical` | *(legado ERP)* | Convertido para `type: 'warning'` + `critical: true` |
+
+### Botões
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `buttonsText.confirm` | `string` | `'Confirmar'` | Label do botão de confirmação (modo `confirm`) |
+| `buttonsText.cancel` | `string` | `'Cancelar'` | Label do botão de cancelamento (modo `confirm`) |
+| `buttonsText.close` | `string` | `'OK'` | Label do botão único (modo `alert`) |
+
+### Confirmação de exclusão (`type: 'danger'`)
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `confirmText` | `string` | — | Texto exato que o usuário deve digitar para habilitar o botão confirmar. **Obrigatório** em `Dialog.confirm` com `type: 'danger'` |
+| `confirmHint` | `string` | auto | Hint do input. Se omitido: `Digite "{confirmText}" para confirmar` |
+
+### Opção `critical`
+
+Disponível apenas em **`Dialog.confirm`** (ou `show` com confirmação). Adiciona countdown antes de habilitar o botão confirmar.
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `critical` | `boolean` | `false` | Se `true`, botão confirmar inicia desabilitado com countdown |
+| `criticalDelay` | `number` | `5` | Duração do countdown em segundos |
+
+Pode combinar com `type: 'danger'`: exige countdown **e** texto digitado corretamente.
+
+### Comportamento
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `position` | `'center'` \| `'top'` \| `'bottom'` | `'center'` | Posição do dialog na tela |
+| `background` | `boolean` | `true` | Exibe overlay escuro atrás do dialog |
+| `closeOnBackdrop` | `boolean` | `false` | Fecha ao clicar fora (cancelar em confirmação, OK em alert) |
+| `closeOnEsc` | `boolean` | `true` | Fecha ao pressionar ESC |
+
+### Legado / callbacks
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `confirmButton` | `boolean` | `true` | Apenas em `Dialog.show`. `false` = informativo; `true` = confirmação |
+| `callback` | `(result) => void` | — | Callback em `Dialog.show`. `true` = confirmou, `false` = cancelou, `null` = OK (alert) |
+| `onResult` | `(result) => void` | — | Callback alternativo, funciona em qualquer método |
+
+---
+
+## Fila de dialogs
+
+Múltiplas chamadas são enfileiradas e exibidas **uma por vez**, na ordem de chamada.
+
+```js
+Dialog.alert({ title: 'Primeiro', message: '...', type: 'info' });
+Dialog.alert({ title: 'Segundo', message: '...', type: 'warning' });
+Dialog.alert({ title: 'Terceiro', message: '...', type: 'success' });
+```
+
+---
+
+## Exemplos
+
+### Informativo
+
+```js
+await Dialog.alert({
+  title: 'Sessão expirada',
+  message: 'Faça login novamente.',
+  type: 'warning',
+  icon: 'far fa-clock',
+  buttonsText: { close: 'Entendi' },
+});
+```
+
+### Confirmação simples
+
+```js
+const ok = await Dialog.confirm({
+  title: 'Vincular consultor',
+  message: 'Deseja vincular este consultor ao contrato?',
+  type: 'warning',
+  buttonsText: { confirm: 'Sim', cancel: 'Não' },
+});
+```
+
+### Exclusão com digitação (estilo GitHub/Notion)
+
+```js
+const deleted = await Dialog.confirm({
+  title: 'Excluir workspace',
+  type: 'danger',
+  confirmText: 'meu-workspace',
+  html: '<p>Esta ação é <strong>irreversível</strong>.</p>',
+  buttonsText: { confirm: 'Excluir permanentemente', cancel: 'Manter' },
+});
+```
+
+### Confirmação crítica (countdown)
+
+```js
+const proceed = await Dialog.confirm({
+  title: 'Ação irreversível',
+  message: 'Esta operação afetará todos os registros.',
+  type: 'warning',
+  critical: true,
+  criticalDelay: 5,
+  buttonsText: { confirm: 'Prosseguir', cancel: 'Cancelar' },
+});
+```
+
+### Corpo HTML
+
+```js
+await Dialog.alert({
+  title: 'Detalhes',
+  type: 'info',
+  html: '<ul><li>Item 1</li><li>Item 2</li></ul>',
+});
+```

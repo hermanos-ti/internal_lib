@@ -1,6 +1,7 @@
 import { GridView } from './gridView';
 import { ListView } from './listView';
-import { KanbanView } from './kanbanView';
+import { BoardView } from './boardView';
 import { CalendarView } from './calendarView';
+import { TimelineView } from './timelineView';
 
-export { GridView, ListView, KanbanView, CalendarView };
+export { GridView, ListView, BoardView, CalendarView, TimelineView };

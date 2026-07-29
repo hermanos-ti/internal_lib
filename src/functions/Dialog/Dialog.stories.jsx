@@ -9,7 +9,7 @@ export default {
     docs: {
       description: {
         component:
-          'Função imperativa para exibir diálogos modais. Monte `<DialogGlobal />` no root da aplicação (junto com `<LoaderGlobal />`).',
+          'Função imperativa para exibir diálogos modais. Monte `<DialogGlobal />` no root da aplicação. Consulte a aba **Docs** para a referência completa de parâmetros.',
       },
     },
   },

@@ -4,14 +4,36 @@ import { useEffect, useState, useMemo, useCallback, useRef, useContext } from 'r
 import { Pagination } from '../Pagination/Pagination';
 import { createPortal } from 'react-dom';
 
-import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, TABLE_VIEWS, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText } from './constants';
+import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, TABLE_VIEWS, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText, DEFAULT_LIST_CONFIG, DEFAULT_BOARD_CONFIG, DEFAULT_CALENDAR_CONFIG, DEFAULT_TIMELINE_CONFIG } from './constants';
 import { prepareExportData, toCSV, downloadFile, getExportFilename } from './exportUtils';
-import { ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal, ImportModal } from './components';
+import {
+  expandFrozenKeysWithGroups,
+  orderLeafColumns,
+  computeFrozenLeftOffsets,
+  estimateColumnWidthPx,
+  getSiblingGroupLeafKeys,
+  getFreezeBlockReason,
+  getFrozenKeysInVisualOrder,
+  SELECTION_COLUMN_WIDTH_PX,
+  FREEZE_MOBILE_MAX_WIDTH,
+} from './freezeUtils';
+import { resolveSettingsOptionsForView, normalizeViewKey, normalizeTableViews, getViewActiveColumnKeys } from './viewSettingsUtils';
+import { ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal, ImportModal, ItemDetailPanel } from './components';
 import { PortalTargetContext } from './PortalTargetContext';
-import { GridView, ListView, KanbanView, CalendarView } from './components/views';
+import { GridView, ListView, BoardView, CalendarView, TimelineView } from './components/views';
+
 
 export const Tabela = ({ id, columns, data, footer, options = {} }) => {
-  const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+  const mergedOptions = useMemo(() => ({
+    ...DEFAULT_OPTIONS,
+    ...options,
+    listConfig: { ...DEFAULT_LIST_CONFIG, ...(options.listConfig || {}) },
+    boardConfig: { ...DEFAULT_BOARD_CONFIG, ...(options.boardConfig || {}) },
+    calendarConfig: { ...DEFAULT_CALENDAR_CONFIG, ...(options.calendarConfig || {}) },
+    timelineConfig: { ...DEFAULT_TIMELINE_CONFIG, ...(options.timelineConfig || {}) },
+    tableViews: normalizeTableViews(options.tableViews ?? DEFAULT_OPTIONS.tableViews),
+  }), [options]);
+
 
   const onFilterChangeRef = useRef(mergedOptions.onFilterChange);
   const filterModeRef = useRef(mergedOptions.filterMode);
@@ -139,9 +161,33 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const [currentAdvancedFilterGroup, setCurrentAdvancedFilterGroup] = useState(null);
   const [groupByColumnKey, setGroupByColumnKey] = useState(null);
   const [calculationByColumn, setCalculationByColumn] = useState(mergedOptions.initialCalculationByColumn ?? {});
+  const [frozenColumnKeys, setFrozenColumnKeys] = useState(() =>
+    Array.isArray(mergedOptions.initialFrozenColumns) ? [...mergedOptions.initialFrozenColumns] : []
+  );
+  const [measuredColumnWidths, setMeasuredColumnWidths] = useState({});
+  const [wrapperClientWidth, setWrapperClientWidth] = useState(0);
+  const [isFreezeMobile, setIsFreezeMobile] = useState(false);
 
-  const [currentTableView, setCurrentTableView] = useState(mergedOptions.currentTableView ?? 'grid');
+  const onFrozenColumnsChangeRef = useRef(mergedOptions.onFrozenColumnsChange);
+  useEffect(() => {
+    onFrozenColumnsChangeRef.current = mergedOptions.onFrozenColumnsChange;
+  }, [mergedOptions.onFrozenColumnsChange]);
+
+  const [currentTableView, setCurrentTableView] = useState(
+    () => normalizeViewKey(mergedOptions.currentTableView ?? 'grid')
+  );
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [detailPanel, setDetailPanel] = useState({ open: false, item: null });
+
+  const effectiveSettingsOptions = useMemo(
+    () => resolveSettingsOptionsForView(mergedOptions.showSettingsOptions, currentTableView),
+    [mergedOptions.showSettingsOptions, currentTableView]
+  );
+
+  const viewActiveColumnKeys = useMemo(
+    () => getViewActiveColumnKeys(currentTableView, mergedOptions, columnVisibility),
+    [currentTableView, mergedOptions, columnVisibility]
+  );
 
   useEffect(() => {
     if (mergedOptions.onTableViewChange) {
@@ -226,6 +272,45 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       setColumnVisibility(nextVisibility);
     }
   }, [columns, processColumns]);
+
+  useEffect(() => {
+    const leaves = tableColumns.filter((c) => !c.hasSubColumns);
+    if (!leaves.length) return;
+    setFrozenColumnKeys((prev) => {
+      const next = expandFrozenKeysWithGroups(prev, leaves).filter((key) =>
+        leaves.some((leaf) => leaf.key === key)
+      );
+      if (next.length === prev.length && next.every((key, i) => key === prev[i])) return prev;
+      return next;
+    });
+  }, [tableColumns]);
+
+  const initialFrozenAppliedRef = useRef(false);
+  useEffect(() => {
+    if (initialFrozenAppliedRef.current) return;
+    const leaves = tableColumns.filter((c) => !c.hasSubColumns);
+    if (!leaves.length) return;
+    initialFrozenAppliedRef.current = true;
+    const initial = mergedOptions.initialFrozenColumns ?? [];
+    if (!initial.length) return;
+    const next = expandFrozenKeysWithGroups(initial, leaves).filter((key) =>
+      leaves.some((leaf) => leaf.key === key)
+    );
+    if (next.length) setFrozenColumnKeys(next);
+  }, [tableColumns, mergedOptions.initialFrozenColumns]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const mq = window.matchMedia(`(max-width: ${FREEZE_MOBILE_MAX_WIDTH}px)`);
+    const update = () => setIsFreezeMobile(mq.matches);
+    update();
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    }
+    mq.addListener(update);
+    return () => mq.removeListener(update);
+  }, []);
 
   const checkRowsRendered = useCallback(() => {
     if (!tableBodyRef.current) return false;
@@ -474,16 +559,19 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
 
     if (menuState.type === menuType && menuState.isOpen) {
-      if (menuType === 'sort-menu') {
-        sortMenuRef.current?.close();
-      } else if (menuType === 'filter-menu') {
-        filterMenuRef.current?.close();
-      } else if (menuType === 'settings-menu') {
-        settingsMenuRef.current?.close();
-      } else {
-        columnSelectionMenuRef.current?.close();
+      // filter-menu: allow switching between filter chips without closing
+      if (!(menuType === 'filter-menu' && options.allowSwitch)) {
+        if (menuType === 'sort-menu') {
+          sortMenuRef.current?.close();
+        } else if (menuType === 'filter-menu') {
+          filterMenuRef.current?.close();
+        } else if (menuType === 'settings-menu') {
+          settingsMenuRef.current?.close();
+        } else {
+          columnSelectionMenuRef.current?.close();
+        }
+        return;
       }
-      return;
     }
 
     if (menuType === 'sort-selection' || menuType === 'filter-selection') {
@@ -720,14 +808,30 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     };
 
     setCurrentEditingFilter(editingFilter);
+    const isSwitchingFilter =
+      menuState.isOpen &&
+      menuState.type === 'filter-menu' &&
+      currentEditingFilter?.key !== filter.key;
     openMenu('filter-menu', buttonRef, {
       preferredPosition: 'bottom-start',
       menuWidth: 320,
-      menuHeight: 350
+      menuHeight: 350,
+      allowSwitch: isSwitchingFilter,
     });
-  }, [visibleColumns, openMenu, calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates, isEditingToolbar, sorts, tempSorts, filters, tempFilters]);
+  }, [visibleColumns, openMenu, calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates, isEditingToolbar, sorts, tempSorts, filters, tempFilters, menuState.isOpen, menuState.type, currentEditingFilter?.key]);
 
   const handleFilterUpdate = useCallback((updatedFilter) => {
+    const baseList = tempFilters.length > 0 ? tempFilters : filters;
+    const existing = baseList.find(f => f.key === updatedFilter.key);
+    if (
+      existing &&
+      existing.condition === updatedFilter.condition &&
+      String(existing.value ?? '') === String(updatedFilter.value ?? '') &&
+      String(existing.valueTo ?? '') === String(updatedFilter.valueTo ?? '')
+    ) {
+      return;
+    }
+
     setIsEditingToolbar(true);
     
     setTempFilters(prev => {
@@ -748,7 +852,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         setCurrentEditingFilter(null);
       }
     }
-  }, [currentEditingFilter, menuState.type, menuState.isOpen, isEditingToolbar, tempSorts, sorts, tempFilters, filters]);
+  }, [currentEditingFilter, menuState.type, menuState.isOpen, tempSorts, sorts, tempFilters, filters]);
 
   const handleFilterRemove = useCallback((filterId) => {
     setIsEditingToolbar(true);
@@ -777,29 +881,40 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       rules: [{ type: 'rule', id: `rule-${Date.now()}`, ...filterItem }]
     };
 
+    const previousMenuPosition = menuState.type === 'filter-menu' && menuState.isOpen
+      ? { ...menuState.position }
+      : null;
+
     setCurrentAdvancedFilterGroup(newGroup);
     filterMenuRef.current?.close();
-    const buttonElement = filterButtonRefs.current.get(filterItem.key);
-    if (buttonElement) {
-      const position = calculateMenuPosition(buttonElement, {
+
+    let position = previousMenuPosition;
+
+    if (!position) {
+      const buttonElement = filterButtonRefs.current.get(filterItem.key);
+      if (!buttonElement) return;
+
+      const rawPosition = calculateMenuPosition(buttonElement, {
         menuWidth: 580,
         menuHeight: 450,
         preferredPosition: 'bottom-start',
         offset: 8,
         padding: 16,
       });
-
-      const newSessionId = Date.now() + Math.random();
-      currentSubMenuSessionRef.current = newSessionId;
-
-      setSubMenuState({
-        isOpen: true,
-        type: 'advanced-filter-menu',
-        position: { ...position },
-        sessionId: newSessionId,
-      });
+      const portalContainer = getPortalContainerResolved();
+      position = positionToPortalCoordinates(rawPosition, portalContainer);
     }
-  }, [currentAdvancedFilterGroup, calculateMenuPosition]);
+
+    const newSessionId = Date.now() + Math.random();
+    currentSubMenuSessionRef.current = newSessionId;
+
+    setSubMenuState({
+      isOpen: true,
+      type: 'advanced-filter-menu',
+      position: { ...position },
+      sessionId: newSessionId,
+    });
+  }, [currentAdvancedFilterGroup, calculateMenuPosition, menuState, getPortalContainerResolved, positionToPortalCoordinates]);
 
   const handleAdvancedFilterUpdate = useCallback((updatedGroup) => {
     setCurrentAdvancedFilterGroup(updatedGroup);
@@ -850,7 +965,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
 
   const handleOpenNewAdvancedFilter = useCallback((buttonRef) => {
     columnSelectionMenuRef.current?.close();
-    
+
     setIsEditingToolbar(true);
 
     // Criar novo grupo vazio
@@ -869,32 +984,42 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     setTempFilters(prev => [...prev, advancedFilterItem]);
     setCurrentAdvancedFilterGroup(newGroup);
 
+    const openAdvancedMenuAt = (position) => {
+      if (!position) return;
+
+      const newSessionId = Date.now() + Math.random();
+      currentSubMenuSessionRef.current = newSessionId;
+
+      setSubMenuState({
+        isOpen: true,
+        type: 'advanced-filter-menu',
+        position: { ...position },
+        sessionId: newSessionId,
+      });
+    };
+
+    // Aguardar o chip montar e ancorar o painel abaixo dele (nunca reutilizar
+    // a posição do filter-selection, calculada para menu de 280px / bottom-end).
     setTimeout(() => {
-      const newFilterButton = filterButtonRefs.current.get(newGroup.id);
-      
-      if (newFilterButton) {
-        const rawPosition = calculateMenuPosition(newFilterButton, {
-          menuWidth: 580,
-          menuHeight: 450,
-          preferredPosition: 'bottom-start',
-          offset: 8,
-          padding: 16,
-        });
+      const anchorElement =
+        filterButtonRefs.current.get(newGroup.id) ||
+        buttonRef?.current ||
+        toolbarFilterButtonRef.current;
 
-        const portalContainer = getPortalContainerResolved();
-        const position = positionToPortalCoordinates(rawPosition, portalContainer);
+      if (!anchorElement) return;
 
-        const newSessionId = Date.now() + Math.random();
-        currentSubMenuSessionRef.current = newSessionId;
+      const rawPosition = calculateMenuPosition(anchorElement, {
+        menuWidth: 580,
+        menuHeight: 450,
+        preferredPosition: 'bottom-start',
+        offset: 8,
+        padding: 16,
+      });
 
-        setSubMenuState({
-          isOpen: true,
-          type: 'advanced-filter-menu',
-          position: { ...position },
-          sessionId: newSessionId,
-        });
-      }
-    }, 0);
+      const portalContainer = getPortalContainerResolved();
+      const position = positionToPortalCoordinates(rawPosition, portalContainer);
+      openAdvancedMenuAt(position);
+    }, 50);
   }, [calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates]);
 
   const evaluateFilterCondition = useCallback((value, filter) => {
@@ -1100,7 +1225,6 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     const activeFilters = isEditingToolbar ? tempFilters : filters;
     const isExternalMode = filterModeRef.current === 'external';
 
-
     requestAnimationFrame(() => {
       let result = originalData;
 
@@ -1226,10 +1350,59 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     };
   }, [sorts, tempSorts, isEditingToolbar, originalData, filteredData, sortDataMultiColumnAsync]);
 
+  const activeFrozenKeys = useMemo(
+    () => (isFreezeMobile ? [] : frozenColumnKeys),
+    [isFreezeMobile, frozenColumnKeys]
+  );
+
+  const naturalLeafColumns = useMemo(
+    () => visibleColumns.filter((col) => !col.hasSubColumns && col.visible !== false),
+    [visibleColumns]
+  );
+
+  const frozenKeysInVisualOrder = useMemo(
+    () => getFrozenKeysInVisualOrder(activeFrozenKeys, naturalLeafColumns),
+    [activeFrozenKeys, naturalLeafColumns]
+  );
+
+  const selectionWidthPx = useMemo(() => {
+    if (!mergedOptions.selectable) return 0;
+    return measuredColumnWidths.__selection || SELECTION_COLUMN_WIDTH_PX;
+  }, [mergedOptions.selectable, measuredColumnWidths]);
+
+  const freezeWidthByKey = useMemo(() => {
+    const widths = {};
+    naturalLeafColumns.forEach((col) => {
+      widths[col.key] = estimateColumnWidthPx(
+        col,
+        measuredColumnWidths[col.key],
+        mergedOptions.columnMinWidth
+      );
+    });
+    return widths;
+  }, [naturalLeafColumns, measuredColumnWidths, mergedOptions.columnMinWidth]);
+
+  const { frozenLeftOffsets, lastFrozenKey } = useMemo(() => {
+    if (!frozenKeysInVisualOrder.length) {
+      return { frozenLeftOffsets: {}, lastFrozenKey: null };
+    }
+    const { offsets } = computeFrozenLeftOffsets(
+      frozenKeysInVisualOrder,
+      freezeWidthByKey,
+      selectionWidthPx
+    );
+    return {
+      frozenLeftOffsets: offsets,
+      lastFrozenKey: frozenKeysInVisualOrder[frozenKeysInVisualOrder.length - 1] ?? null,
+    };
+  }, [frozenKeysInVisualOrder, freezeWidthByKey, selectionWidthPx]);
+
+  const freezeActive = frozenKeysInVisualOrder.length > 0;
+
   const headerStructure = useMemo(() => {
     if (!tableColumns.length) return { headerRows: [], leafColumns: [] };
 
-    const leafColumns = visibleColumns.filter(col => !col.hasSubColumns && (col.visible !== false));
+    const leafColumns = orderLeafColumns(naturalLeafColumns, frozenKeysInVisualOrder);
 
     const maxLevel = tableColumns.length > 0
       ? Math.max(...tableColumns.map(col => col.level || 0))
@@ -1398,7 +1571,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       }
     }
     return { headerRows, leafColumns, totalRows: maxLeafLevel + 1 };
-  }, [tableColumns, visibleColumns]);
+  }, [tableColumns, visibleColumns, naturalLeafColumns, frozenKeysInVisualOrder]);
 
   const sortedData = useMemo(() => {
     const activeSorts = isEditingToolbar ? tempSorts : sorts;
@@ -1498,10 +1671,16 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
 
   // ── Edit logic ──
 
-  const handleCellClick = useCallback((row, column, rowIndex, colIndex) => {
+  const handleCellClick = useCallback((row, column, rowIndex, colIndex, cellWidth) => {
     if (!mergedOptions.editable) return;
     const rowKey = getRowKey(row);
-    setEditingCell({ rowKey, colKey: column.key, rowIndex, colIndex });
+    setEditingCell({
+      rowKey,
+      colKey: column.key,
+      rowIndex,
+      colIndex,
+      width: typeof cellWidth === 'number' && cellWidth > 0 ? cellWidth : undefined,
+    });
   }, [mergedOptions.editable, getRowKey]);
 
   const clickDelayTimerRef = useRef(null);
@@ -1509,7 +1688,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const CLICK_DELAY_MS = 300;
 
   const handleCellClickWithDbl = useCallback((event) => {
-    const { row, column, cell, rowIndex, colIndex } = event;
+    const { row, column, cell, rowIndex, colIndex, cellWidth } = event;
     const cellKey = `${rowIndex}-${colIndex}`;
     const now = Date.now();
 
@@ -1525,7 +1704,13 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       if (clickDelayTimerRef.current) clearTimeout(clickDelayTimerRef.current);
       mergedOptions.onClick?.(pending.event);
       if (mergedOptions.editable && pending.event.column?.editable) {
-        handleCellClick(pending.event.row, pending.event.column, pending.event.rowIndex, pending.event.colIndex);
+        handleCellClick(
+          pending.event.row,
+          pending.event.column,
+          pending.event.rowIndex,
+          pending.event.colIndex,
+          pending.event.cellWidth
+        );
       }
     }
 
@@ -1533,7 +1718,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       clickPendingRef.current = null;
       mergedOptions.onClick?.(event);
       if (mergedOptions.editable && column?.editable) {
-        handleCellClick(row, column, rowIndex, colIndex);
+        handleCellClick(row, column, rowIndex, colIndex, cellWidth);
       }
     }, CLICK_DELAY_MS);
 
@@ -1579,6 +1764,45 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       onEditChangeRef.current(allData, changedRow, colKey);
     }
   }, [getRowKey, originalData, editedData]);
+
+  const handleItemClick = useCallback((e, row, rowIndex = 0) => {
+    mergedOptions.onClick?.({
+      row,
+      column: null,
+      cell: null,
+      rowIndex,
+      colIndex: -1,
+      nativeEvent: e,
+    });
+  }, [mergedOptions.onClick]);
+
+  const handleItemDoubleClick = useCallback((e, row, rowIndex = 0) => {
+    mergedOptions.onDoubleClick?.({
+      row,
+      column: null,
+      cell: null,
+      rowIndex,
+      colIndex: -1,
+      nativeEvent: e,
+    });
+  }, [mergedOptions.onDoubleClick]);
+
+  const handleItemContextMenu = useCallback((_e, row) => {
+    setDetailPanel({ open: true, item: row });
+  }, []);
+
+  const handleCloseDetailPanel = useCallback(() => {
+    setDetailPanel({ open: false, item: null });
+  }, []);
+
+  const handleBoardMove = useCallback((row, { from, to, columnKey }) => {
+    const boardCfg = mergedOptions.boardConfig || {};
+    boardCfg.onBoardMove?.(row, { from, to, columnKey });
+
+    if (mergedOptions.editable) {
+      handleCellCommit(row, columnKey, to);
+    }
+  }, [mergedOptions.boardConfig, mergedOptions.editable, handleCellCommit]);
 
   const handleCellCancel = useCallback(() => {
     setEditingCell(null);
@@ -1644,8 +1868,21 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
 
     const nextRowKey = getRowKey(nextRow);
-    setEditingCell({ rowKey: nextRowKey, colKey: nextColumn.key, rowIndex: nextRowIndex, colIndex: nextColIndex });
-  }, [headerStructure, sortedData, getRowKey]);
+    const measured = containerRef.current
+      ?.querySelector(`[data-tabela-cell-col="${CSS.escape(nextColumn.key)}"]`)
+      ?.getBoundingClientRect?.().width;
+    const width = typeof measured === 'number' && measured > 0
+      ? measured
+      : (nextColumn.key === editingCell?.colKey ? editingCell?.width : undefined);
+
+    setEditingCell({
+      rowKey: nextRowKey,
+      colKey: nextColumn.key,
+      rowIndex: nextRowIndex,
+      colIndex: nextColIndex,
+      width,
+    });
+  }, [headerStructure, sortedData, getRowKey, editingCell?.colKey, editingCell?.width]);
 
   useEffect(() => {
     if (!mergedOptions.editable || !mergedOptions.editRef) return;
@@ -1894,15 +2131,24 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   }, []);
 
   useEffect(() => {
-    const checkScroll = () => {
-      if (tableWrapperRef.current) {
-        const hasVerticalScroll = tableWrapperRef.current.scrollHeight > tableWrapperRef.current.clientHeight;
-        const hasHorizontalScroll = tableWrapperRef.current.scrollWidth > tableWrapperRef.current.clientWidth;
-        setHasScroll(hasVerticalScroll || hasHorizontalScroll);
-      }
+    let debounceTimer = null;
+    let disposed = false;
+
+    const applyScrollState = () => {
+      if (disposed || !tableWrapperRef.current) return;
+      const hasVerticalScroll = tableWrapperRef.current.scrollHeight > tableWrapperRef.current.clientHeight;
+      const hasHorizontalScroll = tableWrapperRef.current.scrollWidth > tableWrapperRef.current.clientWidth;
+      const next = hasVerticalScroll || hasHorizontalScroll;
+      setHasScroll(prev => (prev === next ? prev : next));
     };
 
-    checkScroll();
+    const checkScroll = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      // Debounce to avoid true↔false thrashing that re-renders the whole table
+      debounceTimer = setTimeout(applyScrollState, 50);
+    };
+
+    applyScrollState();
     
     const resizeObserver = new ResizeObserver(checkScroll);
     if (tableWrapperRef.current) {
@@ -1916,6 +2162,8 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
 
     return () => {
+      disposed = true;
+      if (debounceTimer) clearTimeout(debounceTimer);
       resizeObserver.disconnect();
       if (wrapperEl) {
         wrapperEl.removeEventListener('scroll', scrollHandler);
@@ -1923,13 +2171,126 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     };
   }, [sortedData, originalData, filters, tempFilters, visibleColumns, groupedBodyItems, groupCurrentPage, collapsedGroupKeys]);
 
+  useEffect(() => {
+    const wrapper = tableWrapperRef.current;
+    if (!wrapper || currentTableView !== 'grid') return undefined;
+
+    const measure = () => {
+      setWrapperClientWidth(wrapper.clientWidth);
+      const next = {};
+      wrapper.querySelectorAll('[data-freeze-measure-key]').forEach((el) => {
+        const key = el.getAttribute('data-freeze-measure-key');
+        if (key) next[key] = el.getBoundingClientRect().width;
+      });
+      const selectionEl = wrapper.querySelector('[data-freeze-selection]');
+      if (selectionEl) {
+        next.__selection = selectionEl.getBoundingClientRect().width;
+      }
+      setMeasuredColumnWidths((prev) => {
+        const prevKeys = Object.keys(prev);
+        const nextKeys = Object.keys(next);
+        if (
+          prevKeys.length === nextKeys.length &&
+          nextKeys.every((key) => Math.abs((prev[key] || 0) - (next[key] || 0)) < 0.5)
+        ) {
+          return prev;
+        }
+        return next;
+      });
+    };
+
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(wrapper);
+    return () => ro?.disconnect();
+  }, [currentTableView, headerStructure, activeFrozenKeys, mergedOptions.selectable, sortedData]);
+
+  const commitFrozenKeys = useCallback((nextKeys) => {
+    const normalized = expandFrozenKeysWithGroups(nextKeys ?? [], naturalLeafColumns);
+    setFrozenColumnKeys(normalized);
+    onFrozenColumnsChangeRef.current?.(normalized);
+  }, [naturalLeafColumns]);
+
+  const handleToggleFreezeColumn = useCallback((columnKey) => {
+    if (isFreezeMobile) return;
+    const leaves = naturalLeafColumns;
+    const column = leaves.find((col) => col.key === columnKey);
+    if (!column) return;
+
+    const isFrozen = frozenColumnKeys.includes(columnKey);
+    if (isFrozen) {
+      const groupKeys = new Set(getSiblingGroupLeafKeys(columnKey, leaves));
+      commitFrozenKeys(frozenColumnKeys.filter((key) => !groupKeys.has(key)));
+      return;
+    }
+
+    const reason = getFreezeBlockReason(column, {
+      isMobile: isFreezeMobile,
+      leafColumns: leaves,
+      frozenKeys: frozenColumnKeys,
+      widthByKey: freezeWidthByKey,
+      containerWidth: wrapperClientWidth || tableWrapperRef.current?.clientWidth || 0,
+      selectionWidth: selectionWidthPx,
+      columnMinWidth: mergedOptions.columnMinWidth,
+    });
+    if (reason) return;
+
+    const groupKeys = getSiblingGroupLeafKeys(columnKey, leaves);
+    commitFrozenKeys([...frozenColumnKeys, ...groupKeys]);
+  }, [
+    isFreezeMobile,
+    naturalLeafColumns,
+    frozenColumnKeys,
+    freezeWidthByKey,
+    wrapperClientWidth,
+    selectionWidthPx,
+    mergedOptions.columnMinWidth,
+    commitFrozenKeys,
+  ]);
+
+  const handleApplyFrozenColumns = useCallback((columnKey, explicitKeys) => {
+    if (Array.isArray(explicitKeys)) {
+      commitFrozenKeys(explicitKeys);
+      return;
+    }
+    if (columnKey) handleToggleFreezeColumn(columnKey);
+  }, [commitFrozenKeys, handleToggleFreezeColumn]);
+
+  const handleHeaderSortCycle = useCallback((column) => {
+    if (!column?.sortable || column.isParent) return;
+    const label = column.label ?? column.key;
+    const apply = (current) => {
+      const index = current.findIndex((s) => s.key === column.key);
+      if (index === -1) {
+        return [...current, { key: column.key, direction: 'asc', label }];
+      }
+      const item = current[index];
+      if (item.direction === 'asc') {
+        const next = [...current];
+        next[index] = { ...item, direction: 'desc' };
+        return next;
+      }
+      return current.filter((_, i) => i !== index);
+    };
+
+    if (isEditingToolbar) {
+      setTempSorts((prev) => apply(prev));
+    } else {
+      setSorts((prev) => apply(prev));
+    }
+  }, [isEditingToolbar]);
+
   const renderTableHead = () => (
     mergedOptions.showHeader && (
       <thead className={`${styles.tabela__header} ${headerStructure.headerRows.length > 1 ? styles.isNastedHeader : ''}`}>
         {headerStructure.leafColumns.length === 0 ? (
           <tr className={styles.tabela__header__row}>
             {mergedOptions.selectable && (
-              <th className={styles.tabela__selection__headerCell} />
+              <th
+                className={`${styles.tabela__selection__headerCell}${freezeActive ? ` ${styles.isFrozen}` : ''}`}
+                data-freeze-selection=""
+                style={freezeActive ? { '--frozen-left': '0px' } : undefined}
+              />
             )}
             <th colSpan={1} className={styles.tabela__header__cell} style={{ width: '100%' }}>
               <span className={styles.tabela__header__label}>Nenhuma coluna encontrada/selecionada</span>
@@ -1939,8 +2300,10 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           <tr className={styles.tabela__header__row} key={`header-row-${rowIndex}`}>
             {mergedOptions.selectable && rowIndex === 0 && (
               <th
-                className={styles.tabela__selection__headerCell}
+                className={`${styles.tabela__selection__headerCell}${freezeActive ? ` ${styles.isFrozen}` : ''}`}
                 rowSpan={headerStructure.headerRows.length}
+                data-freeze-selection=""
+                style={freezeActive ? { '--frozen-left': '0px' } : undefined}
               >
                 {selectionMode !== 'single' && (
                   <button
@@ -1975,18 +2338,81 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             {headerRow.columns.map((column) => {
               const colSpan = column.colSpan || 1;
               const rowspan = column.rowspan || 1;
+              const isLeaf = !column.isParent && !column.hasSubColumns;
+              const isFrozenLeaf = isLeaf && freezeActive && Object.prototype.hasOwnProperty.call(frozenLeftOffsets, column.key);
+              let isFrozenParent = false;
+              let parentFrozenLeft = 0;
+              let parentIsLastFrozen = false;
+
+              if (column.isParent || column.hasSubColumns) {
+                const groupLeaves = leafKeysMap.get(column.key) || [];
+                if (groupLeaves.length > 0 && freezeActive) {
+                  const allFrozen = groupLeaves.every((key) => frozenKeysInVisualOrder.includes(key));
+                  if (allFrozen) {
+                    isFrozenParent = true;
+                    const firstKey = frozenKeysInVisualOrder.find((key) => groupLeaves.includes(key));
+                    parentFrozenLeft = frozenLeftOffsets[firstKey] ?? 0;
+                    parentIsLastFrozen = groupLeaves.includes(lastFrozenKey);
+                  }
+                }
+              }
+
+              const isFrozen = isFrozenLeaf || isFrozenParent;
+              const isFrozenLast = isFrozenLeaf
+                ? lastFrozenKey === column.key
+                : parentIsLastFrozen;
+              const frozenLeft = isFrozenLeaf
+                ? (frozenLeftOffsets[column.key] ?? 0)
+                : parentFrozenLeft;
+              const frozenWidthPx = isFrozenLeaf ? freezeWidthByKey[column.key] : null;
+
+              const showActions = isLeaf && !column.isParent;
               const cellClasses = [
                 styles.tabela__header__cell,
                 column.level > 0 ? styles.tabela__header__intern__cell : '',
-                column.sortable && !column.isParent ? styles.tabela__header__cell__sortable : '',
+                column.sortable && showActions ? styles.tabela__header__cell__sortable : '',
+                showActions ? styles.tabela__header__cell__hasActions : '',
+                isFrozen ? styles.isFrozen : '',
+                isFrozenLast ? styles.isFrozenLast : '',
                 column.className || ''
               ].filter(Boolean).join(' ');
+
+              const minWidthValue = typeof column?.minWidth === 'number'
+                ? `${column.minWidth}px`
+                : typeof mergedOptions.columnMinWidth === 'number'
+                  ? `${mergedOptions.columnMinWidth}px`
+                  : 'auto';
+
               const cellStyles = {
-                minWidth: typeof mergedOptions.columnMinWidth === 'number' ? `${mergedOptions.columnMinWidth}px` : 'auto',
-                width: column?.width == 'auto' ? 'auto' : `${column?.width}%`,
+                minWidth: frozenWidthPx ? `${frozenWidthPx}px` : minWidthValue,
+                width: frozenWidthPx
+                  ? `${frozenWidthPx}px`
+                  : column?.width == 'auto'
+                    ? 'auto'
+                    : `${column?.width}%`,
+                ...(frozenWidthPx ? { maxWidth: `${frozenWidthPx}px` } : {}),
                 textAlign: column?.align || 'left',
+                ...(rowspan > 1 ? { verticalAlign: column?.verticalAlign || 'middle' } : {}),
+                ...(isFrozen ? { '--frozen-left': `${frozenLeft}px` } : {}),
                 ...column?.style,
               };
+
+              const activeSorts = isEditingToolbar ? tempSorts : sorts;
+              const sortItem = showActions ? activeSorts.find((s) => s.key === column.key) : null;
+              const freezeBlockReason = showActions
+                ? getFreezeBlockReason(column, {
+                    isMobile: isFreezeMobile,
+                    leafColumns: naturalLeafColumns,
+                    frozenKeys: frozenColumnKeys,
+                    widthByKey: freezeWidthByKey,
+                    containerWidth: wrapperClientWidth || tableWrapperRef.current?.clientWidth || 0,
+                    selectionWidth: selectionWidthPx,
+                    columnMinWidth: mergedOptions.columnMinWidth,
+                  })
+                : null;
+              const isColumnFrozen = frozenColumnKeys.includes(column.key);
+              const freezeDisabled = !isColumnFrozen && !!freezeBlockReason;
+
               return (
                 <th
                   key={column.key}
@@ -1994,17 +2420,64 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   style={cellStyles}
                   colSpan={colSpan > 1 ? colSpan : undefined}
                   rowSpan={rowspan > 1 ? rowspan : undefined}
+                  data-freeze-measure-key={isLeaf ? column.key : undefined}
                 >
                   <span className={styles.tabela__header__label}>{column.label}</span>
-                  {column.sortable && !column.isParent && (() => {
-                    const activeSorts = isEditingToolbar ? tempSorts : sorts;
-                    const sortItem = activeSorts.find(s => s.key === column.key);
-                    return (
-                      <i
-                        className={`fas ${sortItem ? sortItem.direction === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down' : ''} ${styles.tabela__header__sortable__icon}`}
-                      />
-                    );
-                  })()}
+                  {showActions && (
+                    <span className={styles.tabela__header__actions}>
+                      {column.sortable !== false && (
+                        <button
+                          type="button"
+                          className={`${styles.tabela__header__actionBtn}${sortItem ? ` ${styles.isActive}` : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleHeaderSortCycle(column);
+                          }}
+                          aria-label={
+                            !sortItem
+                              ? `Ordenar ${column.label ?? column.key} ascendente`
+                              : sortItem.direction === 'asc'
+                                ? `Ordenar ${column.label ?? column.key} descendente`
+                                : `Remover ordenação de ${column.label ?? column.key}`
+                          }
+                          title={
+                            !sortItem
+                              ? 'Ordenar ASC'
+                              : sortItem.direction === 'asc'
+                                ? 'Ordenar DESC'
+                                : 'Remover ordenação'
+                          }
+                        >
+                          <i className={`fas ${
+                            sortItem
+                              ? sortItem.direction === 'asc'
+                                ? 'fa-arrow-up'
+                                : 'fa-arrow-down'
+                              : 'fa-arrow-up'
+                          }`} />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={`${styles.tabela__header__actionBtn}${isColumnFrozen ? ` ${styles.isActive}` : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!freezeDisabled) handleToggleFreezeColumn(column.key);
+                        }}
+                        disabled={freezeDisabled}
+                        aria-label={isColumnFrozen ? 'Descongelar coluna' : 'Congelar coluna'}
+                        title={
+                          freezeDisabled
+                            ? freezeBlockReason
+                            : isColumnFrozen
+                              ? 'Descongelar'
+                              : 'Congelar'
+                        }
+                      >
+                        <i className={`${isColumnFrozen ? 'fas' : 'far'} fa-thumbtack`} />
+                      </button>
+                    </span>
+                  )}
                 </th>
               );
             })}
@@ -2102,18 +2575,84 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             onCellCommit={handleCellCommit}
             onCellCancel={handleCellCancel}
             onEditNavigate={handleEditNavigate}
+            freezeActive={freezeActive}
+            frozenLeftOffsets={frozenLeftOffsets}
+            lastFrozenKey={lastFrozenKey}
+            freezeWidthByKey={freezeWidthByKey}
           />
         );
       case 'list':
-        return <ListView sortedData={sortedData} headerStructure={headerStructure} />;
+        return (
+          <ListView
+            sortedData={displayData}
+            headerStructure={headerStructure}
+            columnVisibility={columnVisibility}
+            listConfig={mergedOptions.listConfig}
+            groupByColumnKey={groupByColumnKey}
+            collapsedGroupKeys={collapsedGroupKeys}
+            setCollapsedGroupKeys={setCollapsedGroupKeys}
+            isLoading={isLoading}
+            isSorting={isSorting}
+            getRowKey={getRowKey}
+            onItemClick={handleItemClick}
+            onItemDoubleClick={handleItemDoubleClick}
+            onItemContextMenu={handleItemContextMenu}
+            editedData={editedData}
+          />
+        );
+      case 'board':
       case 'kanban':
-        return <KanbanView sortedData={sortedData} headerStructure={headerStructure} />;
+        return (
+          <BoardView
+            sortedData={fullDataForGrouping}
+            headerStructure={headerStructure}
+            columnVisibility={columnVisibility}
+            boardConfig={mergedOptions.boardConfig}
+            listConfig={mergedOptions.listConfig}
+            isLoading={isLoading}
+            isSorting={isSorting}
+            getRowKey={getRowKey}
+            onItemClick={handleItemClick}
+            onItemDoubleClick={handleItemDoubleClick}
+            onItemContextMenu={handleItemContextMenu}
+            onBoardMove={handleBoardMove}
+            editable={mergedOptions.editable}
+            editedData={editedData}
+          />
+        );
       case 'calendar':
-        return <CalendarView sortedData={sortedData} headerStructure={headerStructure} />;
+        return (
+          <CalendarView
+            sortedData={fullDataForGrouping}
+            headerStructure={headerStructure}
+            columnVisibility={columnVisibility}
+            calendarConfig={mergedOptions.calendarConfig}
+            getRowKey={getRowKey}
+            onItemClick={handleItemClick}
+            onItemDoubleClick={handleItemDoubleClick}
+            onItemContextMenu={handleItemContextMenu}
+            editedData={editedData}
+          />
+        );
+      case 'timeline':
+        return (
+          <TimelineView
+            sortedData={fullDataForGrouping}
+            headerStructure={headerStructure}
+            columnVisibility={columnVisibility}
+            timelineConfig={mergedOptions.timelineConfig}
+            listConfig={mergedOptions.listConfig}
+            getRowKey={getRowKey}
+            onItemClick={handleItemClick}
+            onItemDoubleClick={handleItemDoubleClick}
+            onItemContextMenu={handleItemContextMenu}
+            editedData={editedData}
+          />
+        );
       default:
         return null;
     }
-  }, [currentTableView, visibleColumns, displayData, sortedData, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, fullDataForGrouping, openCalculationSubmenu, hasScroll, visibleFooter, renderTableHead, handleGroupItemsPerPageChange, mergedOptions.selectable, selectionMode, selectedKeys, getRowKey, toggleRowSelection, mergedOptions.editable, editingCell, editedData, rowStatuses, handleCellClickWithDbl, handleCellClick, handleCellCommit, handleCellCancel, handleEditNavigate]);
+  }, [currentTableView, visibleColumns, displayData, sortedData, fullDataForGrouping, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, openCalculationSubmenu, hasScroll, visibleFooter, renderTableHead, handleGroupItemsPerPageChange, mergedOptions, selectionMode, selectedKeys, getRowKey, toggleRowSelection, editingCell, editedData, rowStatuses, handleCellClickWithDbl, handleCellClick, handleCellCommit, handleCellCancel, handleEditNavigate, freezeActive, frozenLeftOffsets, lastFrozenKey, freezeWidthByKey, columnVisibility, handleItemClick, handleItemDoubleClick, handleItemContextMenu, handleBoardMove]);
 
   const footerRowRef = useRef(null);
   const [footerCellMeta, setFooterCellMeta] = useState({});
@@ -2203,8 +2742,10 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           </div>
         );
       case 'list':
+      case 'board':
       case 'kanban':
       case 'calendar':
+      case 'timeline':
       default:
         return null;
     }
@@ -2251,11 +2792,11 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   <button
                     key={view.key}
                     type="button"
-                    className={`${styles.tabela__toolbar__tableViews__button} ${currentTableView === view.key ? styles.tabela__toolbar__tableViews__button__active : ''}`}
+                    className={`${styles.tabela__toolbar__tableViews__button} ${normalizeViewKey(currentTableView) === view.key ? styles.tabela__toolbar__tableViews__button__active : ''}`}
                     onClick={() => setCurrentTableView(view.key)}
                     aria-label={view.label}
-                    aria-pressed={currentTableView === view.key}
-                    data-view-active={currentTableView === view.key ? 'true' : 'false'}
+                    aria-pressed={normalizeViewKey(currentTableView) === view.key}
+                    data-view-active={normalizeViewKey(currentTableView) === view.key ? 'true' : 'false'}
                     title={view.label}
                   >
                     <i className={view.icon} />
@@ -2373,6 +2914,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                     return (
                       <button
                         key={filter.key}
+                        data-tabela-filter-chip={filter.key}
                         ref={(el) => {
                           if (el) filterButtonRefs.current.set(filter.key, el);
                           else filterButtonRefs.current.delete(filter.key);
@@ -2395,6 +2937,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                     return (
                       <button
                         key={filter.key}
+                        data-tabela-filter-chip={filter.key}
                         ref={(el) => {
                           if (el) filterButtonRefs.current.set(filter.key, el);
                           else filterButtonRefs.current.delete(filter.key);
@@ -2574,7 +3117,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       {mergedOptions.showToolbar && toolbarContent}
       {tableContent}
       {mergedOptions.showFooter && tableFooterContent}
-      {mergedOptions.showPagination && !groupByColumnKey && paginationContent}
+      {mergedOptions.showPagination && !groupByColumnKey && !['calendar', 'timeline', 'board'].includes(normalizeViewKey(currentTableView)) && paginationContent}
 
       {menuState.isOpen && (() => {
         const menuContent = (
@@ -2680,10 +3223,12 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               onRemoveFilter={handleFilterRemove}
               onOpenAdvancedFilter={handleOpenAdvancedFilter}
               refList={[
-                filterButtonRefs.current.get(currentEditingFilter?.key)
+                ...Array.from(filterButtonRefs.current.values()),
+                toolbarFilterButtonRef.current,
               ]}
               getExtraRefs={() => [
-                advancedFilterMenuRef.current?.getElement?.()
+                advancedFilterMenuRef.current?.getElement?.(),
+                ...Array.from(filterButtonRefs.current.values()),
               ]}
             />
           )}
@@ -2694,7 +3239,11 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               menuState={menuState}
               onClose={closeMenu}
               refList={[toolbarSettingsButtonRef.current]}
-              headerColumns={tableColumns.filter(c => !c.hasSubColumns && c.calculable !== false)}
+              headerColumns={
+                viewActiveColumnKeys
+                  ? tableColumns.filter(c => !c.hasSubColumns && c.calculable !== false && viewActiveColumnKeys.includes(c.key))
+                  : tableColumns.filter(c => !c.hasSubColumns && c.calculable !== false)
+              }
               footerItems={tableFooter}
               columnVisibility={columnVisibility}
               footerVisibility={footerVisibility}
@@ -2707,7 +3256,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               calculationByColumn={calculationByColumn}
               onApplyCalculation={handleApplyCalculation}
               dataForCalculation={fullDataForGrouping}
-              showSettingsOptions={mergedOptions.showSettingsOptions}
+              showSettingsOptions={effectiveSettingsOptions}
               additionalSettingsOptions={mergedOptions.additionalSettingsOptions}
               importConfig={mergedOptions.importConfig}
               onImportClick={(sessionId) => {
@@ -2728,6 +3277,14 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
                   downloadFile(csv, getExportFilename(tableName, 'csv'));
                 }
               }}
+              freezeLeafColumns={naturalLeafColumns}
+              frozenColumnKeys={frozenColumnKeys}
+              onApplyFrozenColumns={handleApplyFrozenColumns}
+              freezeIsMobile={isFreezeMobile}
+              freezeWidthByKey={freezeWidthByKey}
+              freezeContainerWidth={wrapperClientWidth || tableWrapperRef.current?.clientWidth || 0}
+              freezeSelectionWidth={selectionWidthPx}
+              freezeColumnMinWidth={mergedOptions.columnMinWidth}
             />
           )}
           </>
@@ -2835,6 +3392,15 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           portalContainer={portalContainer}
         />
       )}
+
+      <ItemDetailPanel
+        open={detailPanel.open}
+        item={detailPanel.item}
+        columns={headerStructure.leafColumns.filter((c) => columnVisibility[c.key] !== false)}
+        onClose={handleCloseDetailPanel}
+        portalContainer={portalContainer}
+        theme={detectedTheme || undefined}
+      />
     </div>
   );
 };

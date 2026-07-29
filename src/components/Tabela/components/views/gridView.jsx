@@ -44,6 +44,10 @@ export function GridView({
   onCellCommit,
   onCellCancel,
   onEditNavigate,
+  freezeActive = false,
+  frozenLeftOffsets = {},
+  lastFrozenKey = null,
+  freezeWidthByKey = {},
 }) {
   const visibleLeafColumns = headerStructure.leafColumns.filter(col => col.visible !== false);
 
@@ -89,7 +93,6 @@ export function GridView({
         e.preventDefault();
         const firstEditableCol = visibleLeafColumns.find(col => editableColumns.has(col.key));
         if (firstEditableCol && sortedData.length > 0) {
-          const rowKey = getRowKey(sortedData[0]);
           onCellClick?.(sortedData[0], firstEditableCol, 0, visibleLeafColumns.indexOf(firstEditableCol));
         }
       }
@@ -97,12 +100,32 @@ export function GridView({
     }
   }, [editable, editingCell, visibleLeafColumns, editableColumns, sortedData, getRowKey, onCellClick]);
 
+  const getFreezeProps = (column) => {
+    if (!freezeActive) return { isFrozen: false, isFrozenLast: false, frozenLeft: 0, frozenWidth: null };
+    const isFrozen = Object.prototype.hasOwnProperty.call(frozenLeftOffsets, column.key);
+    return {
+      isFrozen,
+      isFrozenLast: isFrozen && lastFrozenKey === column.key,
+      frozenLeft: frozenLeftOffsets[column.key] ?? 0,
+      frozenWidth: isFrozen ? (freezeWidthByKey[column.key] ?? null) : null,
+    };
+  };
+
   const renderSelectionCell = (item) => {
     if (!selectable) return null;
     const key = getRowKey(item);
     const checked = selectedKeys.has(key);
+    const selectionFrozen = freezeActive;
     return (
-      <td className={styles.tabela__selection__cell} onClick={(e) => e.stopPropagation()}>
+      <td
+        className={[
+          styles.tabela__selection__cell,
+          selectionFrozen ? styles.isFrozen : '',
+          selectionFrozen && !lastFrozenKey ? styles.isFrozenLast : '',
+        ].filter(Boolean).join(' ')}
+        style={selectionFrozen ? { '--frozen-left': '0px' } : undefined}
+        onClick={(e) => e.stopPropagation()}
+      >
         <label className={styles.tabela__selection__label}>
           <input
             type="checkbox"
@@ -120,7 +143,16 @@ export function GridView({
 
   const renderCalcSelectionCell = () => {
     if (!selectable) return null;
-    return <td className={styles.tabela__calculationCell} />;
+    const selectionFrozen = freezeActive;
+    return (
+      <td
+        className={[
+          styles.tabela__calculationCell,
+          selectionFrozen ? styles.isFrozen : '',
+        ].filter(Boolean).join(' ')}
+        style={selectionFrozen ? { '--frozen-left': '0px' } : undefined}
+      />
+    );
   };
 
   const renderDataCell = (item, column, rowIndex, colIndex) => {
@@ -128,6 +160,7 @@ export function GridView({
     const cellValue = getCellValue(item, column.key);
     const hasColumnRender = renderFlags.columnRenders.get(column.key) || false;
     const colIsEditable = editable && editableColumns.has(column.key);
+    const freezeProps = getFreezeProps(column);
 
     if (colIsEditable && isEditingCell(rowKey, column.key)) {
       return (
@@ -138,9 +171,11 @@ export function GridView({
           column={column}
           rowIndex={rowIndex}
           colIndex={colIndex}
+          lockedWidth={editingCell?.width}
           onCommit={onCellCommit}
           onCancel={onCellCancel}
           onNavigate={onEditNavigate}
+          {...freezeProps}
         />
       );
     }
@@ -157,7 +192,77 @@ export function GridView({
         isEditable={colIsEditable}
         cellStatus={getCellStatusClass(item, column.key)}
         onCellClickWithDbl={onCellClickWithDbl}
+        {...freezeProps}
       />
+    );
+  };
+
+  const renderCalcCell = (column, dataSource, labelMode = 'short') => {
+    const freezeProps = getFreezeProps(column);
+    const frozenClass = [
+      styles.tabela__calculationCell,
+      freezeProps.isFrozen ? styles.isFrozen : '',
+      freezeProps.isFrozenLast ? styles.isFrozenLast : '',
+    ].filter(Boolean).join(' ');
+    const frozenStyle = freezeProps.isFrozen
+      ? {
+          '--frozen-left': `${freezeProps.frozenLeft}px`,
+          ...(freezeProps.frozenWidth
+            ? {
+                width: `${freezeProps.frozenWidth}px`,
+                minWidth: `${freezeProps.frozenWidth}px`,
+                maxWidth: `${freezeProps.frozenWidth}px`,
+              }
+            : {}),
+        }
+      : undefined;
+
+    if (column.calculable === false) {
+      return <td key={column.key} className={frozenClass} style={frozenStyle} />;
+    }
+    const config = calculationByColumn[column.key];
+    const hasValidCalc =
+      config?.calculationId &&
+      config.calculationId !== 'none' &&
+      (config.calculationId !== 'pctByGroup' || config.groupValue !== undefined);
+    const result = hasValidCalc
+      ? computeCalculation(dataSource, column, config.calculationId, { groupValue: config.groupValue })
+      : null;
+    const calculationLabel = hasValidCalc && config?.calculationId
+      ? config.calculationId === 'pctByGroup'
+        ? labelMode === 'short'
+          ? `${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
+          : `Porcentagem por grupo${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
+        : labelMode === 'short'
+          ? (CALCULATION_OPTIONS[config.calculationId]?.labelShort ?? config.calculationId)
+          : (CALCULATION_OPTIONS[config.calculationId]?.label ?? config.calculationId)
+      : '';
+    return (
+      <td key={column.key} className={frozenClass} style={frozenStyle}>
+        {hasValidCalc ? (
+          <>
+            <span className={styles.tabela__calculationCell__label}>{calculationLabel}</span>
+            <span className={styles.tabela__calculationCell__value}>{result.formatted}</span>
+            <button
+              type="button"
+              className={styles.tabela__calculationCell__editBtn}
+              onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
+              aria-label="Alterar cálculo"
+            >
+              <i className="far fa-calculator" />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            className={styles.tabela__calculationCell__addBtn}
+            onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
+            aria-label="Calcular"
+          >
+            <i className="far fa-calculator" /> Calcular
+          </button>
+        )}
+      </td>
     );
   };
 
@@ -183,51 +288,7 @@ export function GridView({
       <tfoot>
         <tr className={styles.tabela__calculationRow}>
           {renderCalcSelectionCell()}
-          {visibleLeafColumns.map((column) => {
-            if (column.calculable === false) {
-              return <td key={column.key} className={styles.tabela__calculationCell} />;
-            }
-            const config = calculationByColumn[column.key];
-            const hasValidCalc =
-              config?.calculationId &&
-              config.calculationId !== 'none' &&
-              (config.calculationId !== 'pctByGroup' || config.groupValue !== undefined);
-            const result = hasValidCalc
-              ? computeCalculation(dataSource, column, config.calculationId, { groupValue: config.groupValue })
-              : null;
-            const calculationLabel = hasValidCalc && config?.calculationId
-              ? config.calculationId === 'pctByGroup'
-                ? `${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
-                : (CALCULATION_OPTIONS[config.calculationId]?.labelShort ?? config.calculationId)
-              : '';
-            return (
-              <td key={column.key} className={styles.tabela__calculationCell}>
-                {hasValidCalc ? (
-                  <>
-                    <span className={styles.tabela__calculationCell__label}>{calculationLabel}</span>
-                    <span className={styles.tabela__calculationCell__value}>{result.formatted}</span>
-                    <button
-                      type="button"
-                      className={styles.tabela__calculationCell__editBtn}
-                      onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                      aria-label="Alterar cálculo"
-                    >
-                      <i className="far fa-calculator" />
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.tabela__calculationCell__addBtn}
-                    onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                    aria-label="Calcular"
-                  >
-                    <i className="far fa-calculator" /> Calcular
-                  </button>
-                )}
-              </td>
-            );
-          })}
+          {visibleLeafColumns.map((column) => renderCalcCell(column, dataSource, 'short'))}
         </tr>
       </tfoot>
     );
@@ -279,51 +340,7 @@ export function GridView({
                       <tfoot>
                         <tr className={styles.tabela__calculationRow}>
                           {renderCalcSelectionCell()}
-                          {visibleLeafColumns.map((column) => {
-                            if (column.calculable === false) {
-                              return <td key={column.key} className={styles.tabela__calculationCell} />;
-                            }
-                            const config = calculationByColumn[column.key];
-                            const hasValidCalc =
-                              config?.calculationId &&
-                              config.calculationId !== 'none' &&
-                              (config.calculationId !== 'pctByGroup' || config.groupValue !== undefined);
-                            const result = hasValidCalc
-                              ? computeCalculation(group.rows, column, config.calculationId, { groupValue: config.groupValue })
-                              : null;
-                            const calculationLabel = hasValidCalc && config?.calculationId
-                              ? config.calculationId === 'pctByGroup'
-                                ? `Porcentagem por grupo${config.groupValue !== undefined && config.groupValue !== null ? ` (${config.groupValue === '' ? '(vazio)' : String(config.groupValue)})` : ''}`
-                                : (CALCULATION_OPTIONS[config.calculationId]?.label ?? config.calculationId)
-                              : '';
-                            return (
-                              <td key={column.key} className={styles.tabela__calculationCell}>
-                                {hasValidCalc ? (
-                                  <>
-                                    <span className={styles.tabela__calculationCell__label}>{calculationLabel}</span>
-                                    <span className={styles.tabela__calculationCell__value}>{result.formatted}</span>
-                                    <button
-                                      type="button"
-                                      className={styles.tabela__calculationCell__editBtn}
-                                      onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                                      aria-label="Alterar cálculo"
-                                    >
-                                      <i className="far fa-calculator" />
-                                    </button>
-                                  </>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    className={styles.tabela__calculationCell__addBtn}
-                                    onClick={(e) => openCalculationSubmenu(column.key, { current: e.currentTarget })}
-                                    aria-label="Calcular"
-                                  >
-                                    <i className="far fa-calculator" /> Calcular
-                                  </button>
-                                )}
-                              </td>
-                            );
-                          })}
+                          {visibleLeafColumns.map((column) => renderCalcCell(column, group.rows, 'long'))}
                         </tr>
                       </tfoot>
                     )}

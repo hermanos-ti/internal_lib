@@ -14,13 +14,19 @@ export const DEFAULT_OPTIONS = {
   showSorts: true,
   showFilters: true,
   showSettings: true,
-  showSettingsOptions: ['colunasVisiveis', 'agrupar', 'calcular', 'importar', 'exportar'],
+  showSettingsOptions: ['colunasVisiveis', 'agrupar', 'calcular', 'congelar', 'importar', 'exportar'],
   additionalSettingsOptions: [], //{ key: '', label: '', icon: 'far fa-<icon-name>', tooltip: 'Tooltip text', onClick: () => {}},
+  initialFrozenColumns: [], // string[] — keys das colunas leaf inicialmente congeladas (pin à esquerda)
+  onFrozenColumnsChange: null, // (frozenColumnKeys: string[]) => void
   currentTableView: 'grid',
   showTableViews: true,
-  tableViews: ['grid', 'list', 'kanban', 'calendar'],
+  tableViews: ['grid', 'list', 'board', 'calendar', 'timeline'],
   additionalTableViews: [], // { key: '', label: '', icon: 'far fa-<icon-name>', render: (columns, data, footer) => {}},
   onTableViewChange: null, // (tableView) => {}
+  listConfig: null, // { fields: [{ key, role: 'icone'|'id'|'principal'|'adicionais' }] }
+  boardConfig: null, // { columnKey, columns?, cardMode, cardRender, fields, draggable, onBoardMove }
+  calendarConfig: null, // { dateKey?, startDateKey?, endDateKey?, fields }
+  timelineConfig: null, // { dateKey?, startDateKey?, endDateKey?, fields, defaultPeriod }
   filterMode: 'internal',
   onFilterChange: null, // (filters, sqlWhere) => {}
   selectable: false,
@@ -54,8 +60,10 @@ export const COLUMN_FORMATS = {
 export const DEFAULT_COLUMN_CONFIG = {
   type: 'text', // text, number, date, select
   visible: true,
-  width: 'auto',
+  width: 'auto', // number = % da tabela; 'auto' = automático. Colunas congeláveis exigem width (number) ou minWidth (px)
+  minWidth: null, // number (px) — obrigatório (ou width numérico) para permitir congelar a coluna
   align: 'left',
+  verticalAlign: 'middle',
   format: 'text', // COLUMN_FORMATS: text | money | percentage | number | integer | date | datetime
   searchable: true,
   sortable: true,
@@ -152,8 +160,67 @@ export const DEFAULT_FILTER_GROUP = {
 export const TABLE_VIEWS = {
   grid: { key: 'grid', label: 'Grade', icon: 'fas fa-th' },
   list: { key: 'list', label: 'Lista', icon: 'fas fa-list' },
-  kanban: { key: 'kanban', label: 'Kanban', icon: 'fas fa-th-large' },
+  board: { key: 'board', label: 'Quadro', icon: 'fas fa-th-large' },
   calendar: { key: 'calendar', label: 'Calendário', icon: 'fas fa-calendar-days' },
+  timeline: { key: 'timeline', label: 'Linha do Tempo', icon: 'fas fa-stream' },
+}
+
+/** Alias legado: `kanban` → `board` */
+export const VIEW_KEY_ALIASES = {
+  kanban: 'board',
+}
+
+export const LIST_FIELD_ROLES = {
+  icone: 'icone',
+  id: 'id',
+  principal: 'principal',
+  adicionais: 'adicionais',
+}
+
+export const TIMELINE_PERIODS = [
+  { value: 'hours', label: 'Horas' },
+  { value: 'days', label: 'Dias' },
+  { value: 'weeks', label: 'Semanas' },
+  { value: 'months', label: 'Meses' },
+  { value: 'years', label: 'Anos' },
+]
+
+/** Settings do menu por modo de visualização */
+export const VIEW_SETTINGS = {
+  grid: ['colunasVisiveis', 'agrupar', 'calcular', 'congelar', 'importar', 'exportar'],
+  list: ['colunasVisiveis', 'agrupar', 'calcular', 'importar', 'exportar'],
+  board: ['colunasVisiveis', 'calcular', 'importar', 'exportar'],
+  calendar: ['calcular', 'importar', 'exportar'],
+  timeline: ['calcular', 'importar', 'exportar'],
+}
+
+export const DEFAULT_LIST_CONFIG = {
+  fields: [],
+}
+
+export const DEFAULT_BOARD_CONFIG = {
+  columnKey: null,
+  columns: [], // string[] — valores de columnKey, ordem fixa, sempre visíveis
+  cardMode: 'simple', // 'simple' | 'custom'
+  cardRender: null,
+  fields: [],
+  draggable: true,
+  onBoardMove: null,
+}
+
+export const DEFAULT_CALENDAR_CONFIG = {
+  dateKey: null,
+  startDateKey: null,
+  endDateKey: null,
+  fields: [],
+}
+
+export const DEFAULT_TIMELINE_CONFIG = {
+  dateKey: null,
+  startDateKey: null,
+  endDateKey: null,
+  fields: [],
+  defaultPeriod: 'days',
 }
 
 // ============================================

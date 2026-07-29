@@ -7,7 +7,8 @@ export const VisibleColumnsPanel = memo(({
   footerItems,
   columnVisibility,
   footerVisibility,
-  onApply
+  onApply,
+  embedded = false,
 }) => {
   const [localColumnVisibility, setLocalColumnVisibility] = useState({});
   const [localFooterVisibility, setLocalFooterVisibility] = useState({});
@@ -54,10 +55,8 @@ export const VisibleColumnsPanel = memo(({
     onApply(localColumnVisibility, next);
   };
 
-  const getColumnIcon = (column) => COLUMN_ICONS[column?.type ?? 'text'];
-
-  return (
-    <div className={styles.visibleColumnsModal__body}>
+  const content = (
+    <>
       {headerColumns.length > 0 && (
         <div className={styles.visibleColumnsModal__section}>
           <div className={styles.visibleColumnsModal__sectionHeader}>
@@ -80,7 +79,7 @@ export const VisibleColumnsPanel = memo(({
                   onChange={() => handleColumnToggle(column.key)}
                 />
                 <span className={styles.visibleColumnsModal__checkboxWrap}>
-                  <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
+                  <i className={`far ${localColumnVisibility[column.key] !== false ? 'fa-square-check' : 'fa-square'}`} />
                 </span>
                 <span className={styles.visibleColumnsModal__itemLabel}>{column.label ?? column.key}</span>
               </label>
@@ -111,7 +110,7 @@ export const VisibleColumnsPanel = memo(({
                   onChange={() => handleFooterToggle(item.key)}
                 />
                 <span className={styles.visibleColumnsModal__checkboxWrap}>
-                  <i className={`far fa-check ${styles.visibleColumnsModal__checkboxWrap__check}`} />
+                  <i className={`far ${localFooterVisibility[item.key] !== false ? 'fa-square-check' : 'fa-square'}`} />
                 </span>
                 <span className={styles.visibleColumnsModal__itemLabel}>{item.label ?? item.key}</span>
               </label>
@@ -125,6 +124,16 @@ export const VisibleColumnsPanel = memo(({
           Nenhuma coluna ou item de rodapé disponível.
         </div>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className={styles.visibleColumnsModal__body}>
+      {content}
     </div>
   );
 });

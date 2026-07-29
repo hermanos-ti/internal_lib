@@ -158,10 +158,10 @@
 }
 
 [data-theme="light"] {
-  --color-primary: #4f46e5;
-  --color-primary-dark: #4338ca;
-  --color-secondary: #db2777;
-  --color-accent: #7c3aed;
+  --color-primary: #ec4899; /* rosa vibrante */
+  --color-primary-dark: #be185d; /* rosa escuro */
+  --color-secondary: #22d3ee; /* azul água secundário */
+  --color-accent: #f472b6; /* rosa claro/acento */
 
   --surface-nav: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
   --surface-bg: #f1f5f9;
@@ -178,11 +178,11 @@
   --border-color: rgba(0, 0, 0, 0.12);
   --border-divider: rgba(0, 0, 0, 0.09);
 
-  --hover-bg: rgba(99, 102, 241, 0.10);
-  --active-bg: rgba(99, 102, 241, 0.16);
-  --active-border: var(--primary-color, #6366f1);
+  --hover-bg: rgba(236, 72, 153, 0.11); /* rosa */
+  --active-bg: rgba(236, 72, 153, 0.17); /* rosa */
+  --active-border: var(--primary-color, #ec4899);
   --icon-color: #64748b;
-  --icon-active: var(--primary-color, #6366f1);
+  --icon-active: var(--primary-color, #ec4899);
   --hover-bg-content: color-mix(in srgb, var(--hover-bg) 72%, var(--surface-content));
   --hover-bg-toolbar: color-mix(in srgb, var(--hover-bg) 72%, var(--surface-toolbar));
   --active-bg-toolbar: color-mix(in srgb, var(--active-bg) 68%, var(--surface-toolbar));
@@ -205,18 +205,18 @@
   --color-error: #dc2626;
   --color-error-bg: #fef2f2;
 
-  --decor-particle: rgba(79, 70, 229, 0.6);
-  --decor-line: 79, 70, 229;
-  --decor-glow-1: rgba(79, 70, 229, 0.15);
-  --decor-glow-2: rgba(124, 58, 237, 0.12);
-  --decor-glow-3: rgba(219, 39, 119, 0.1);
-  --gradient-start: #e2e8f0;
-  --gradient-end: #cbd5e1;
-  --canvas-bg-start: #e2e8f0;
-  --canvas-bg-end: #cbd5e1;
-  --decor-shape-bg: rgba(79, 70, 229, 0.05);
-  --logo-gradient-start: #1e293b;
-  --logo-gradient-end: #475569;
+  --decor-particle: rgba(236, 72, 153, 0.4); /* rosas decorativos */
+  --decor-line: 236, 72, 153;
+  --decor-glow-1: rgba(236, 72, 153, 0.13);
+  --decor-glow-2: rgba(244, 114, 182, 0.10);
+  --decor-glow-3: rgba(34, 211, 238, 0.09);
+  --gradient-start: #fce7f3; /* rosa muito claro */
+  --gradient-end: #fbcfe8;
+  --canvas-bg-start: #fce7f3;
+  --canvas-bg-end: #fbcfe8;
+  --decor-shape-bg: rgba(236, 72, 153, 0.05);
+  --logo-gradient-start: #be185d;
+  --logo-gradient-end: #ec4899;
 }
 
 [data-theme="tokyoNight"] {

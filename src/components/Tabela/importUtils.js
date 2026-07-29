@@ -3,7 +3,7 @@
  * @module importUtils
  */
 
-import { formatDisplayValue } from './formatUtils';
+import { formatDisplayValue, parseLocaleNumber } from './formatUtils';
 
 const EMPTY_DISPLAY = '—';
 
@@ -166,11 +166,11 @@ export function sortImportData(data, sortBy, columns) {
     if (va == null || va === '') return 1 * dir;
     if (vb == null || vb === '') return -1 * dir;
     if (format === 'number' || format === 'integer' || format === 'money' || format === 'percentage') {
-      const na = parseFloat(va);
-      const nb = parseFloat(vb);
-      if (Number.isNaN(na) && Number.isNaN(nb)) return 0;
-      if (Number.isNaN(na)) return 1 * dir;
-      if (Number.isNaN(nb)) return -1 * dir;
+      const na = parseLocaleNumber(va);
+      const nb = parseLocaleNumber(vb);
+      if (na == null && nb == null) return 0;
+      if (na == null) return 1 * dir;
+      if (nb == null) return -1 * dir;
       return (na - nb) * dir;
     }
     if (format === 'date' || format === 'datetime') {

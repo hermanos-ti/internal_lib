@@ -19,12 +19,12 @@ const FORMAT_LABELS = {
 
 const EXAMPLE_BY_TYPE = {
   text: ['Exemplo 1', 'Exemplo 2', 'Exemplo 3'],
-  money: ['1500.00', '2999.99', '0.50'],
-  number: ['42.5', '100.0', '3.14'],
+  money: ['1500,00', '2999,99', '0,50'],
+  number: ['42,5', '100,0', '3,14'],
   integer: ['42', '100', '18'],
   date: ['2024-01-15', '2024-06-20', '2023-12-31'],
   datetime: ['2024-01-15 10:30', '2024-06-20 14:00', '2023-12-31 23:59'],
-  percentage: ['15.5', '100', '0.25'],
+  percentage: ['15,5', '100', '0,25'],
 };
 
 export const ImportModal = memo(({
@@ -134,8 +134,12 @@ export const ImportModal = memo(({
     e.target.value = '';
   }, [importConfig?.columns]);
 
-  const handleCellClick = useCallback((rowIndex, colKey) => {
-    setEditingCell({ rowIndex, colKey });
+  const handleCellClick = useCallback((rowIndex, colKey, cellWidth) => {
+    setEditingCell({
+      rowIndex,
+      colKey,
+      width: typeof cellWidth === 'number' && cellWidth > 0 ? cellWidth : undefined,
+    });
   }, []);
 
   const handleCellCommit = useCallback((row, colKey, newValue) => {
@@ -286,20 +290,20 @@ export const ImportModal = memo(({
 
       <Modal.Body>
         {step === 'instructions' && (
-          <>
+          <div className={styles.importModal__instructions}>
             <p className={styles.importModal__description}>
-              O arquivo CSV deve conter as colunas na primeira linha, separadas por vírgula (,).
-              Use aspas duplas para valores que contenham pipe.
+              Selecione um arquivo CSV com a primeira linha contendo os identificadores das colunas.
+              Valores numéricos podem usar vírgula ou ponto como separador decimal.
             </p>
 
             <div className={styles.importModal__layoutSection}>
-              <div className={styles.importModal__layoutSection__title}>Layout esperado</div>
+              <div className={styles.importModal__layoutSection__title}>Colunas esperadas</div>
               <div className={styles.importModal__layoutList}>
                 <div className={styles.importModal__layoutListHeader}>
-                  <span>Label</span>
-                  <span>key</span>
-                  <span>type</span>
-                  <span>obrigatorio</span>
+                  <span>Nome</span>
+                  <span>Identificador</span>
+                  <span>Formato</span>
+                  <span>Obrigatório</span>
                 </div>
                 {columns.map((col) => (
                   <div key={col.key} className={styles.importModal__layoutListRow}>
@@ -320,6 +324,9 @@ export const ImportModal = memo(({
 
             <div className={styles.importModal__exampleSection}>
               <div className={styles.importModal__exampleSection__title}>Exemplo de CSV</div>
+              <p className={styles.importModal__exampleHint}>
+                Use aspas duplas quando o valor contiver vírgula e for texto, ou quando houver ambiguidade.
+              </p>
               <pre className={styles.importModal__exampleCode}>
                 <code>{exampleCsvLines}</code>
               </pre>
@@ -332,24 +339,26 @@ export const ImportModal = memo(({
               </div>
             )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileSelect}
-              className={styles.importModal__fileInput}
-              aria-hidden="true"
-              tabIndex={-1}
-            />
-            <Button
-              variant="secondary"
-              iconLeft={<i className="far fa-file-csv" />}
-              onClick={() => fileInputRef.current?.click()}
-              tooltip="Selecione um arquivo .csv com as colunas definidas no layout esperado"
-            >
-              Selecionar arquivo CSV
-            </Button>
-          </>
+            <div className={styles.importModal__fileAction}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                className={styles.importModal__fileInput}
+                aria-hidden="true"
+                tabIndex={-1}
+              />
+              <Button
+                variant="secondary"
+                iconLeft={<i className="far fa-file-csv" />}
+                onClick={() => fileInputRef.current?.click()}
+                tooltip="Selecione um arquivo .csv com as colunas definidas acima"
+              >
+                Selecionar arquivo CSV
+              </Button>
+            </div>
+          </div>
         )}
 
         {step === 'preview' && (
@@ -451,6 +460,7 @@ export const ImportModal = memo(({
                                 column={colWithEditable}
                                 rowIndex={idx}
                                 colIndex={colIndex}
+                                lockedWidth={editingCell?.width}
                                 onCommit={handleCellCommit}
                                 onCancel={handleCellCancel}
                                 onNavigate={() => {}}
@@ -471,7 +481,7 @@ export const ImportModal = memo(({
                               cellStatus={cellStatus}
                               onCellClickWithDbl={(e) => {
                                 e.stopPropagation?.();
-                                handleCellClick(idx, col.key);
+                                handleCellClick(idx, col.key, e.cellWidth);
                               }}
                             />
                           );

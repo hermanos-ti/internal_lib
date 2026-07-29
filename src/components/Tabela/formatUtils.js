@@ -8,6 +8,46 @@
 const EMPTY_DISPLAY = '—';
 const LOCALE_BR = 'pt-BR';
 
+const NUMERIC_FORMATS = new Set(['money', 'number', 'integer', 'percentage']);
+
+/**
+ * Parse a locale-aware numeric string (pt-BR friendly).
+ * Accepts: 1234,56 | 1.234,56 | 1234.56 | 42,5
+ * @param {*} value
+ * @returns {number|null}
+ */
+export function parseLocaleNumber(value) {
+  if (value == null || value === '') return null;
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const hasComma = str.includes(',');
+  const hasDot = str.includes('.');
+
+  let normalized = str.replace(/\s/g, '');
+
+  if (hasComma && hasDot) {
+    const lastComma = normalized.lastIndexOf(',');
+    const lastDot = normalized.lastIndexOf('.');
+    if (lastComma > lastDot) {
+      normalized = normalized.replace(/\./g, '').replace(',', '.');
+    } else {
+      normalized = normalized.replace(/,/g, '');
+    }
+  } else if (hasComma) {
+    normalized = normalized.replace(',', '.');
+  }
+
+  const n = parseFloat(normalized);
+  return Number.isNaN(n) ? null : n;
+}
+
+export function isNumericFormat(format) {
+  return NUMERIC_FORMATS.has(format);
+}
+
 const CURRENCY_FMT = new Intl.NumberFormat(LOCALE_BR, { style: 'currency', currency: 'BRL' });
 const PERCENT_FMT = new Intl.NumberFormat(LOCALE_BR, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const NUMBER_FMT = new Intl.NumberFormat(LOCALE_BR, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -26,22 +66,22 @@ function formatSingleValue(value, format) {
 
   switch (format) {
     case 'money': {
-      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
+      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseLocaleNumber(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
       return CURRENCY_FMT.format(n);
     }
     case 'percentage': {
-      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
+      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseLocaleNumber(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
       return `${PERCENT_FMT.format(n)}%`;
     }
     case 'number': {
-      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
+      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseLocaleNumber(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
       return NUMBER_FMT.format(n);
     }
     case 'integer': {
-      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseFloat(value);
+      const n = typeof value === 'number' && !Number.isNaN(value) ? value : parseLocaleNumber(value);
       if (typeof n !== 'number' || Number.isNaN(n)) return EMPTY_DISPLAY;
       return INTEGER_FMT.format(Math.round(n));
     }

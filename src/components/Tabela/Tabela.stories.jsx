@@ -453,6 +453,7 @@ const columnsComSubcolunas = [
     key: 'nome',
     label: 'Nome',
     sortable: true,
+    verticalAlign: 'top',
   },
   {
     key: 'contato',
@@ -475,6 +476,7 @@ const columnsComSubcolunas = [
     key: 'status',
     label: 'Status',
     sortable: true,
+    verticalAlign: 'bottom',
   },
 ];
 
@@ -521,10 +523,12 @@ const columnsComSubcolunasAninhadas = [
     key: 'nome',
     label: 'Nome',
     sortable: true,
+    verticalAlign: 'top',
   },
   {
     key: 'informacoes',
     label: 'Informações',
+    verticalAlign: 'middle',
     subColumns: [
       {
         key: 'contato',
@@ -1258,3 +1262,229 @@ export const Import = {
     },
   },
 };
+
+// ── Congelar colunas (pin à esquerda) ──
+
+const columnsCongelar = [
+  { key: 'id', label: 'ID', sortable: true, width: 8, minWidth: 72 },
+  { key: 'nome', label: 'Nome', sortable: true, width: 18, minWidth: 160 },
+  { key: 'departamento', label: 'Departamento', sortable: true, width: 14, minWidth: 140 },
+  { key: 'cargo', label: 'Cargo', sortable: true, width: 14, minWidth: 140 },
+  { key: 'cidade', label: 'Cidade', sortable: true, width: 12, minWidth: 120 },
+  { key: 'estado', label: 'UF', sortable: true, width: 6, minWidth: 64 },
+  { key: 'salario', label: 'Salário', sortable: true, width: 12, minWidth: 120, format: 'money', align: 'right' },
+  { key: 'bonus', label: 'Bônus', sortable: true, width: 10, minWidth: 100, format: 'money', align: 'right' },
+  { key: 'meta', label: 'Meta %', sortable: true, width: 10, minWidth: 96, format: 'percentage', align: 'right' },
+  { key: 'status', label: 'Status', sortable: true, width: 10, minWidth: 100 },
+];
+
+const dataCongelar = Array.from({ length: 24 }, (_, i) => ({
+  key: `freeze-${i}`,
+  id: i + 1,
+  nome: `Colaborador ${i + 1}`,
+  departamento: ['Engenharia', 'Produto', 'Comercial', 'Financeiro'][i % 4],
+  cargo: ['Analista', 'Especialista', 'Coordenador', 'Gerente'][i % 4],
+  cidade: ['São Paulo', 'Curitiba', 'Belo Horizonte', 'Recife'][i % 4],
+  estado: ['SP', 'PR', 'MG', 'PE'][i % 4],
+  salario: 4500 + i * 350,
+  bonus: 200 + i * 40,
+  meta: 0.45 + (i % 10) * 0.05,
+  status: i % 3 === 0 ? 'Inativo' : 'Ativo',
+}));
+
+export const CongelarColunas = {
+  render: () => (
+    <div>
+      <p style={{ marginBottom: '1rem', color: '#666', maxWidth: 720 }}>
+        Use Configurações → Congelar, ou o ícone de pin no hover do cabeçalho.
+        Colunas congeladas são pinadas à esquerda e acompanham o scroll horizontal.
+        Sort no cabeçalho cicla ASC → DESC → nenhum.
+      </p>
+      <TabelaWithPortal
+        id="tabela-congelar"
+        columns={columnsCongelar}
+        data={dataCongelar}
+        options={{
+          tableName: 'Relatório com colunas congeladas',
+          tableSubtitle: 'Pin à esquerda para comparação visual',
+          columnMinWidth: 80,
+          initialFrozenColumns: ['id', 'nome'],
+        }}
+      />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstra congelamento (pin à esquerda) com overflow horizontal. Requer width ou minWidth nas colunas. Em mobile (≤768px) o freeze é desativado.',
+      },
+    },
+  },
+};
+
+const columnsCongelarSub = [
+  {
+    key: 'nome',
+    label: 'Nome',
+    sortable: true,
+    width: 16,
+    minWidth: 150,
+    verticalAlign: 'top',
+  },
+  {
+    key: 'contato',
+    label: 'Contato',
+    subColumns: [
+      { key: 'email', label: 'Email', sortable: true, width: 18, minWidth: 180 },
+      { key: 'telefone', label: 'Telefone', sortable: true, width: 12, minWidth: 120 },
+    ],
+  },
+  {
+    key: 'metricas',
+    label: 'Métricas',
+    subColumns: [
+      { key: 'vendas', label: 'Vendas', sortable: true, width: 12, minWidth: 110, format: 'money' },
+      { key: 'ticket', label: 'Ticket', sortable: true, width: 12, minWidth: 110, format: 'money' },
+      { key: 'nps', label: 'NPS', sortable: true, width: 8, minWidth: 80 },
+    ],
+  },
+  {
+    key: 'regiao',
+    label: 'Região',
+    sortable: true,
+    width: 12,
+    minWidth: 120,
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    sortable: true,
+    width: 10,
+    minWidth: 100,
+  },
+];
+
+const dataCongelarSub = [
+  { key: 'cs1', nome: 'Ana Lima', email: 'ana@example.com', telefone: '(11) 90000-0001', vendas: 12000, ticket: 450, nps: 72, regiao: 'Sudeste', status: 'Ativo' },
+  { key: 'cs2', nome: 'Bruno Dias', email: 'bruno@example.com', telefone: '(21) 90000-0002', vendas: 9800, ticket: 390, nps: 64, regiao: 'Sul', status: 'Ativo' },
+  { key: 'cs3', nome: 'Carla Nunes', email: 'carla@example.com', telefone: '(31) 90000-0003', vendas: 15400, ticket: 510, nps: 81, regiao: 'Nordeste', status: 'Inativo' },
+  { key: 'cs4', nome: 'Diego Alves', email: 'diego@example.com', telefone: '(41) 90000-0004', vendas: 8700, ticket: 320, nps: 58, regiao: 'Centro-Oeste', status: 'Ativo' },
+];
+
+export const CongelarComSubcolunas = {
+  render: () => (
+    <div>
+      <p style={{ marginBottom: '1rem', color: '#666', maxWidth: 720 }}>
+        Congelar qualquer leaf de um grupo (ex.: Email) congela o grupo inteiro (Email + Telefone),
+        evitando quebrar o colspan do cabeçalho.
+      </p>
+      <TabelaWithPortal
+        id="tabela-congelar-sub"
+        columns={columnsCongelarSub}
+        data={dataCongelarSub}
+        options={{
+          tableName: 'Congelar com subcolunas',
+          columnMinWidth: 80,
+          initialFrozenColumns: ['nome'],
+        }}
+      />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Freeze com headers aninhados: o grupo de subcolunas é congelado por completo.',
+      },
+    },
+  },
+};
+
+// ============================================
+// Views: Lista, Quadro, Calendário, Linha do Tempo
+// ============================================
+
+const viewDemoColumns = [
+  { key: 'icon', label: 'Ícone', searchable: false, sortable: false },
+  { key: 'codigo', label: 'Código', type: 'text', groupable: true },
+  { key: 'nome', label: 'Nome', type: 'text', searchable: true, sortable: true },
+  { key: 'status', label: 'Status', type: 'select', groupable: true, filterable: true },
+  { key: 'prioridade', label: 'Prioridade', type: 'text' },
+  { key: 'date', label: 'Data', type: 'date', format: 'date' },
+  { key: 'start', label: 'Início', type: 'date', format: 'date' },
+  { key: 'end', label: 'Fim', type: 'date', format: 'date' },
+];
+
+const viewDemoData = [
+  { icon: 'fa-solid fa-bullseye', codigo: 'PRJ-01', nome: 'New Project', status: 'Ativo', prioridade: 'Alta', date: '2026-07-14', start: '2026-07-09', end: '2026-07-14' },
+  { icon: 'fa-solid fa-rocket', codigo: 'PRJ-02', nome: 'Launch Pad', status: 'Em progresso', prioridade: 'Média', date: '2026-07-18', start: '2026-07-09', end: '2026-07-20' },
+  { icon: 'fa-solid fa-flask', codigo: 'PRJ-03', nome: 'Lab Experiments', status: 'Ativo', prioridade: 'Baixa', date: '2026-07-22', start: '2026-07-15', end: '2026-07-25' },
+  { icon: 'fa-solid fa-book', codigo: 'PRJ-04', nome: 'Docs Hub', status: 'Pausado', prioridade: 'Média', date: '2026-07-10', start: '2026-07-01', end: '2026-07-12' },
+  { icon: 'fa-solid fa-users', codigo: 'PRJ-05', nome: 'Team Sync', status: 'Em progresso', prioridade: 'Alta', date: '2026-07-27', start: '2026-07-20', end: '2026-07-30' },
+  { icon: 'fa-solid fa-shield', codigo: 'PRJ-06', nome: 'Security Audit', status: 'Ativo', prioridade: 'Alta', date: '2026-08-02', start: '2026-07-28', end: '2026-08-05' },
+];
+
+const sharedListFields = [
+  { key: 'icon', role: 'icone' },
+  { key: 'codigo', role: 'id' },
+  { key: 'nome', role: 'principal' },
+  { key: 'status', role: 'adicionais' },
+  { key: 'prioridade', role: 'adicionais' },
+];
+
+const calendarFields = [
+  { key: 'icon', role: 'icone' },
+  { key: 'nome', role: 'principal' },
+  { key: 'status', role: 'adicionais' },
+];
+
+/** Uma única tabela com todas as views — troque o modo na toolbar. */
+export const Views = {
+  render: () => (
+    <TabelaWithPortal
+      id="tabela-views"
+      columns={viewDemoColumns}
+      data={viewDemoData}
+      options={{
+        tableName: 'Todas as visualizações',
+        tableSubtitle: 'Use a toolbar para alternar entre Grade, Lista, Quadro, Calendário e Linha do Tempo.',
+        tableIcon: 'fa-solid fa-layer-group',
+        currentTableView: 'list',
+        tableViews: ['grid', 'list', 'board', 'calendar', 'timeline'],
+        editable: true,
+        itensPerPage: 25,
+        listConfig: { fields: sharedListFields },
+        boardConfig: {
+          columnKey: 'status',
+          columns: ['Ativo', 'Em progresso', 'Pausado', 'Concluído'],
+          cardMode: 'simple',
+          fields: sharedListFields,
+          draggable: true,
+          onBoardMove: (item, meta) => {
+            console.log('onBoardMove', item?.codigo, meta);
+          },
+        },
+        calendarConfig: {
+          // Para testar intervalo, troque para startDateKey/endDateKey e remova dateKey
+          startDateKey: 'start',
+          endDateKey: 'end',
+          fields: calendarFields,
+        },
+        timelineConfig: {
+          startDateKey: 'start',
+          endDateKey: 'end',
+          fields: sharedListFields,
+          defaultPeriod: 'days',
+        },
+      }}
+    />
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Uma tabela compartilhando os mesmos dados entre Grade, Lista, Quadro, Calendário e Linha do Tempo. Alternar a view na toolbar. Calendário usa intervalo (start/end); ajuste calendarConfig.dateKey para modo data única.',
+      },
+    },
+  },
+};
+

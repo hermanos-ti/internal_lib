@@ -16,16 +16,35 @@ export const FilterMenu = memo(forwardRef(({
   const menuRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  const getDefaultCondition = useCallback((type) => {
+    const conditions = FILTER_CONDITIONS[type] || FILTER_CONDITIONS.text;
+    return conditions[0]?.value || 'is';
+  }, []);
+
+  const normalizeFromItem = useCallback((item) => {
+    if (!item) return { condition: '', value: '', valueTo: '' };
+    return {
+      condition: item.condition || getDefaultCondition(item.type),
+      value: item.value ?? '',
+      valueTo: item.valueTo ?? '',
+    };
+  }, [getDefaultCondition]);
+
+  const initialValues = normalizeFromItem(filterItem);
   
-  // Local state for filter editing
-  const [localCondition, setLocalCondition] = useState('');
-  const [localValue, setLocalValue] = useState('');
-  const [localValueTo, setLocalValueTo] = useState('');
+  // Local state for filter editing — hydrate from filterItem to avoid empty→default false updates
+  const [localCondition, setLocalCondition] = useState(initialValues.condition);
+  const [localValue, setLocalValue] = useState(initialValues.value);
+  const [localValueTo, setLocalValueTo] = useState(initialValues.valueTo);
   const [showActionMenu, setShowActionMenu] = useState(false);
   
-  // Refs para rastrear valores anteriores e evitar debounce desnecessário
-  const prevValuesRef = useRef({ condition: '', value: '', valueTo: '' });
+  const prevValuesRef = useRef(initialValues);
   const onUpdateFilterRef = useRef(onUpdateFilter);
+  const pendingUpdateRef = useRef(null);
+  const debounceTimerRef = useRef(null);
+  const filterItemRef = useRef(filterItem);
+  const skipDebounceRef = useRef(true); // skip first debounce after hydrate/open
   
   // Session management refs (CRÍTICO para evitar race conditions)
   const currentSessionRef = useRef(null);
@@ -40,6 +59,52 @@ export const FilterMenu = memo(forwardRef(({
   }, [onUpdateFilter]);
 
   useEffect(() => {
+    filterItemRef.current = filterItem;
+  }, [filterItem]);
+
+  const isMeaningfulChange = useCallback((update, baselineItem) => {
+    if (!update) return false;
+    const baseline = normalizeFromItem(baselineItem);
+    return (
+      update.condition !== baseline.condition ||
+      String(update.value ?? '') !== String(baseline.value ?? '') ||
+      String(update.valueTo ?? '') !== String(baseline.valueTo ?? '')
+    );
+  }, [normalizeFromItem]);
+
+  const flushPendingUpdate = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    const update = pendingUpdateRef.current;
+    if (!update) return false;
+
+    // Never push no-op updates (open/close without edits)
+    if (!isMeaningfulChange(update, filterItemRef.current)) {
+      pendingUpdateRef.current = null;
+      prevValuesRef.current = {
+        condition: update.condition,
+        value: update.value,
+        valueTo: update.valueTo,
+      };
+      return false;
+    }
+
+    pendingUpdateRef.current = null;
+    prevValuesRef.current = {
+      condition: update.condition,
+      value: update.value,
+      valueTo: update.valueTo,
+    };
+    onUpdateFilterRef.current(update);
+    return true;
+  }, [isMeaningfulChange]);
+
+  // Flush meaningful pending edits on unmount only
+  useEffect(() => () => { flushPendingUpdate(); }, [flushPendingUpdate]);
+
+  useEffect(() => {
     menuStateSessionRef.current = menuState.sessionId;
     
     if (menuState.isOpen && menuState.type === 'filter-menu') {
@@ -48,41 +113,35 @@ export const FilterMenu = memo(forwardRef(({
       currentSessionRef.current = menuState.sessionId;
       setIsVisible(true);
       
-      if (isNewSession && !closeTimerRef.current) {
+      if (isNewSession) {
+        flushPendingUpdate();
+
+        if (closeTimerRef.current) {
+          clearTimeout(closeTimerRef.current);
+          closeTimerRef.current = null;
+        }
         isClosingRef.current = false;
         setIsClosing(false);
       }
       
-      if (closeTimerRef.current && isNewSession && !isClosingRef.current) {
-        clearTimeout(closeTimerRef.current);
-        closeTimerRef.current = null;
-      }
-      
       if (isNewSession && filterItem) {
         prevSessionRef.current = menuState.sessionId;
-        const newCondition = filterItem.condition || getDefaultCondition(filterItem.type);
-        const newValue = filterItem.value || '';
-        const newValueTo = filterItem.valueTo || '';
+        const hydrated = normalizeFromItem(filterItem);
         
-        setLocalCondition(newCondition);
-        setLocalValue(newValue);
-        setLocalValueTo(newValueTo);
+        skipDebounceRef.current = true;
+        setLocalCondition(hydrated.condition);
+        setLocalValue(hydrated.value);
+        setLocalValueTo(hydrated.valueTo);
         
-        prevValuesRef.current = {
-          condition: newCondition,
-          value: newValue,
-          valueTo: newValueTo,
-        };
+        prevValuesRef.current = hydrated;
+        pendingUpdateRef.current = null;
       }
     }
-  }, [menuState.isOpen, menuState.sessionId, menuState.type, filterItem]);
-
-  const getDefaultCondition = useCallback((type) => {
-    const conditions = FILTER_CONDITIONS[type] || FILTER_CONDITIONS.text;
-    return conditions[0]?.value || 'is';
-  }, []);
+  }, [menuState.isOpen, menuState.sessionId, menuState.type, filterItem, flushPendingUpdate, normalizeFromItem]);
 
   const handleClose = useCallback(() => {
+    flushPendingUpdate();
+
     if (closeTimerRef.current) {
       return;
     }
@@ -106,7 +165,7 @@ export const FilterMenu = memo(forwardRef(({
       setIsClosing(false);
       onClose(closingSessionId);
     }, 180);
-  }, [onClose]);
+  }, [onClose, filterItem?.key, flushPendingUpdate]);
 
   // Expor métodos via ref
   useImperativeHandle(ref, () => ({
@@ -121,6 +180,12 @@ export const FilterMenu = memo(forwardRef(({
     const handleClickOutside = (event) => {
       const clickedOnSelectDropdown = event.target?.closest?.(`.${styles.select__dropdown}`);
       if (clickedOnSelectDropdown) {
+        return;
+      }
+
+      // Filter chips use data attribute — refs can be empty during chip remount
+      const clickedOnFilterChip = event.target?.closest?.('[data-tabela-filter-chip]');
+      if (clickedOnFilterChip) {
         return;
       }
       
@@ -159,6 +224,18 @@ export const FilterMenu = memo(forwardRef(({
 
   useEffect(() => {
     if (!filterItem) return;
+
+    // After hydrate/open, sync refs and skip one cycle — prevents empty→default false updates
+    if (skipDebounceRef.current) {
+      skipDebounceRef.current = false;
+      prevValuesRef.current = {
+        condition: localCondition,
+        value: localValue,
+        valueTo: localValueTo,
+      };
+      pendingUpdateRef.current = null;
+      return;
+    }
     
     const valuesChanged = 
       prevValuesRef.current.condition !== localCondition ||
@@ -168,25 +245,40 @@ export const FilterMenu = memo(forwardRef(({
     if (!valuesChanged) {
       return;
     }
-    
-    prevValuesRef.current = {
+
+    const updatedFilter = {
+      ...filterItem,
       condition: localCondition,
       value: localValue,
       valueTo: localValueTo,
     };
-    
-    const timeoutId = setTimeout(() => {
-      const updatedFilter = {
-        ...filterItem,
+
+    // Don't queue if nothing actually changed vs committed filter
+    if (!isMeaningfulChange(updatedFilter, filterItem)) {
+      prevValuesRef.current = {
         condition: localCondition,
         value: localValue,
         valueTo: localValueTo,
       };
-      onUpdateFilterRef.current(updatedFilter);
-    }, 500);
+      pendingUpdateRef.current = null;
+      return;
+    }
+
+    pendingUpdateRef.current = updatedFilter;
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      debounceTimerRef.current = null;
+      flushPendingUpdate();
+    }, 250);
     
-    return () => clearTimeout(timeoutId);
-  }, [localCondition, localValue, localValueTo, filterItem]);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [localCondition, localValue, localValueTo, filterItem, flushPendingUpdate, isMeaningfulChange]);
 
   const handleRemoveFilter = useCallback(() => {
     if (!filterItem) return;

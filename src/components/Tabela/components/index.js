@@ -11,4 +11,7 @@ export { CalculationModal } from './CalculationModal';
 export { ImportModal } from './ImportModal';
 export { VisibleColumnsPanel } from './VisibleColumnsPanel';
 export { VisibleColumnsModal } from './VisibleColumnsModal';
+export { FreezeColumnsPanel } from './FreezeColumnsPanel';
 export { Select } from './Select';
+export { ItemCard } from './ItemCard';
+export { ItemDetailPanel } from './ItemDetailPanel';

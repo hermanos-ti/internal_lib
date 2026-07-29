@@ -12,6 +12,10 @@ export const TableCell = memo(({
   isEditable,
   cellStatus,
   onCellClickWithDbl,
+  isFrozen = false,
+  isFrozenLast = false,
+  frozenLeft = 0,
+  frozenWidth = null,
 }) => {
   const content = hasColumnRender 
     ? column.render(cellValue, row, column, rowIndex, colIndex)
@@ -24,22 +28,40 @@ export const TableCell = memo(({
     column?.cellClassName,
     isEditable ? styles.tabela__body__cell__editable : '',
     statusClass,
+    isFrozen ? styles.isFrozen : '',
+    isFrozenLast ? styles.isFrozenLast : '',
   ].filter(Boolean).join(' ');
 
   const handleClick = useCallback((e) => {
     if (e.target.closest?.('input[type="checkbox"], input[type="radio"]')) return;
     if (!onCellClickWithDbl) return;
 
-    const event = { row, column, cell: cellValue, rowIndex, colIndex };
+    const cellWidth = e.currentTarget.getBoundingClientRect().width;
+    const event = { row, column, cell: cellValue, rowIndex, colIndex, cellWidth };
     onCellClickWithDbl(event);
   }, [row, column, cellValue, rowIndex, colIndex, onCellClickWithDbl]);
 
   const hasClickHandler = !!onCellClickWithDbl;
 
+  const cellStyle = {
+    ...(column?.cellStyle || {}),
+    ...(isFrozen ? { '--frozen-left': `${frozenLeft}px` } : {}),
+    ...(isFrozen && typeof frozenWidth === 'number'
+      ? {
+          width: `${frozenWidth}px`,
+          minWidth: `${frozenWidth}px`,
+          maxWidth: `${frozenWidth}px`,
+        }
+      : isFrozen && typeof column?.minWidth === 'number'
+        ? { minWidth: `${column.minWidth}px` }
+        : {}),
+  };
+
   return (
     <td
       className={className}
-      style={column?.cellStyle}
+      style={cellStyle}
+      data-tabela-cell-col={column?.key}
       onClick={hasClickHandler ? handleClick : undefined}
     >
       {content}
@@ -55,7 +77,11 @@ export const TableCell = memo(({
     prevProps.hasColumnRender === nextProps.hasColumnRender &&
     prevProps.isEditable === nextProps.isEditable &&
     prevProps.cellStatus === nextProps.cellStatus &&
-    prevProps.onCellClickWithDbl === nextProps.onCellClickWithDbl
+    prevProps.onCellClickWithDbl === nextProps.onCellClickWithDbl &&
+    prevProps.isFrozen === nextProps.isFrozen &&
+    prevProps.isFrozenLast === nextProps.isFrozenLast &&
+    prevProps.frozenLeft === nextProps.frozenLeft &&
+    prevProps.frozenWidth === nextProps.frozenWidth
   );
 });
 
