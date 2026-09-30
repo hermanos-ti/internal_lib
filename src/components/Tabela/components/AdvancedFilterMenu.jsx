@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import styles from '../Tabela.module.css';
 import { PortalTargetContext } from '../PortalTargetContext';
 import { COLUMN_ICONS, FILTER_CONDITIONS, EMPTY_CONDITIONS, RANGE_CONDITIONS } from '../constants';
+import { resolveSelectOptions } from '../filterValueUtils';
+import { FilterValueField } from './FilterValueField';
 import { Select } from './Select';
 import { Button } from '../../Button/Button';
 
@@ -10,6 +12,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
   menuState,
   filterGroup,
   columns,
+  rows = [],
   onClose, 
   onUpdateFilterGroup,
   onSaveFilterGroup,
@@ -144,6 +147,9 @@ export const AdvancedFilterMenu = memo(forwardRef(({
       if (clickedOnSelectDropdown) {
         return;
       }
+      if (event.target?.closest?.('[data-tabela-date-picker]')) {
+        return;
+      }
       
       const clickedOnActionDropdown = actionDropdownRef.current?.contains(event.target);
       const clickedOnAddRuleDropdown = event.target?.closest?.(`.${styles.advancedFilterMenu__addRuleDropdown}`);
@@ -177,6 +183,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
 
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
+        if (document.querySelector('[data-tabela-date-picker]')) return;
         // Close dropdowns first, then menu
         if (openActionMenu || openAddRuleMenu) {
           setOpenActionMenu(null);
@@ -584,6 +591,13 @@ export const AdvancedFilterMenu = memo(forwardRef(({
     const isEmptyCondition = EMPTY_CONDITIONS.includes(rule.condition);
     const isRangeCondition = RANGE_CONDITIONS.includes(rule.condition);
     const showActionMenu = openActionMenu && openActionMenu.path.join('-') === pathKey;
+    const selectOptions = columnType === 'select' ? resolveSelectOptions(column, rows) : [];
+    const valueClassName = columnType === 'text' || columnType === 'number'
+      ? styles.advancedFilterMenu__valueInput
+      : (columnType === 'select' ? styles.filterValueSelect : '');
+    const valueToClassName = columnType === 'text' || columnType === 'number'
+      ? styles.advancedFilterMenu__valueToInput
+      : '';
 
     return (
       <div key={rule.id || `rule-${pathKey}`} className={styles.advancedFilterMenu__ruleRow}>
@@ -624,25 +638,27 @@ export const AdvancedFilterMenu = memo(forwardRef(({
         {/* Value input */}
         {!isEmptyCondition && (
           <>
-            <input
-              type={columnType === 'number' ? 'number' : columnType === 'date' ? 'date' : 'text'}
-              className={styles.advancedFilterMenu__valueInput}
-              value={rule.value || ''}
-              onChange={(e) => handleUpdateValue(path, e.target.value)}
-              placeholder="Valor"
+            <FilterValueField
+              type={columnType}
+              value={rule.value ?? ''}
+              onChange={(next) => handleUpdateValue(path, next)}
+              className={valueClassName}
+              placeholder={columnType === 'date' ? 'dd/mm/aaaa' : 'Valor'}
               title="Valor de comparação da regra"
+              selectOptions={selectOptions}
             />
 
             {isRangeCondition && (
               <>
                 <span className={styles.advancedFilterMenu__rangeSeparator}>e</span>
-                <input
-                  type={columnType === 'number' ? 'number' : columnType === 'date' ? 'date' : 'text'}
-                  className={styles.advancedFilterMenu__valueToInput}
-                  value={rule.valueTo || ''}
-                  onChange={(e) => handleUpdateValueTo(path, e.target.value)}
-                  placeholder="Valor"
+                <FilterValueField
+                  type={columnType}
+                  value={rule.valueTo ?? ''}
+                  onChange={(next) => handleUpdateValueTo(path, next)}
+                  className={valueToClassName}
+                  placeholder={columnType === 'date' ? 'dd/mm/aaaa' : 'Valor'}
                   title="Limite superior do intervalo"
+                  selectOptions={selectOptions}
                 />
               </>
             )}
@@ -672,7 +688,7 @@ export const AdvancedFilterMenu = memo(forwardRef(({
         </div>
       </div>
     );
-  }, [columns, openActionMenu, handleToggleLogic, handleUpdateColumn, handleUpdateCondition, handleUpdateValue, handleUpdateValueTo, handleDuplicateRule, handleTransformToGroup, handleRemoveRule]);
+  }, [columns, rows, openActionMenu, handleToggleLogic, handleUpdateColumn, handleUpdateCondition, handleUpdateValue, handleUpdateValueTo, handleDuplicateRule, handleTransformToGroup, handleRemoveRule]);
 
   // Render RuleGroup component (recursive)
   const renderRuleGroup = useCallback((group, path = [], isFirstInParent = false, parentLogic = 'AND') => {

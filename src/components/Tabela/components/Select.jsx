@@ -1,4 +1,4 @@
-import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle, useContext } from 'react';
+import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle, useContext, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import styles from '../Tabela.module.css';
 import { PortalTargetContext } from '../PortalTargetContext';
@@ -16,7 +16,8 @@ export const Select = memo(forwardRef(({
   placeholder = 'Selecione...',
   disabled = false,
   className = '',
-  style = {}
+  style = {},
+  multiple = false,
 }, ref) => {
   const getPortalContainer = useContext(PortalTargetContext);
   
@@ -47,9 +48,22 @@ export const Select = memo(forwardRef(({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Encontrar índice da opção selecionada
-  const selectedIndex = options.findIndex(opt => opt.value === value);
-  const selectedOption = options[selectedIndex] || null;
+  const selectedValues = useMemo(() => {
+    if (!multiple) return [];
+    if (Array.isArray(value)) return value.map((item) => String(item));
+    if (value == null || value === '') return [];
+    return [String(value)];
+  }, [multiple, value]);
+  const selectedIndex = multiple
+    ? options.findIndex((opt) => selectedValues.includes(String(opt.value)))
+    : options.findIndex(opt => opt.value === value);
+  const selectedOption = multiple ? null : (options[selectedIndex] || null);
+  const selectedChips = multiple
+    ? selectedValues.map((item) => {
+      const match = options.find((opt) => String(opt.value) === item);
+      return { value: item, label: match?.label ?? item };
+    })
+    : [];
 
   // Filtrar opções baseado no termo de busca (se houver)
   const filteredOptions = searchTerm
@@ -98,6 +112,31 @@ export const Select = memo(forwardRef(({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
+
+  const handleSelect = useCallback((selectedValue, event) => {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    if (multiple) {
+      const key = String(selectedValue);
+      const next = selectedValues.includes(key)
+        ? selectedValues.filter((item) => item !== key)
+        : [...selectedValues, key];
+      onChange?.(next);
+      return;
+    }
+    onChange?.(selectedValue);
+    setIsOpen(false);
+    setSearchTerm('');
+    setHighlightedIndex(-1);
+  }, [multiple, onChange, selectedValues]);
+
+  const handleRemoveChip = useCallback((chipValue, event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    onChange?.(selectedValues.filter((item) => item !== chipValue));
+  }, [onChange, selectedValues]);
 
   // Navegação por teclado
   const handleKeyDown = useCallback((event) => {
@@ -168,19 +207,7 @@ export const Select = memo(forwardRef(({
         }
         break;
     }
-  }, [isOpen, highlightedIndex, filteredOptions, disabled]);
-
-  // Selecionar opção
-  const handleSelect = useCallback((selectedValue, event) => {
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-    onChange?.(selectedValue);
-    setIsOpen(false);
-    setSearchTerm('');
-    setHighlightedIndex(-1);
-  }, [onChange]);
+  }, [isOpen, highlightedIndex, filteredOptions, disabled, handleSelect]);
 
   // Toggle dropdown
   const handleToggle = useCallback(() => {
@@ -247,21 +274,44 @@ export const Select = memo(forwardRef(({
       className={`${styles.select} ${className} ${disabled ? styles.disabled : ''}`}
       style={style}
     >
-      {/* Trigger - Botão que abre o dropdown */}
-      <button
-        type="button"
-        className={`${styles.select__trigger} ${isOpen ? styles.open : ''}`}
+      <div
+        role="combobox"
+        tabIndex={disabled ? -1 : 0}
+        className={`${styles.select__trigger} ${multiple ? styles.multiple : ''} ${isOpen ? styles.open : ''}`}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-disabled={disabled}
       >
-        <span className={styles.select__trigger__text}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
+        {multiple ? (
+          selectedChips.length > 0 ? (
+            <span className={styles.select__chips}>
+              {selectedChips.map((chip) => (
+                <span key={chip.value} className={styles.select__chip}>
+                  <span className={styles.select__chip__label}>{chip.label}</span>
+                  <button
+                    type="button"
+                    className={styles.select__chip__remove}
+                    aria-label={`Remover ${chip.label}`}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onClick={(event) => handleRemoveChip(chip.value, event)}
+                  >
+                    <i className="far fa-xmark" />
+                  </button>
+                </span>
+              ))}
+            </span>
+          ) : (
+            <span className={styles.select__trigger__placeholder}>{placeholder}</span>
+          )
+        ) : (
+          <span className={styles.select__trigger__text}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+        )}
         <i className={`fas fa-chevron-down ${styles.select__trigger__icon} ${isOpen ? styles.rotated : ''}`} />
-      </button>
+      </div>
 
       {/* Dropdown via Portal */}
       {isOpen && (() => {
@@ -286,7 +336,9 @@ export const Select = memo(forwardRef(({
               </div>
             ) : (
               filteredOptions.map((option, index) => {
-                const isSelected = option.value === value;
+                const isSelected = multiple
+                  ? selectedValues.includes(String(option.value))
+                  : option.value === value;
                 const isHighlighted = index === highlightedIndex;
                 
                 return (

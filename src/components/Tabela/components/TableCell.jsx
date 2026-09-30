@@ -12,6 +12,7 @@ export const TableCell = memo(({
   isEditable,
   cellStatus,
   onCellClickWithDbl,
+  onCellContextMenu,
   isFrozen = false,
   isFrozenLast = false,
   frozenLeft = 0,
@@ -31,6 +32,11 @@ export const TableCell = memo(({
     isFrozen ? styles.isFrozen : '',
     isFrozenLast ? styles.isFrozenLast : '',
   ].filter(Boolean).join(' ');
+
+  const handleContextMenu = useCallback((e) => {
+    if (!onCellContextMenu) return;
+    onCellContextMenu(e, { row, column, cell: cellValue, rowIndex, colIndex });
+  }, [row, column, cellValue, rowIndex, colIndex, onCellContextMenu]);
 
   const handleClick = useCallback((e) => {
     if (e.target.closest?.('input[type="checkbox"], input[type="radio"]')) return;
@@ -63,6 +69,7 @@ export const TableCell = memo(({
       style={cellStyle}
       data-tabela-cell-col={column?.key}
       onClick={hasClickHandler ? handleClick : undefined}
+      onContextMenu={onCellContextMenu ? handleContextMenu : undefined}
     >
       {content}
     </td>
@@ -78,6 +85,7 @@ export const TableCell = memo(({
     prevProps.isEditable === nextProps.isEditable &&
     prevProps.cellStatus === nextProps.cellStatus &&
     prevProps.onCellClickWithDbl === nextProps.onCellClickWithDbl &&
+    prevProps.onCellContextMenu === nextProps.onCellContextMenu &&
     prevProps.isFrozen === nextProps.isFrozen &&
     prevProps.isFrozenLast === nextProps.isFrozenLast &&
     prevProps.frozenLeft === nextProps.frozenLeft &&

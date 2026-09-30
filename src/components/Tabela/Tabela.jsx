@@ -1,7 +1,8 @@
 import '../../styles/themes.css';
 import styles from './Tabela.module.css';
-import { useEffect, useState, useMemo, useCallback, useRef, useContext } from 'react';
+import { useEffect, useLayoutEffect, useState, useMemo, useCallback, useRef, useContext } from 'react';
 import { Pagination } from '../Pagination/Pagination';
+import { Button } from '../Button/Button';
 import { createPortal } from 'react-dom';
 
 import { DEFAULT_OPTIONS, DEFAULT_COLUMN_CONFIG, DEFAULT_FOOTER_CONFIG, DEFAULT_FILTER, DEFAULT_FILTER_GROUP, TABLE_VIEWS, FILTER_CONDITIONS, filtersToSQL, getFilterDisplayText, DEFAULT_LIST_CONFIG, DEFAULT_BOARD_CONFIG, DEFAULT_CALENDAR_CONFIG, DEFAULT_TIMELINE_CONFIG } from './constants';
@@ -18,7 +19,8 @@ import {
   FREEZE_MOBILE_MAX_WIDTH,
 } from './freezeUtils';
 import { resolveSettingsOptionsForView, normalizeViewKey, normalizeTableViews, getViewActiveColumnKeys } from './viewSettingsUtils';
-import { ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal, ImportModal, ItemDetailPanel } from './components';
+import { ColumnSelectionMenu, SortMenu, FilterMenu, AdvancedFilterMenu, SettingsMenu, CalculationModal, ImportModal, ItemDetailPanel, CellContextMenu, ActionsMenu } from './components';
+import { filterValuesEqual, resolveSelectOptions, toSelectFilterValue, valueFromCell } from './filterValueUtils';
 import { PortalTargetContext } from './PortalTargetContext';
 import { GridView, ListView, BoardView, CalendarView, TimelineView } from './components/views';
 
@@ -146,6 +148,9 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const settingsMenuRef = useRef(null);
   const toolbarFilterButtonRef = useRef(null);
   const toolbarSortButtonRef = useRef(null);
+  const actionsOverflowRef = useRef(null);
+  const actionsOverflowCountRef = useRef(0);
+  const selectedRowsRef = useRef([]);
   const toolbarSettingsButtonRef = useRef(null);
   const sortButtonRef = useRef(null);
   const filterButtonRefs = useRef(new Map());
@@ -155,6 +160,9 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   const searchContainerRef = useRef(null);
   const wasSearchFocusedRef = useRef(false);
   const viewsContainerRef = useRef(null);
+  const viewsSlotRef = useRef(null);
+  const viewMeasureRef = useRef(null);
+  const viewsOverflowRef = useRef(null);
   const viewIndicatorRef = useRef(null);
 
   const [currentEditingFilter, setCurrentEditingFilter] = useState(null);
@@ -178,6 +186,12 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
   );
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [detailPanel, setDetailPanel] = useState({ open: false, item: null });
+  const [cellContextMenu, setCellContextMenu] = useState(null);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [actionsMenuPosition, setActionsMenuPosition] = useState(null);
+  const [viewsMenuOpen, setViewsMenuOpen] = useState(false);
+  const [viewsMenuPosition, setViewsMenuPosition] = useState(null);
+  const [fittedViewKeys, setFittedViewKeys] = useState(null);
 
   const effectiveSettingsOptions = useMemo(
     () => resolveSettingsOptionsForView(mergedOptions.showSettingsOptions, currentTableView),
@@ -826,8 +840,8 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     if (
       existing &&
       existing.condition === updatedFilter.condition &&
-      String(existing.value ?? '') === String(updatedFilter.value ?? '') &&
-      String(existing.valueTo ?? '') === String(updatedFilter.valueTo ?? '')
+      filterValuesEqual(existing.value, updatedFilter.value) &&
+      filterValuesEqual(existing.valueTo, updatedFilter.valueTo)
     ) {
       return;
     }
@@ -1026,10 +1040,23 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     const { condition, value: filterValue, valueTo } = filter;
 
     if (condition === 'isEmpty') {
+      if (Array.isArray(value)) return value.length === 0;
       return value === null || value === undefined || value === '';
     }
     if (condition === 'isNotEmpty') {
+      if (Array.isArray(value)) return value.length > 0;
       return value !== null && value !== undefined && value !== '';
+    }
+
+    const isSelectFilter = filter.type === 'select' || filter.columnType === 'select' || Array.isArray(filterValue);
+    if (isSelectFilter) {
+      const selected = toSelectFilterValue(filterValue);
+      if (selected.length === 0) return true;
+      const selectedNorm = new Set(selected.map((item) => item.toLowerCase()));
+      const cellValues = Array.isArray(value) ? value : [value];
+      const hit = cellValues.some((item) => selectedNorm.has(String(item ?? '').toLowerCase()));
+      if (condition === 'is') return hit;
+      if (condition === 'isNot') return !hit;
     }
 
     if (filterValue === '' || filterValue === null || filterValue === undefined) {
@@ -2533,6 +2560,87 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     [calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates]
   );
 
+  const closeCellContextMenu = useCallback(() => {
+    setCellContextMenu(null);
+  }, []);
+
+  const handleCellContextMenu = useCallback((event, payload) => {
+    const column = payload?.column;
+    if (!mergedOptions.showFilters || !column || column.filterable === false || column.hasSubColumns) return;
+    event.preventDefault();
+
+    const anchor = {
+      getBoundingClientRect: () => ({
+        top: event.clientY,
+        bottom: event.clientY,
+        left: event.clientX,
+        right: event.clientX,
+        width: 0,
+        height: 0,
+        x: event.clientX,
+        y: event.clientY,
+        toJSON() { return {}; },
+      }),
+    };
+    const rawPosition = calculateMenuPosition(anchor, {
+      menuWidth: 210,
+      menuHeight: 44,
+      preferredPosition: 'bottom-start',
+      offset: 4,
+      padding: 8,
+    });
+    const position = positionToPortalCoordinates(rawPosition, getPortalContainerResolved());
+    setCellContextMenu({
+      position,
+      column,
+      cellValue: payload.cell,
+    });
+  }, [calculateMenuPosition, getPortalContainerResolved, positionToPortalCoordinates, mergedOptions.showFilters]);
+
+  const addCellValueToFilter = useCallback((column, cellValue) => {
+    const type = column.type || 'text';
+    const shaped = valueFromCell(type, cellValue);
+    const conditions = FILTER_CONDITIONS[type] || FILTER_CONDITIONS.text;
+    const condition = shaped.empty ? 'isEmpty' : (conditions[0]?.value || 'is');
+    const list = tempFilters.length > 0 ? [...tempFilters] : [...filters];
+    const index = list.findIndex((item) => !item.isAdvanced && item.key === column.key);
+    const nextFilter = {
+      ...DEFAULT_FILTER,
+      ...(index >= 0 ? list[index] : {}),
+      id: index >= 0 ? list[index].id : `filter-${column.key}-${Date.now()}`,
+      key: column.key,
+      label: column.label ?? column.title ?? column.key,
+      type,
+      condition,
+      value: shaped.value,
+      valueTo: '',
+      isAdvanced: false,
+    };
+    const nextList = index >= 0
+      ? list.map((item, itemIndex) => (itemIndex === index ? nextFilter : item))
+      : [...list, nextFilter];
+
+    setIsEditingToolbar(true);
+    setTempFilters(nextList);
+    if (tempSorts.length === 0 && sorts.length > 0) {
+      setTempSorts([...sorts]);
+    }
+    setCurrentEditingFilter(nextFilter);
+    setCellContextMenu(null);
+
+    setTimeout(() => {
+      const buttonElement = filterButtonRefs.current.get(column.key);
+      if (!buttonElement) return;
+      openMenu('filter-menu', { current: buttonElement }, {
+        preferredPosition: 'bottom-start',
+        menuWidth: 280,
+        menuHeight: 300,
+        skipTempReset: true,
+        allowSwitch: true,
+      });
+    }, 50);
+  }, [filters, tempFilters, sorts, tempSorts, openMenu]);
+
   const tableContent = useMemo(() => {
     switch (currentTableView) {
       case 'grid':
@@ -2571,6 +2679,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
             editedData={editedData}
             rowStatuses={rowStatuses}
             onCellClickWithDbl={(mergedOptions.onClick || mergedOptions.onDoubleClick || mergedOptions.editable) ? handleCellClickWithDbl : undefined}
+            onCellContextMenu={handleCellContextMenu}
             onCellClick={handleCellClick}
             onCellCommit={handleCellCommit}
             onCellCancel={handleCellCancel}
@@ -2652,7 +2761,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
       default:
         return null;
     }
-  }, [currentTableView, visibleColumns, displayData, sortedData, fullDataForGrouping, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, openCalculationSubmenu, hasScroll, visibleFooter, renderTableHead, handleGroupItemsPerPageChange, mergedOptions, selectionMode, selectedKeys, getRowKey, toggleRowSelection, editingCell, editedData, rowStatuses, handleCellClickWithDbl, handleCellClick, handleCellCommit, handleCellCancel, handleEditNavigate, freezeActive, frozenLeftOffsets, lastFrozenKey, freezeWidthByKey, columnVisibility, handleItemClick, handleItemDoubleClick, handleItemContextMenu, handleBoardMove]);
+  }, [currentTableView, visibleColumns, displayData, sortedData, fullDataForGrouping, groupedBodyItems, groupByColumnKey, groupCurrentPage, collapsedGroupKeys, groupItemsPerPage, renderFlags, sorts, tempSorts, isEditingToolbar, isSorting, isLoading, headerStructure, hasCalculationRow, calculationByColumn, openCalculationSubmenu, hasScroll, visibleFooter, renderTableHead, handleGroupItemsPerPageChange, mergedOptions, selectionMode, selectedKeys, getRowKey, toggleRowSelection, editingCell, editedData, rowStatuses, handleCellClickWithDbl, handleCellContextMenu, handleCellClick, handleCellCommit, handleCellCancel, handleEditNavigate, freezeActive, frozenLeftOffsets, lastFrozenKey, freezeWidthByKey, columnVisibility, handleItemClick, handleItemDoubleClick, handleItemContextMenu, handleBoardMove]);
 
   const footerRowRef = useRef(null);
   const [footerCellMeta, setFooterCellMeta] = useState({});
@@ -2780,33 +2889,252 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
     }
   }, []);
 
+  const { visibleActions, overflowActions } = useMemo(() => {
+    const list = Array.isArray(mergedOptions.actions)
+      ? mergedOptions.actions.filter((action) => action && action.label)
+      : [];
+    const rawLimit = Number(mergedOptions.actionsMaxVisible);
+    const limit = Number.isFinite(rawLimit) && rawLimit >= 0 ? Math.floor(rawLimit) : 2;
+    return {
+      visibleActions: list.slice(0, limit),
+      overflowActions: list.slice(limit),
+    };
+  }, [mergedOptions.actions, mergedOptions.actionsMaxVisible]);
+
+  actionsOverflowCountRef.current = overflowActions.length;
+  selectedRowsRef.current = originalData.filter((item) => selectedKeys.has(getRowKey(item)));
+
+  const closeActionsMenu = useCallback(() => {
+    setActionsMenuOpen(false);
+  }, []);
+
+  const runTableAction = useCallback((action) => {
+    if (!action || action.disabled) return;
+    action.onClick?.({ selectedRows: selectedRowsRef.current });
+    setActionsMenuOpen(false);
+  }, []);
+
+  const toggleActionsMenu = useCallback(() => {
+    setViewsMenuOpen(false);
+    setActionsMenuOpen((open) => {
+      if (open) return false;
+      const anchor = actionsOverflowRef.current;
+      if (!anchor) return false;
+      const count = Math.max(actionsOverflowCountRef.current, 1);
+      const raw = calculateMenuPosition(anchor, {
+        menuWidth: 240,
+        menuHeight: Math.min(count * 40 + 8, 320),
+        preferredPosition: 'bottom-end',
+        offset: 8,
+        padding: 8,
+      });
+      setActionsMenuPosition(positionToPortalCoordinates(raw, getPortalContainerResolved()));
+      return true;
+    });
+  }, [getPortalContainerResolved]);
+
+  const toolbarViews = useMemo(() => {
+    const allowed = new Set((mergedOptions.tableViews || []).map((key) => normalizeViewKey(key)));
+    return Object.values(TABLE_VIEWS).filter((view) => allowed.has(view.key));
+  }, [mergedOptions.tableViews]);
+
+  const { visibleViews, overflowViews } = useMemo(() => {
+    if (!fittedViewKeys) {
+      return { visibleViews: toolbarViews, overflowViews: [] };
+    }
+    const visibleSet = new Set(fittedViewKeys);
+    return {
+      visibleViews: toolbarViews.filter((view) => visibleSet.has(view.key)),
+      overflowViews: toolbarViews.filter((view) => !visibleSet.has(view.key)),
+    };
+  }, [toolbarViews, fittedViewKeys]);
+
+  useLayoutEffect(() => {
+    if (!mergedOptions.showTableViews || !mergedOptions.showToolbar) return undefined;
+    const slot = viewsSlotRef.current;
+    const measure = viewMeasureRef.current;
+    if (!slot || !measure) return undefined;
+
+    const fit = () => {
+      const available = slot.clientWidth;
+      const buttons = [...measure.querySelectorAll('[data-view-key]')];
+      const entries = buttons.map((button) => ({
+        key: button.getAttribute('data-view-key'),
+        width: button.offsetWidth,
+      }));
+      if (!entries.length || entries.some((entry) => entry.width <= 0) || available <= 0) return;
+      const moreWidth = measure.querySelector('[data-view-more]')?.offsetWidth || 40;
+      const widthOf = (key) => entries.find((entry) => entry.key === key)?.width || 0;
+
+      let used = 0;
+      const keys = [];
+      for (let index = 0; index < entries.length; index += 1) {
+        const reserve = index === entries.length - 1 ? 0 : moreWidth;
+        if (used + entries[index].width + reserve <= available + 1) {
+          used += entries[index].width;
+          keys.push(entries[index].key);
+        } else {
+          break;
+        }
+      }
+
+      const activeKey = normalizeViewKey(currentTableView);
+      if (keys.length > 0 && activeKey && !keys.includes(activeKey) && entries.some((entry) => entry.key === activeKey)) {
+        const activeWidth = widthOf(activeKey);
+        const candidate = keys.slice(0, -1);
+        let candidateUsed = candidate.reduce((sum, key) => sum + widthOf(key), 0);
+        while (candidate.length) {
+          const stillHidden = entries.length - candidate.length - 1;
+          const reserve = stillHidden > 0 ? moreWidth : 0;
+          if (candidateUsed + activeWidth + reserve <= available + 1) break;
+          candidateUsed -= widthOf(candidate.pop());
+        }
+        const stillHidden = entries.length - candidate.length - 1;
+        const reserve = stillHidden > 0 ? moreWidth : 0;
+        if (candidateUsed + activeWidth + reserve <= available + 1) {
+          keys.splice(0, keys.length, ...candidate, activeKey);
+        }
+      }
+
+      setFittedViewKeys((prev) => {
+        const same = Array.isArray(prev) && prev.length === keys.length && prev.every((key, index) => key === keys[index]);
+        return same ? prev : keys;
+      });
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(slot);
+    return () => observer.disconnect();
+  }, [mergedOptions.showTableViews, mergedOptions.showToolbar, toolbarViews, currentTableView]);
+
+  const closeViewsMenu = useCallback(() => {
+    setViewsMenuOpen(false);
+  }, []);
+
+  const toggleViewsMenu = useCallback(() => {
+    setActionsMenuOpen(false);
+    setViewsMenuOpen((open) => {
+      if (open) return false;
+      const anchor = viewsOverflowRef.current;
+      if (!anchor) return false;
+      const count = Math.max(overflowViews.length, 1);
+      const raw = calculateMenuPosition(anchor, {
+        menuWidth: 220,
+        menuHeight: Math.min(count * 40 + 8, 320),
+        preferredPosition: 'bottom-start',
+        offset: 8,
+        padding: 8,
+      });
+      setViewsMenuPosition(positionToPortalCoordinates(raw, getPortalContainerResolved()));
+      return true;
+    });
+  }, [getPortalContainerResolved, overflowViews.length]);
+
+  const selectToolbarView = useCallback((viewKey) => {
+    setCurrentTableView(viewKey);
+    setViewsMenuOpen(false);
+  }, []);
+
   const toolbarContent = useMemo(() => {
     return (
       <div className={styles.tabela__toolbar}>
         <div className={`${styles.tabela__toolbar__top} ${sorts.length > 0 || filters.length > 0 || isEditingToolbar ? styles.tabela__toolbar__top_with_buttons : ''}`}>
-          <div className={styles.tabela__toolbar__top__left}>
-            {mergedOptions.showTableViews && (
-              <div ref={viewsContainerRef} className={styles.tabela__toolbar__tableViews}>
-                {/* <div ref={viewIndicatorRef} className={styles.tabela__toolbar__tableViews__indicator} /> */}
-                {Object.values(TABLE_VIEWS).filter(view => mergedOptions.tableViews.includes(view.key)).map((view) => (
-                  <button
-                    key={view.key}
-                    type="button"
-                    className={`${styles.tabela__toolbar__tableViews__button} ${normalizeViewKey(currentTableView) === view.key ? styles.tabela__toolbar__tableViews__button__active : ''}`}
-                    onClick={() => setCurrentTableView(view.key)}
-                    aria-label={view.label}
-                    aria-pressed={normalizeViewKey(currentTableView) === view.key}
-                    data-view-active={normalizeViewKey(currentTableView) === view.key ? 'true' : 'false'}
-                    title={view.label}
-                  >
-                    <i className={view.icon} />
-                    <span className={styles.tabela__toolbar__tableViews__button__label}>{view.label}</span>
+          <div
+            ref={viewsSlotRef}
+            className={`${styles.tabela__toolbar__top__left} ${mergedOptions.showTableViews && toolbarViews.length > 0 ? styles.tabela__toolbar__top__left_views : ''}`}
+          >
+            {mergedOptions.showTableViews && toolbarViews.length > 0 && (
+              <>
+                <div ref={viewMeasureRef} className={styles.tabela__toolbar__tableViewsMeasure} aria-hidden="true">
+                  {toolbarViews.map((view) => (
+                    <button
+                      key={view.key}
+                      type="button"
+                      tabIndex={-1}
+                      data-view-key={view.key}
+                      className={styles.tabela__toolbar__tableViews__button}
+                    >
+                      <i className={view.icon} />
+                      <span className={styles.tabela__toolbar__tableViews__button__label}>{view.label}</span>
+                    </button>
+                  ))}
+                  <button type="button" tabIndex={-1} data-view-more className={styles.tabela__toolbar__tableViews__button}>
+                    +{Math.max(toolbarViews.length, 1)}
                   </button>
-                ))}
-              </div>
+                </div>
+                <div ref={viewsContainerRef} className={styles.tabela__toolbar__tableViews}>
+                  {visibleViews.map((view) => (
+                    <button
+                      key={view.key}
+                      type="button"
+                      className={`${styles.tabela__toolbar__tableViews__button} ${normalizeViewKey(currentTableView) === view.key ? styles.tabela__toolbar__tableViews__button__active : ''}`}
+                      onClick={() => selectToolbarView(view.key)}
+                      aria-label={view.label}
+                      aria-pressed={normalizeViewKey(currentTableView) === view.key}
+                      data-view-active={normalizeViewKey(currentTableView) === view.key ? 'true' : 'false'}
+                      title={view.label}
+                    >
+                      <i className={view.icon} />
+                      <span className={styles.tabela__toolbar__tableViews__button__label}>{view.label}</span>
+                    </button>
+                  ))}
+                  {overflowViews.length > 0 && (
+                    <button
+                      ref={viewsOverflowRef}
+                      type="button"
+                      className={`${styles.tabela__toolbar__tableViews__button} ${viewsMenuOpen ? styles.tabela__toolbar__tableViews__button__active : ''}`}
+                      aria-label={`Mais ${overflowViews.length} visualizações`}
+                      aria-haspopup="menu"
+                      aria-expanded={viewsMenuOpen}
+                      title="Mais visualizações"
+                      onClick={toggleViewsMenu}
+                    >
+                      +{overflowViews.length}
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </div>
           <div className={styles.tabela__toolbar__top__right}>
+            {visibleActions.length + overflowActions.length > 0 && (
+              <div className={styles.tabela__toolbar__actions}>
+                {visibleActions.map((action) => {
+                  const variant = ['primary', 'secondary', 'tertiary', 'danger'].includes(action.variant)
+                    ? action.variant
+                    : 'secondary';
+                  return (
+                    <Button
+                      key={action.key ?? action.label}
+                      size="md"
+                      variant={variant}
+                      className={styles.tabela__toolbar__actionButton}
+                      iconLeft={action.icon ? <i className={action.icon} /> : undefined}
+                      disabled={Boolean(action.disabled)}
+                      onClick={() => runTableAction(action)}
+                    >
+                      {action.label}
+                    </Button>
+                  );
+                })}
+                {overflowActions.length > 0 && (
+                  <button
+                    ref={actionsOverflowRef}
+                    type="button"
+                    className={`${styles.tabela__toolbar__actions__more} ${actionsMenuOpen ? styles.tabela__toolbar__actions__more_open : ''}`}
+                    aria-haspopup="menu"
+                    aria-expanded={actionsMenuOpen}
+                    onClick={toggleActionsMenu}
+                  >
+                    +{overflowActions.length}
+                  </button>
+                )}
+              </div>
+            )}
+            {visibleActions.length + overflowActions.length > 0 && (mergedOptions.showSearch || mergedOptions.showSorts || mergedOptions.showFilters || mergedOptions.showSettings) && (
+              <span className={styles.tabela__toolbar__top__right__divider} aria-hidden="true" />
+            )}
             {mergedOptions.showSearch && (
               <div 
                 ref={searchContainerRef}
@@ -3091,7 +3419,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
         )}
       </div>
     );
-  }, [mergedOptions.tableIcon, mergedOptions.tableName, sorts, filters, openMenu, tempSorts, tempFilters, isEditingToolbar, handleOpenFilterMenu, currentTableView, mergedOptions.editable, editedKeys, editViewFilter, editViewDropdownOpen, rowStatuses, handleRevertEdits, handleSaveEdits]);
+  }, [mergedOptions.tableIcon, mergedOptions.tableName, sorts, filters, openMenu, tempSorts, tempFilters, isEditingToolbar, handleOpenFilterMenu, currentTableView, mergedOptions.editable, editedKeys, editViewFilter, editViewDropdownOpen, rowStatuses, handleRevertEdits, handleSaveEdits, visibleActions, overflowActions, runTableAction, toggleActionsMenu, actionsMenuOpen, mergedOptions.showSearch, mergedOptions.showSorts, mergedOptions.showFilters, mergedOptions.showSettings, mergedOptions.showTableViews, toolbarViews, visibleViews, overflowViews, viewsMenuOpen, toggleViewsMenu, selectToolbarView]);
 
   const portalContainer = getPortalContainerResolved();
   const portalTargetIsBody = portalContainer === document.body;
@@ -3222,6 +3550,14 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               onUpdateFilter={handleFilterUpdate}
               onRemoveFilter={handleFilterRemove}
               onOpenAdvancedFilter={handleOpenAdvancedFilter}
+              selectOptions={
+                currentEditingFilter?.type === 'select'
+                  ? resolveSelectOptions(
+                    visibleColumns.find((col) => col.key === currentEditingFilter.key),
+                    originalData
+                  )
+                  : []
+              }
               refList={[
                 ...Array.from(filterButtonRefs.current.values()),
                 toolbarFilterButtonRef.current,
@@ -3361,6 +3697,7 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
               menuState={subMenuState}
               filterGroup={currentAdvancedFilterGroup}
               columns={visibleColumns.filter(col => !col.hasSubColumns)}
+              rows={originalData}
               onClose={(closingSessionId) => {
                 closeSubMenu(closingSessionId);
                 setCurrentAdvancedFilterGroup(null);
@@ -3382,6 +3719,101 @@ export const Tabela = ({ id, columns, data, footer, options = {} }) => {
           portalContainer
         );
       })()}
+
+      {cellContextMenu && createPortal(
+        portalTargetIsBody
+          ? (
+            <div data-theme={detectedTheme || 'light'} style={{ display: 'contents' }}>
+              <CellContextMenu
+                position={cellContextMenu.position}
+                onClose={closeCellContextMenu}
+                actions={[{
+                  id: 'add-filter',
+                  label: 'Adicionar ao filtro',
+                  icon: 'far fa-bars-filter',
+                  onSelect: () => addCellValueToFilter(cellContextMenu.column, cellContextMenu.cellValue),
+                }]}
+              />
+            </div>
+          )
+          : (
+            <CellContextMenu
+              position={cellContextMenu.position}
+              onClose={closeCellContextMenu}
+              actions={[{
+                id: 'add-filter',
+                label: 'Adicionar ao filtro',
+                icon: 'far fa-bars-filter',
+                onSelect: () => addCellValueToFilter(cellContextMenu.column, cellContextMenu.cellValue),
+              }]}
+            />
+          ),
+        portalContainer
+      )}
+
+      {actionsMenuOpen && overflowActions.length > 0 && createPortal(
+        portalTargetIsBody
+          ? (
+            <div data-theme={detectedTheme || 'light'} style={{ display: 'contents' }}>
+              <ActionsMenu
+                position={actionsMenuPosition}
+                onClose={closeActionsMenu}
+                ignoreRef={actionsOverflowRef}
+                actions={overflowActions.map((action) => ({
+                  ...action,
+                  onSelect: () => runTableAction(action),
+                }))}
+              />
+            </div>
+          )
+          : (
+            <ActionsMenu
+              position={actionsMenuPosition}
+              onClose={closeActionsMenu}
+              ignoreRef={actionsOverflowRef}
+              actions={overflowActions.map((action) => ({
+                ...action,
+                onSelect: () => runTableAction(action),
+              }))}
+            />
+          ),
+        portalContainer
+      )}
+
+      {viewsMenuOpen && overflowViews.length > 0 && createPortal(
+        portalTargetIsBody
+          ? (
+            <div data-theme={detectedTheme || 'light'} style={{ display: 'contents' }}>
+              <ActionsMenu
+                position={viewsMenuPosition}
+                onClose={closeViewsMenu}
+                ignoreRef={viewsOverflowRef}
+                actions={overflowViews.map((view) => ({
+                  key: view.key,
+                  label: view.label,
+                  icon: view.icon,
+                  variant: normalizeViewKey(currentTableView) === view.key ? 'primary' : 'tertiary',
+                  onSelect: () => selectToolbarView(view.key),
+                }))}
+              />
+            </div>
+          )
+          : (
+            <ActionsMenu
+              position={viewsMenuPosition}
+              onClose={closeViewsMenu}
+              ignoreRef={viewsOverflowRef}
+              actions={overflowViews.map((view) => ({
+                key: view.key,
+                label: view.label,
+                icon: view.icon,
+                variant: normalizeViewKey(currentTableView) === view.key ? 'primary' : 'tertiary',
+                onSelect: () => selectToolbarView(view.key),
+              }))}
+            />
+          ),
+        portalContainer
+      )}
 
       {importModalOpen && mergedOptions.importConfig?.columns?.length && (
         <ImportModal

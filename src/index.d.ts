@@ -207,6 +207,7 @@ export interface TabelaColumn {
   title?: string;
   label?: string;
   type?: 'text' | 'number' | 'date' | 'select';
+  options?: Array<string | { value: unknown; label: string }>;
   format?: 'text' | 'money' | 'percentage' | 'number' | 'integer' | 'date' | 'datetime';
   visible?: boolean;
   width?: string | number;
@@ -228,6 +229,17 @@ export interface TabelaColumn {
   [key: string]: unknown;
 }
 
+export type TabelaActionVariant = 'primary' | 'secondary' | 'tertiary' | 'danger';
+
+export interface TabelaAction {
+  key: string;
+  label: string;
+  variant?: TabelaActionVariant;
+  icon?: string;
+  disabled?: boolean;
+  onClick?: (payload: { selectedRows: Record<string, unknown>[] }) => void;
+}
+
 export interface TabelaOptions {
   showHeader?: boolean;
   showFooter?: boolean;
@@ -241,6 +253,8 @@ export interface TabelaOptions {
   tableSubtitle?: string | null;
   columnMinWidth?: string;
   showSearch?: boolean;
+  actions?: TabelaAction[];
+  actionsMaxVisible?: number;
   showSorts?: boolean;
   showFilters?: boolean;
   showSettings?: boolean;
@@ -275,6 +289,133 @@ export interface TabelaProps {
   [key: string]: unknown;
 }
 export declare const Tabela: ComponentType<TabelaProps>;
+
+export interface OrganogramaNode {
+  id?: string | number;
+  parentId?: string | number | null;
+  children?: OrganogramaNode[];
+  name?: string;
+  role?: string;
+  department?: string;
+  photo?: string;
+  email?: string;
+  phone?: string;
+  [key: string]: unknown;
+}
+
+export interface OrganogramaOptions {
+  view?: 'tree' | 'treeHorizontal' | 'list' | 'matrix' | 'departments' | 'radial' | string;
+  additionalViews?: Array<{ key: string; label?: string; layout?: (params: unknown) => unknown }>;
+  onViewChange?: (view: string) => void;
+  keys?: Record<string, string>;
+  nodeType?: string;
+  nodeRender?: (node: OrganogramaNode, ctx: Record<string, unknown>) => ReactNode;
+  nodeSize?: { width?: number; height?: number };
+  nodeSizeOf?: (id: string | number) => { width?: number; height?: number };
+  autoSize?: boolean;
+  spacing?: { sibling?: number; subtree?: number; level?: number };
+  edge?: {
+    type?: 'orthogonal' | 'straight' | 'bezier';
+    radius?: number;
+    width?: number;
+    color?: string | null;
+    dashed?: ((source: OrganogramaNode, target: OrganogramaNode) => boolean) | null;
+  };
+  collapsible?: boolean;
+  defaultExpandedDepth?: number;
+  expandedIds?: Set<string | number> | null;
+  showCounters?: boolean;
+  counterMode?: 'direct' | 'total' | 'both';
+  onToggle?: (id: string | number | null, expanded: boolean, expandedIds: Set<string | number> | null) => void;
+  interaction?: {
+    pan?: boolean;
+    zoom?: boolean;
+    zoomRange?: [number, number];
+    zoomStep?: number;
+    fitOnMount?: boolean;
+    fitPadding?: number;
+    selectable?: boolean;
+  };
+  detailMode?: 'panel' | 'drawer' | 'none';
+  renderDetails?: (node: OrganogramaNode, ctx: { close: () => void }) => ReactNode;
+  detailFields?: Array<{ key: string; label: string }>;
+  onNodeClick?: (id: string | number, node: OrganogramaNode) => void;
+  onNodeDoubleClick?: (id: string | number, node: OrganogramaNode) => void;
+  toolbar?: {
+    visible?: boolean;
+    position?: 'bottom' | 'top';
+    align?: 'center' | 'start' | 'end';
+    items?: string[];
+    additionalItems?: Array<{ key: string; label?: string; icon?: string; tooltip?: string; onClick?: () => void }>;
+  };
+  groups?: {
+    enabled?: boolean;
+    key?: string;
+    label?: ((value: unknown, node: OrganogramaNode) => string) | null;
+    color?: ((value: unknown, node?: OrganogramaNode) => unknown) | null;
+    cluster?: boolean;
+    padding?: number;
+    render?: ((group: Record<string, unknown>) => ReactNode) | null;
+  };
+  compact?: {
+    enabled?: boolean;
+    leafThreshold?: number;
+    maxColumns?: number | 'auto';
+    columnGap?: number;
+    rowGap?: number;
+  };
+  focus?: {
+    enabled?: boolean;
+    trigger?: 'doubleClick';
+    showBreadcrumb?: boolean;
+  };
+  onFocusChange?: (id: string | number | null) => void;
+  performance?: {
+    culling?: boolean;
+    cullingMargin?: number;
+    lodThreshold?: number;
+    minimalThreshold?: number;
+    lazyPhotos?: boolean;
+    maxAnimatedNodes?: number;
+  };
+  getPortalContainer?: () => HTMLElement;
+  emptyState?: ReactNode;
+  loading?: boolean;
+  className?: string;
+  style?: CSSProperties;
+  orgRef?: Ref<OrganogramaRef>;
+  [key: string]: unknown;
+}
+
+export interface OrganogramaRef {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
+  fit: () => void;
+  centerOn: (id?: string | number) => void;
+  expand: (id: string | number) => void;
+  collapse: (id: string | number) => void;
+  expandAll: () => void;
+  collapseAll: () => void;
+  select: (id: string | number) => void;
+  find: (query: string) => string | number | null;
+  focus: (id: string | number) => void;
+  clearFocus: () => void;
+  getTransform: () => { x: number; y: number; scale: number };
+  setTransform: (transform: { x: number; y: number; scale: number }) => void;
+}
+
+export interface OrganogramaProps {
+  id?: string;
+  data?: OrganogramaNode[];
+  options?: OrganogramaOptions;
+  className?: string;
+  style?: CSSProperties;
+  [key: string]: unknown;
+}
+
+export declare const Organograma: ComponentType<OrganogramaProps>;
+export declare function useOrganograma(): Ref<OrganogramaRef>;
 
 export interface TabGroupProps {
   children?: ReactNode;

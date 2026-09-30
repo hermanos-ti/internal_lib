@@ -13,6 +13,7 @@ import { Input, useInput } from './components/Input';
 import { Loader } from './components/Loader/Loader';
 import { Menu } from './components/Menu/Menu';
 import { Modal } from './components/Modal/Modal';
+import { Organograma, useOrganograma } from './components/Organograma';
 import { Pagination } from './components/Pagination/Pagination';
 import { Popup } from './components/Popup/Popup';
 import { Skeleton } from './components/Skeleton/Skeleton';
@@ -43,6 +44,8 @@ export {
   Loader,
   Menu,
   Modal,
+  Organograma,
+  useOrganograma,
   Pagination,
   Popup,
   Skeleton,

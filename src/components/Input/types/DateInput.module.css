@@ -122,6 +122,11 @@
   color: var(--input-focus, #4f46e5);
 }
 
+.dateInput__calendar {
+  width: calc(7 * 2.25rem + 6 * 2px);
+  box-sizing: border-box;
+}
+
 .dateInput__body {
   display: flex;
   flex-direction: column;
@@ -206,21 +211,22 @@
 
 .dateInput__months {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
 }
 
 .dateInput__month {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 6px;
+  min-height: 3.5rem;
+  padding: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--input-text, #0f172a);
   cursor: pointer;
   transition: background var(--input-transition, 150ms ease), color var(--input-transition, 150ms ease);
@@ -234,21 +240,22 @@
 
 .dateInput__years {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
 }
 
 .dateInput__year {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 6px;
+  min-height: 3.5rem;
+  padding: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--input-text, #0f172a);
   cursor: pointer;
   transition: background var(--input-transition, 150ms ease), color var(--input-transition, 150ms ease);

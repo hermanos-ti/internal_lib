@@ -67,7 +67,7 @@ function TabelaWithPortal(props) {
   return (
     <Tabela
       {...props}
-      options={{ ...props.options, getPortalContainer }}
+      options={{ showTableViews: false, ...props.options, getPortalContainer }}
     />
   );
 }
@@ -1445,6 +1445,7 @@ export const Views = {
       columns={viewDemoColumns}
       data={viewDemoData}
       options={{
+        showTableViews: true,
         tableName: 'Todas as visualizações',
         tableSubtitle: 'Use a toolbar para alternar entre Grade, Lista, Quadro, Calendário e Linha do Tempo.',
         tableIcon: 'fa-solid fa-layer-group',
@@ -1483,6 +1484,160 @@ export const Views = {
       description: {
         story:
           'Uma tabela compartilhando os mesmos dados entre Grade, Lista, Quadro, Calendário e Linha do Tempo. Alternar a view na toolbar. Calendário usa intervalo (start/end); ajuste calendarConfig.dateKey para modo data única.',
+      },
+    },
+  },
+};
+
+function AcoesStory() {
+  const [message, setMessage] = useState('Nenhuma ação executada.');
+
+  const report = (label, selectedRows) => {
+    const names = selectedRows.map((row) => row.name).filter(Boolean);
+    setMessage(names.length ? `${label}: ${names.join(', ')}` : `${label}: nenhuma linha selecionada`);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <TabelaWithPortal
+        id="tabela-acoes"
+        columns={columns}
+        data={data}
+        options={{
+          tableName: 'Ações da toolbar',
+          selectable: true,
+          actions: [
+            {
+              key: 'create',
+              label: 'Criar',
+              variant: 'primary',
+              icon: 'far fa-plus',
+              onClick: ({ selectedRows }) => report('Criar', selectedRows),
+            },
+            {
+              key: 'batch',
+              label: 'Alteração em lote',
+              variant: 'secondary',
+              icon: 'far fa-pen',
+              onClick: ({ selectedRows }) => report('Alteração em lote', selectedRows),
+            },
+            {
+              key: 'export',
+              label: 'Exportar',
+              variant: 'tertiary',
+              icon: 'far fa-file-export',
+              onClick: ({ selectedRows }) => report('Exportar', selectedRows),
+            },
+            {
+              key: 'remove',
+              label: 'Excluir',
+              variant: 'danger',
+              icon: 'far fa-trash',
+              onClick: ({ selectedRows }) => report('Excluir', selectedRows),
+            },
+          ],
+        }}
+      />
+      <p>{message}</p>
+    </div>
+  );
+}
+
+export const Acoes = {
+  render: () => <AcoesStory />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Botões explícitos na toolbar. Com o limite padrão de 2, Criar e Alteração em lote ficam visíveis e as demais entram no menu +2.',
+      },
+    },
+  },
+};
+
+function ViewsComAcoesStory() {
+  const [message, setMessage] = useState('Nenhuma ação executada.');
+
+  const report = (label, selectedRows) => {
+    const names = selectedRows.map((row) => row.nome).filter(Boolean);
+    setMessage(names.length ? `${label}: ${names.join(', ')}` : `${label}: nenhuma linha selecionada`);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <TabelaWithPortal
+        id="tabela-views-acoes"
+        columns={viewDemoColumns}
+        data={viewDemoData}
+        options={{
+          showTableViews: true,
+          tableName: 'Views e ações',
+          tableSubtitle: 'Redimensione a janela para ver as views entrarem no +N.',
+          tableIcon: 'fa-solid fa-layer-group',
+          currentTableView: 'grid',
+          tableViews: ['grid', 'list', 'board', 'calendar', 'timeline'],
+          selectable: true,
+          itensPerPage: 25,
+          listConfig: { fields: sharedListFields },
+          boardConfig: {
+            columnKey: 'status',
+            columns: ['Ativo', 'Em progresso', 'Pausado', 'Concluído'],
+            cardMode: 'simple',
+            fields: sharedListFields,
+          },
+          calendarConfig: {
+            startDateKey: 'start',
+            endDateKey: 'end',
+            fields: calendarFields,
+          },
+          timelineConfig: {
+            startDateKey: 'start',
+            endDateKey: 'end',
+            fields: sharedListFields,
+            defaultPeriod: 'days',
+          },
+          actions: [
+            {
+              key: 'create',
+              label: 'Criar',
+              variant: 'primary',
+              icon: 'far fa-plus',
+              onClick: ({ selectedRows }) => report('Criar', selectedRows),
+            },
+            {
+              key: 'batch',
+              label: 'Alteração em lote',
+              variant: 'secondary',
+              icon: 'far fa-pen',
+              onClick: ({ selectedRows }) => report('Alteração em lote', selectedRows),
+            },
+            {
+              key: 'export',
+              label: 'Exportar',
+              variant: 'tertiary',
+              icon: 'far fa-file-export',
+              onClick: ({ selectedRows }) => report('Exportar', selectedRows),
+            },
+            {
+              key: 'remove',
+              label: 'Excluir',
+              variant: 'danger',
+              icon: 'far fa-trash',
+              onClick: ({ selectedRows }) => report('Excluir', selectedRows),
+            },
+          ],
+        }}
+      />
+      <p>{message}</p>
+    </div>
+  );
+}
+
+export const ViewsComAcoes = {
+  render: () => <ViewsComAcoesStory />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Views e ações na mesma toolbar. Com pouco espaço, as views que não cabem entram no +N e a view ativa permanece visível.',
       },
     },
   },

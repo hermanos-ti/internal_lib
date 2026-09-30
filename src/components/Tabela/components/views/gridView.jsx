@@ -40,6 +40,7 @@ export function GridView({
   editedData,
   rowStatuses,
   onCellClickWithDbl,
+  onCellContextMenu,
   onCellClick,
   onCellCommit,
   onCellCancel,
@@ -192,6 +193,7 @@ export function GridView({
         isEditable={colIsEditable}
         cellStatus={getCellStatusClass(item, column.key)}
         onCellClickWithDbl={onCellClickWithDbl}
+        onCellContextMenu={onCellContextMenu}
         {...freezeProps}
       />
     );

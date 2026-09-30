@@ -1,6 +1,8 @@
 import { memo, forwardRef, useRef, useState, useEffect, useCallback, useImperativeHandle } from 'react';
 import styles from '../Tabela.module.css';
 import { COLUMN_ICONS, FILTER_CONDITIONS, EMPTY_CONDITIONS, RANGE_CONDITIONS } from '../constants';
+import { filterValuesEqual, toSelectFilterValue } from '../filterValueUtils';
+import { FilterValueField } from './FilterValueField';
 import { Select } from './Select';
 
 export const FilterMenu = memo(forwardRef(({ 
@@ -10,6 +12,7 @@ export const FilterMenu = memo(forwardRef(({
   onUpdateFilter,
   onRemoveFilter,
   onOpenAdvancedFilter,
+  selectOptions = [],
   refList,
   getExtraRefs
 }, ref) => {
@@ -24,9 +27,10 @@ export const FilterMenu = memo(forwardRef(({
 
   const normalizeFromItem = useCallback((item) => {
     if (!item) return { condition: '', value: '', valueTo: '' };
+    const value = item.type === 'select' ? toSelectFilterValue(item.value) : (item.value ?? '');
     return {
       condition: item.condition || getDefaultCondition(item.type),
-      value: item.value ?? '',
+      value,
       valueTo: item.valueTo ?? '',
     };
   }, [getDefaultCondition]);
@@ -67,8 +71,8 @@ export const FilterMenu = memo(forwardRef(({
     const baseline = normalizeFromItem(baselineItem);
     return (
       update.condition !== baseline.condition ||
-      String(update.value ?? '') !== String(baseline.value ?? '') ||
-      String(update.valueTo ?? '') !== String(baseline.valueTo ?? '')
+      !filterValuesEqual(update.value, baseline.value) ||
+      !filterValuesEqual(update.valueTo, baseline.valueTo)
     );
   }, [normalizeFromItem]);
 
@@ -182,6 +186,9 @@ export const FilterMenu = memo(forwardRef(({
       if (clickedOnSelectDropdown) {
         return;
       }
+      if (event.target?.closest?.('[data-tabela-date-picker]')) {
+        return;
+      }
 
       // Filter chips use data attribute — refs can be empty during chip remount
       const clickedOnFilterChip = event.target?.closest?.('[data-tabela-filter-chip]');
@@ -214,6 +221,7 @@ export const FilterMenu = memo(forwardRef(({
 
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
+        if (document.querySelector('[data-tabela-date-picker]')) return;
         handleClose();
       }
     };
@@ -408,14 +416,15 @@ export const FilterMenu = memo(forwardRef(({
             <label className={styles.filterMenu__field__label} htmlFor={`filter-value-${filterItem.key}`}>
               {isRangeCondition ? 'De' : 'Valor'}
             </label>
-            <input
+            <FilterValueField
               id={`filter-value-${filterItem.key}`}
-              className={styles.filterMenu__field__input}
-              type={filterItem.type === 'date' ? 'date' : filterItem.type === 'number' ? 'number' : 'text'}
+              type={filterItem.type}
               value={localValue}
-              onChange={(e) => setLocalValue(e.target.value)}
-              placeholder={filterItem.type === 'date' ? undefined : 'Digite um valor...'}
+              onChange={setLocalValue}
+              className={filterItem.type === 'text' || filterItem.type === 'number' || !filterItem.type ? styles.filterMenu__field__input : ''}
+              placeholder={filterItem.type === 'date' ? 'dd/mm/aaaa' : filterItem.type === 'select' ? 'Selecione...' : 'Digite um valor...'}
               title="Valor usado para comparar com os dados da coluna"
+              selectOptions={selectOptions}
             />
           </div>
         )}
@@ -425,14 +434,15 @@ export const FilterMenu = memo(forwardRef(({
             <label className={styles.filterMenu__field__label} htmlFor={`filter-value-to-${filterItem.key}`}>
               Até
             </label>
-            <input
+            <FilterValueField
               id={`filter-value-to-${filterItem.key}`}
-              className={styles.filterMenu__field__input}
-              type={filterItem.type === 'date' ? 'date' : filterItem.type === 'number' ? 'number' : 'text'}
+              type={filterItem.type}
               value={localValueTo}
-              onChange={(e) => setLocalValueTo(e.target.value)}
-              placeholder={filterItem.type === 'date' ? undefined : 'Digite um valor...'}
+              onChange={setLocalValueTo}
+              className={filterItem.type === 'text' || filterItem.type === 'number' || !filterItem.type ? styles.filterMenu__field__input : ''}
+              placeholder={filterItem.type === 'date' ? 'dd/mm/aaaa' : 'Digite um valor...'}
               title="Limite superior do intervalo de filtro"
+              selectOptions={selectOptions}
             />
           </div>
         )}

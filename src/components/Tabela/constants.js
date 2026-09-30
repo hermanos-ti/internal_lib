@@ -1,3 +1,5 @@
+import { formatFilterValueForDisplay, toSelectFilterValue } from './filterValueUtils';
+
 export const DEFAULT_OPTIONS = {
   showHeader: true,
   showFooter: true,
@@ -16,6 +18,8 @@ export const DEFAULT_OPTIONS = {
   showSettings: true,
   showSettingsOptions: ['colunasVisiveis', 'agrupar', 'calcular', 'congelar', 'importar', 'exportar'],
   additionalSettingsOptions: [], //{ key: '', label: '', icon: 'far fa-<icon-name>', tooltip: 'Tooltip text', onClick: () => {}},
+  actions: [], // { key, label, variant: 'primary'|'secondary'|'tertiary'|'danger', icon?, disabled?, onClick: ({ selectedRows }) => {} }
+  actionsMaxVisible: 2,
   initialFrozenColumns: [], // string[] — keys das colunas leaf inicialmente congeladas (pin à esquerda)
   onFrozenColumnsChange: null, // (frozenColumnKeys: string[]) => void
   currentTableView: 'grid',
@@ -59,6 +63,7 @@ export const COLUMN_FORMATS = {
 
 export const DEFAULT_COLUMN_CONFIG = {
   type: 'text', // text, number, date, select
+  options: null, // select: string[] | { value, label }[] — se ausente, o filtro usa os valores distintos dos dados
   visible: true,
   width: 'auto', // number = % da tabela; 'auto' = automático. Colunas congeláveis exigem width (number) ou minWidth (px)
   minWidth: null, // number (px) — obrigatório (ou width numérico) para permitir congelar a coluna
@@ -318,8 +323,8 @@ export const getFilterDisplayText = (filter, columns) => {
 
   // Condição "entre" precisa de dois valores
   if (RANGE_CONDITIONS.includes(filter.condition)) {
-    const value = filter.value || '';
-    const valueTo = filter.valueTo || '';
+    const value = formatFilterValueForDisplay(filter.value, columnType);
+    const valueTo = formatFilterValueForDisplay(filter.valueTo, columnType);
     if (value && valueTo) {
       return `${columnLabel} ${conditionLabel} ${value} e ${valueTo}`;
     } else if (value) {
@@ -330,7 +335,7 @@ export const getFilterDisplayText = (filter, columns) => {
   }
 
   // Condições normais com valor
-  const value = filter.value || '';
+  const value = formatFilterValueForDisplay(filter.value, columnType);
   if (value) {
     // Para condições numéricas, usar símbolo ao invés de texto
     if (['equals', 'notEquals', 'greaterThan', 'lessThan', 'greaterOrEqual', 'lessOrEqual'].includes(filter.condition)) {
@@ -399,6 +404,16 @@ function ruleToSQL(rule, columns) {
   // Range conditions need both values
   if (RANGE_CONDITIONS.includes(condition)) {
     return sqlGenerator(columnName, value, valueTo);
+  }
+
+  const isSelectRule = column?.type === 'select' || rule.type === 'select' || rule.columnType === 'select' || Array.isArray(value);
+  if (isSelectRule && (condition === 'is' || condition === 'isNot')) {
+    const selected = toSelectFilterValue(value);
+    if (selected.length === 0) return null;
+    const list = selected.map((item) => `'${escapeSqlString(item)}'`).join(', ');
+    return condition === 'isNot'
+      ? `${columnName} NOT IN (${list})`
+      : `${columnName} IN (${list})`;
   }
   
   // Regular conditions

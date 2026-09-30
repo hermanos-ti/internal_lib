@@ -15,3 +15,6 @@ export { FreezeColumnsPanel } from './FreezeColumnsPanel';
 export { Select } from './Select';
 export { ItemCard } from './ItemCard';
 export { ItemDetailPanel } from './ItemDetailPanel';
+export { CellContextMenu } from './CellContextMenu';
+export { ActionsMenu } from './ActionsMenu';
+export { FilterValueField } from './FilterValueField';

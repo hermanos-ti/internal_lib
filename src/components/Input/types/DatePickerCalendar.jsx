@@ -111,6 +111,43 @@ export function DatePickerCalendar({
     [range, startDate, endDate, onChange, onSelectComplete]
   );
 
+  const drillToMonth = useCallback((yearNum) => {
+    onViewDateChange?.((prev) => ({
+      ...prev,
+      year: yearNum,
+      mode: 'month',
+    }));
+  }, [onViewDateChange]);
+
+  const drillToDays = useCallback((date) => {
+    if (!formatIncludesDay(format)) {
+      handleSelect(date);
+      return;
+    }
+    onViewDateChange?.((prev) => ({
+      ...prev,
+      year: date.getFullYear(),
+      month: date.getMonth(),
+      mode: 'days',
+    }));
+  }, [format, handleSelect, onViewDateChange]);
+
+  const isYearDisabled = useCallback((yearNum) => {
+    const start = new Date(yearNum, 0, 1);
+    const end = new Date(yearNum, 11, 31, 23, 59, 59, 999);
+    if (minDate && end < minDate) return true;
+    if (maxDate && start > maxDate) return true;
+    return false;
+  }, [minDate, maxDate]);
+
+  const isMonthDisabled = useCallback((date) => {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+    if (minDate && end < minDate) return true;
+    if (maxDate && start > maxDate) return true;
+    return false;
+  }, [minDate, maxDate]);
+
   const isDisabled = useCallback(
     (d) => {
       if (!d) return true;
@@ -266,7 +303,7 @@ export function DatePickerCalendar({
         {mode === 'month' && (
           <div className={styles.dateInput__months}>
             {monthsGrid.map((d, i) => {
-              const disabled = isDisabled(d);
+              const disabled = isMonthDisabled(d);
               const selected = (startDate && d.getMonth() === startDate.getMonth() && d.getFullYear() === startDate.getFullYear()) ||
                 (endDate && d.getMonth() === endDate.getMonth() && d.getFullYear() === endDate.getFullYear());
               return (
@@ -274,7 +311,7 @@ export function DatePickerCalendar({
                   key={i}
                   type="button"
                   className={`${styles.dateInput__month} ${selected ? styles.dateInput__daySelected : ''} ${disabled ? styles.dateInput__dayDisabled : ''}`}
-                  onClick={() => !disabled && handleSelect(d)}
+                  onClick={() => !disabled && drillToDays(d)}
                   disabled={disabled}
                 >
                   {MONTHS_SHORT[i]}
@@ -287,16 +324,15 @@ export function DatePickerCalendar({
         {mode === 'year' && (
           <div className={styles.dateInput__years}>
             {yearsGrid.map((y) => {
-              const d = new Date(y, 0, 1);
-              const disabled = isDisabled(d);
-              const selected = (startDate && d.getFullYear() === startDate.getFullYear()) ||
-                (endDate && d.getFullYear() === endDate.getFullYear());
+              const disabled = isYearDisabled(y);
+              const selected = (startDate && y === startDate.getFullYear()) ||
+                (endDate && y === endDate.getFullYear());
               return (
                 <button
                   key={y}
                   type="button"
                   className={`${styles.dateInput__year} ${selected ? styles.dateInput__daySelected : ''} ${disabled ? styles.dateInput__dayDisabled : ''}`}
-                  onClick={() => !disabled && handleSelect(d)}
+                  onClick={() => !disabled && drillToMonth(y)}
                   disabled={disabled}
                 >
                   {y}
@@ -308,6 +344,12 @@ export function DatePickerCalendar({
       </div>
     </div>
   );
+}
+
+const MONTH_ONLY_FORMATS = new Set(['mes-ano', 'mes-ano-extenso', 'mes-ano-extenso-curto']);
+
+function formatIncludesDay(format) {
+  return !MONTH_ONLY_FORMATS.has(format);
 }
 
 function parseValue(val, format) {
